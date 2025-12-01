@@ -17,26 +17,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          cache: true
 
-      - name: Upgrade dependencies
+      - name: Upgrade Flutter dependencies
         run: flutter pub upgrade
 
-      - name: Commit updated dependencies
+      - name: Upgrade Gradle to Latest
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew wrapper --gradle-version latest --distribution-type all
+
+      - name: Commit updated dependencies and Gradle
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: update dependencies [skip ci]"
-          file_pattern: "pubspec.lock"
+          commit_message: "chore: update gradle to latest & pub dependencies [skip ci]"
+          file_pattern: "pubspec.lock android/gradle/wrapper/gradle-wrapper.properties android/gradle/wrapper/gradle-wrapper.jar"
 
       - name: Setup environment file
         run: |
           echo "API_TOKEN=${{ secrets.API_TOKEN }}" >> .env
           echo "API_KEY_WEATHERAPI=${{ secrets.API_KEY_WEATHERAPI }}" >> .env
           echo "API_KEY_OPENROUTER=${{ secrets.API_KEY_OPENROUTER }}" >> .env
-
 
       - name: Build Split APKs
         run: flutter build apk --release --split-per-abi
@@ -46,9 +59,17 @@ jobs:
           VERSION_NAME=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
           mkdir release_apks 
           
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.arm64-v8a.apk
-          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.armeabi-v7a.apk
-          cp build/app/outputs/flutter-apk/app-x86_64-release.apk release_apks/WeatherMaster.${VERSION_NAME}.x86_64.apk
+          if [ -f build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ]; then
+            cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.arm64-v8a.apk
+          fi
+          
+          if [ -f build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ]; then
+            cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.armeabi-v7a.apk
+          fi
+          
+          if [ -f build/app/outputs/flutter-apk/app-x86_64-release.apk ]; then
+            cp build/app/outputs/flutter-apk/app-x86_64-release.apk release_apks/WeatherMaster.${VERSION_NAME}.x86_64.apk
+          fi
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
