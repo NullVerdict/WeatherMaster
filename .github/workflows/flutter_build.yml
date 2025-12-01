@@ -35,15 +35,13 @@ jobs:
 
       - name: Upgrade Gradle to Latest
         working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew wrapper --gradle-version latest --distribution-type all
+        run: gradle wrapper --gradle-version latest --distribution-type all
 
       - name: Commit updated dependencies and Gradle
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update gradle to latest & pub dependencies [skip ci]"
-          file_pattern: "pubspec.lock android/gradle/wrapper/gradle-wrapper.properties android/gradle/wrapper/gradle-wrapper.jar"
+          file_pattern: "pubspec.lock android/gradle/wrapper/gradle-wrapper.properties android/gradle/wrapper/gradle-wrapper.jar android/gradlew android/gradlew.bat"
 
       - name: Setup environment file
         run: |
