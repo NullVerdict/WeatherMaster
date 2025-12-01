@@ -1,297 +1,209 @@
+import 'dart:async';
 import 'dart:convert';
-import 'services/fetch_data.dart';
-import 'utils/preferences_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:home_widget/home_widget.dart';
-import 'utils/unit_converter.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:hive/hive.dart';
-import 'utils/condition_label_map.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:home_widget/home_widget.dart';
+import 'services/fetch_data.dart';
+import 'utils/condition_label_map.dart';
+import 'utils/preferences_helper.dart';
+import 'utils/unit_converter.dart';
 
 @pragma('vm:entry-point')
-Future<void> updateHomeWidget(weather, {bool updatedFromHome = false}) async {
+Future<void> updateHomeWidget(dynamic weather, {bool updatedFromHome = false}) async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    await PreferencesHelper.init();
-    await dotenv.load(fileName: ".env");
+    await Future.wait([
+      PreferencesHelper.init(),
+      dotenv.load(fileName: ".env"),
+    ]);
 
-    double _safeToDouble(dynamic value, [double fallback = 0.0]) {
-      if (value == null) return fallback;
-      if (value is num) return value.toDouble();
-      return double.tryParse(value.toString()) ?? fallback;
-    }
+    final bool triggerFromWorker = PreferencesHelper.getBool("triggerfromWorker") ?? false;
+    final String? lastUpdatedString = PreferencesHelper.getString('lastUpdatedFromHome');
 
-    final dynamic temp;
-    final dynamic code;
-    final dynamic maxTemp;
-    final dynamic minTemp;
-    final dynamic isDay;
-    final List<dynamic> hourlyTime;
-    final List<dynamic> hourlyTemps;
-    late final dailyDataMain;
-
-    final List<dynamic> hourlyWeatherCodes;
-    final String utcOffsetSeconds;
-
-    final timeUnit = PreferencesHelper.getString("selectedTimeUnit") ?? "12 hr";
-    final tempUnit =
-        PreferencesHelper.getString("selectedTempUnit") ?? "Celsius";
-
-    final triggerFromWorker =
-        PreferencesHelper.getBool("triggerfromWorker") ?? false;
-    String? lastUpdatedString =
-        PreferencesHelper.getString('lastUpdatedFromHome');
-
-    if (weather == null && updatedFromHome == false) {
-      if (triggerFromWorker == false) {
-        PreferencesHelper.setBool('triggerfromWorker', true);
+    if (weather == null && !updatedFromHome) {
+      if (!triggerFromWorker) {
+        await PreferencesHelper.setBool('triggerfromWorker', true);
         return;
       }
-
       if (lastUpdatedString != null) {
-        DateTime lastUpdated = DateTime.parse(lastUpdatedString);
-
-        Duration difference = DateTime.now().difference(lastUpdated);
-
-        if (difference.inMinutes < 45) {
-          return;
-        }
+        final lastUpdated = DateTime.parse(lastUpdatedString);
+        if (DateTime.now().difference(lastUpdated).inMinutes < 45) return;
       }
-
-      final weatherService = WeatherService();
-      final homeLocation = PreferencesHelper.getJson('homeLocation');
-
-      if (homeLocation == null) {
-        return;
-      }
-
-      final result = await weatherService.fetchWeather(
-          homeLocation?['lat']!, homeLocation?['lon']!,
-          locationName: homeLocation?['cacheKey'],
-          context: null,
-          isBackground: true);
-
-      final current = result!['data']['current'];
-      temp = _safeToDouble(current['temperature_2m'].toDouble());
-      code = current['weather_code'];
-      final hourly = result!['data']['hourly'] ?? {};
-      final dailyData = result!['data']['daily'];
-      dailyDataMain = dailyData;
-      hourlyTime = hourly['time'];
-      hourlyTemps = hourly['temperature_2m'];
-      hourlyWeatherCodes = hourly['weather_code'];
-
-      maxTemp = _safeToDouble(dailyData['temperature_2m_max'][0]);
-      minTemp = _safeToDouble(dailyData['temperature_2m_min'][0]);
-      isDay = current['is_day'];
-
-      utcOffsetSeconds = result!['data']['utc_offset_seconds'].toString();
-    } else {
-      final currentData = weather['current'];
-
-      temp = currentData['temperature_2m'].toDouble();
-      code = currentData['weather_code'];
-      final dailyData = weather['daily'];
-      final hourly = weather['hourly'] ?? {};
-      dailyDataMain = dailyData;
-      maxTemp = dailyData['temperature_2m_max'][0];
-      minTemp = dailyData['temperature_2m_min'][0];
-      isDay = currentData['is_day'];
-
-      hourlyTime = hourly['time'];
-      hourlyTemps = hourly['temperature_2m'];
-      hourlyWeatherCodes = hourly['weather_code'];
-      utcOffsetSeconds = weather['utc_offset_seconds'].toString();
     }
 
-    int offsetSeconds = int.parse(utcOffsetSeconds);
-    DateTime utcNow = DateTime.now().toUtc();
-    DateTime now = utcNow.add(Duration(seconds: offsetSeconds));
-
-    now = DateTime(now.year, now.month, now.day, now.hour);
-
-    // Find the first index in hourlyTime that is >= now
-    int startIndex = hourlyTime.indexWhere((time) {
-      DateTime hourlyTimeItem = DateTime.parse(time);
-      return !hourlyTimeItem.isBefore(now); // same as >= now
-    });
-
-    // If for some reason it's not found, default to 0 (safe fallback)
-    if (startIndex == -1) startIndex = 0;
-
-    for (int i = 0; i < 4; i++) {
-      int currentIndex = startIndex + i;
-
-      if (currentIndex >= hourlyTemps.length ||
-          currentIndex >= hourlyTime.length ||
-          currentIndex >= hourlyWeatherCodes.length) break;
-
-      // Temp conversion
-      final tempValue = hourlyTemps[currentIndex].toDouble();
-      final formattedTemp = tempUnit == 'Fahrenheit'
-          ? UnitConverter.celsiusToFahrenheit(tempValue).round().toString()
-          : tempValue.round().toString();
-
-      // Time formatting
-      final rawTimeString = hourlyTime[currentIndex];
-      final roundedDisplayTime = DateTime.parse(rawTimeString);
-
-      final formattedTime = timeUnit == '24 hr'
-          ? "${roundedDisplayTime.hour.toString().padLeft(2, '0')}:00"
-          : UnitConverter.formatTo12Hour(roundedDisplayTime);
-
-      await HomeWidget.saveWidgetData<String>('hourly_temp_$i', formattedTemp);
-      await HomeWidget.saveWidgetData<String>('hourly_time_$i', formattedTime);
-      await HomeWidget.saveWidgetData<String>(
-          'hourly_code_$i', hourlyWeatherCodes[currentIndex].toString());
-    }
-
-    for (int i = 0; i < 4; i++) {
-      if (i >= dailyDataMain['time'].length) break;
-
-      final dayMaxTemp = _safeToDouble(dailyDataMain['temperature_2m_max'][i]);
-      final dayMinTemp = _safeToDouble(dailyDataMain['temperature_2m_min'][i]);
-      final dayCode = dailyDataMain['weather_code'][i];
-
-      final localeString = PreferencesHelper.getString('locale') ?? 'en';
-      final conditionKey = WeatherConditionMapper.getConditionLabel(dayCode, 1);
-
-      Locale locale;
-
-      if (localeString.contains('-')) {
-        var parts = localeString.split('-');
-        locale = Locale(parts[0], parts[1]);
-      } else if (localeString.contains('_')) {
-        var parts = localeString.split('_');
-        locale = Locale(parts[0], parts[1]);
-      } else {
-        locale = Locale(localeString);
-      }
-
-      String translationFileName = locale.languageCode.toLowerCase();
-      if (locale.countryCode != null && locale.countryCode!.isNotEmpty) {
-        translationFileName += '-${locale.countryCode!.toUpperCase()}';
-      }
-
-      Map<String, dynamic> translations;
-
-      try {
-        final String data = await rootBundle
-            .loadString('assets/translations/$translationFileName.json');
-        translations = jsonDecode(data);
-      } catch (_) {
-        print(
-            '[Translation] $translationFileName.json not found, falling back to ${locale.languageCode}.json');
-        final String data = await rootBundle
-            .loadString('assets/translations/${locale.languageCode}.json');
-        translations = jsonDecode(data);
-      }
-      final conditionNameDaily = translations[conditionKey] ?? conditionKey;
-
-      final maxTempFormatted = tempUnit == 'Fahrenheit'
-          ? UnitConverter.celsiusToFahrenheit(dayMaxTemp).round().toString()
-          : dayMaxTemp.round().toString();
-
-      final minTempFormatted = tempUnit == 'Fahrenheit'
-          ? UnitConverter.celsiusToFahrenheit(dayMinTemp).round().toString()
-          : dayMinTemp.round().toString();
-
-      await HomeWidget.saveWidgetData<String>(
-          'day${i + 1}Max', maxTempFormatted);
-      await HomeWidget.saveWidgetData<String>(
-          'day${i + 1}Min', minTempFormatted);
-      await HomeWidget.saveWidgetData<String>(
-          'day${i + 1}Code', dayCode.toString());
-
-      final dayDate = DateTime.parse(dailyDataMain['time'][i]);
-      final formattedDay = "${dayDate.month}/${dayDate.day}";
-      await HomeWidget.saveWidgetData<String>('day${i + 1}Date', formattedDay);
-      await HomeWidget.saveWidgetData<String>(
-          'day${i + 1}_condition', conditionNameDaily);
-    }
-
-    final convertedTemp = tempUnit == 'Fahrenheit'
-        ? UnitConverter.celsiusToFahrenheit(temp).round()
-        : temp.round();
-
-    final convertedMaxTemp = tempUnit == 'Fahrenheit'
-        ? UnitConverter.celsiusToFahrenheit(maxTemp).round()
-        : maxTemp.round();
-
-    final convertedMinTemp = tempUnit == 'Fahrenheit'
-        ? UnitConverter.celsiusToFahrenheit(minTemp).round()
-        : minTemp.round();
-
-    final currentTempFormatted = "${convertedTemp.round()}";
-    final maxTempFormatted = "${convertedMaxTemp.round()}";
-    final minTempFormatted = "${convertedMinTemp.round()}";
-
-    final conditionKey = WeatherConditionMapper.getConditionLabel(code, isDay);
-    final localeString = PreferencesHelper.getString('locale') ?? 'en';
-
-    Locale locale;
-
-    if (localeString.contains('-')) {
-      var parts = localeString.split('-');
-      locale = Locale(parts[0], parts[1]);
-    } else if (localeString.contains('_')) {
-      var parts = localeString.split('_');
-      locale = Locale(parts[0], parts[1]);
-    } else {
-      locale = Locale(localeString);
-    }
-
-    String translationFileName = locale.languageCode;
-    if (locale.countryCode != null && locale.countryCode!.isNotEmpty) {
-      translationFileName += '-${locale.countryCode}';
-    }
-
+    final String localeString = PreferencesHelper.getString('locale') ?? 'en';
+    
+    Map<String, dynamic>? weatherData;
     Map<String, dynamic> translations;
 
-    try {
-      final String data = await rootBundle
-          .loadString('assets/translations/$translationFileName.json');
-      translations = jsonDecode(data);
-    } catch (e) {
-      print(
-          '[Translation] Could not load $translationFileName.json, falling back to en.json');
-      final String data =
-          await rootBundle.loadString('assets/translations/en.json');
-      translations = jsonDecode(data);
+    if (weather == null && !updatedFromHome) {
+      final homeLocation = PreferencesHelper.getJson('homeLocation');
+      if (homeLocation == null) return;
+
+      final fetchFuture = WeatherService().fetchWeather(
+        homeLocation['lat'], 
+        homeLocation['lon'],
+        locationName: homeLocation['cacheKey'],
+        isBackground: true
+      );
+      
+      final transFuture = _loadTranslations(localeString);
+      
+      final results = await Future.wait([fetchFuture, transFuture]);
+      final fetchResultMap = results[0] as Map<String, dynamic>?;
+      translations = results[1] as Map<String, dynamic>;
+
+      if (fetchResultMap == null) return;
+      weatherData = fetchResultMap['data'];
+    } else {
+      translations = await _loadTranslations(localeString);
+      weatherData = weather;
     }
 
-    final conditionName = translations[conditionKey] ?? conditionKey;
+    if (weatherData == null) return;
 
-    await HomeWidget.saveWidgetData<String>(
-        'temperatureCurrentPill', currentTempFormatted);
-    await HomeWidget.saveWidgetData<String>(
-        'weather_codeCurrentPill', code.toString());
-    await HomeWidget.saveWidgetData<String>('todayMax', maxTempFormatted);
-    await HomeWidget.saveWidgetData<String>('todayMin', minTempFormatted);
-    await HomeWidget.saveWidgetData<String>('locationNameWidget',
-        "${PreferencesHelper.getJson('homeLocation')?['city']}, ${PreferencesHelper.getJson('homeLocation')?['country']}");
-    await HomeWidget.saveWidgetData<String>(
-        'locationCurrentConditon', conditionName);
+    final current = weatherData['current'];
+    final daily = weatherData['daily'];
+    final hourly = weatherData['hourly'] ?? const {};
+    final int utcOffsetSeconds = _toInt(weatherData['utc_offset_seconds']);
 
-    await HomeWidget.saveWidgetData<String>('isDayWidget', isDay.toString());
+    final double temp = _toDouble(current['temperature_2m']);
+    final int code = _toInt(current['weather_code']);
+    final int isDay = _toInt(current['is_day']);
+    final double maxTemp = _toDouble(daily['temperature_2m_max']?[0]);
+    final double minTemp = _toDouble(daily['temperature_2m_min']?[0]);
 
-    await HomeWidget.updateWidget(name: 'WeatherWidgetProvider', iOSName: null);
-    await HomeWidget.updateWidget(
-        name: 'WeatherWidgetCastProvider', iOSName: null);
-    await HomeWidget.updateWidget(name: 'PillWidgetProvider', iOSName: null);
-    await HomeWidget.updateWidget(
-        name: 'clockDateWidgetProvider', iOSName: null);
-    await HomeWidget.updateWidget(
-        name: 'DateCurrentWidgetProvider', iOSName: null);
-    await HomeWidget.updateWidget(
-        name: 'ClockHourlyWidgetProvider', iOSName: null);
+    final String tempUnit = PreferencesHelper.getString("selectedTempUnit") ?? "Celsius";
+    final String timeUnit = PreferencesHelper.getString("selectedTimeUnit") ?? "12 hr";
+    final bool isFahrenheit = tempUnit == 'Fahrenheit';
+    final bool is24Hour = timeUnit == '24 hr';
 
-    print('[WidgetUpdate] Called updateWidget');
+    final List<Future<void>> widgetUpdates = [];
+    
+    String formatTemp(double t) => isFahrenheit 
+        ? UnitConverter.celsiusToFahrenheit(t).round().toString() 
+        : t.round().toString();
+
+    final List<dynamic> hourlyTime = hourly['time'] ?? const [];
+    final List<dynamic> hourlyTemps = hourly['temperature_2m'] ?? const [];
+    final List<dynamic> hourlyCodes = hourly['weather_code'] ?? const [];
+    
+    final now = DateTime.now().toUtc().add(Duration(seconds: utcOffsetSeconds));
+    final nowNormalized = DateTime(now.year, now.month, now.day, now.hour);
+    
+    int startIndex = 0;
+    if (hourlyTime.isNotEmpty) {
+      final firstTime = DateTime.parse(hourlyTime[0].toString());
+      startIndex = nowNormalized.difference(firstTime).inHours;
+      if (startIndex < 0) startIndex = 0;
+    }
+
+    final int maxHourly = hourlyTime.length;
+    for (int i = 0; i < 4; i++) {
+      final idx = startIndex + i;
+      if (idx >= maxHourly) break;
+
+      final tVal = _toDouble(hourlyTemps[idx]);
+      final tDate = DateTime.parse(hourlyTime[idx].toString());
+      final fTime = is24Hour 
+          ? "${tDate.hour.toString().padLeft(2, '0')}:00" 
+          : UnitConverter.formatTo12Hour(tDate);
+
+      widgetUpdates.add(HomeWidget.saveWidgetData('hourly_temp_$i', formatTemp(tVal)));
+      widgetUpdates.add(HomeWidget.saveWidgetData('hourly_time_$i', fTime));
+      widgetUpdates.add(HomeWidget.saveWidgetData('hourly_code_$i', hourlyCodes[idx].toString()));
+    }
+
+    final List<dynamic> dailyMax = daily['temperature_2m_max'] ?? const [];
+    final List<dynamic> dailyMin = daily['temperature_2m_min'] ?? const [];
+    final List<dynamic> dailyCodes = daily['weather_code'] ?? const [];
+    final List<dynamic> dailyTime = daily['time'] ?? const [];
+    final int maxDaily = dailyTime.length;
+
+    for (int i = 0; i < 4; i++) {
+      if (i >= maxDaily) break;
+
+      final dCode = dailyCodes[i];
+      final condKey = WeatherConditionMapper.getConditionLabel(dCode, 1);
+      final condName = translations[condKey] ?? condKey;
+      final dDate = DateTime.parse(dailyTime[i].toString());
+
+      widgetUpdates.add(HomeWidget.saveWidgetData('day${i + 1}Max', formatTemp(_toDouble(dailyMax[i]))));
+      widgetUpdates.add(HomeWidget.saveWidgetData('day${i + 1}Min', formatTemp(_toDouble(dailyMin[i]))));
+      widgetUpdates.add(HomeWidget.saveWidgetData('day${i + 1}Code', dCode.toString()));
+      widgetUpdates.add(HomeWidget.saveWidgetData('day${i + 1}Date', "${dDate.month}/${dDate.day}"));
+      widgetUpdates.add(HomeWidget.saveWidgetData('day${i + 1}_condition', condName));
+    }
+
+    final curCondKey = WeatherConditionMapper.getConditionLabel(code, isDay);
+    final curCondName = translations[curCondKey] ?? curCondKey;
+    final homeLoc = PreferencesHelper.getJson('homeLocation');
+    final locName = homeLoc != null ? "${homeLoc['city']}, ${homeLoc['country']}" : "";
+
+    widgetUpdates.addAll([
+      HomeWidget.saveWidgetData('temperatureCurrentPill', isFahrenheit ? UnitConverter.celsiusToFahrenheit(temp).round().toString() : temp.round().toString()),
+      HomeWidget.saveWidgetData('weather_codeCurrentPill', code.toString()),
+      HomeWidget.saveWidgetData('todayMax', isFahrenheit ? UnitConverter.celsiusToFahrenheit(maxTemp).round().toString() : maxTemp.round().toString()),
+      HomeWidget.saveWidgetData('todayMin', isFahrenheit ? UnitConverter.celsiusToFahrenheit(minTemp).round().toString() : minTemp.round().toString()),
+      HomeWidget.saveWidgetData('locationNameWidget', locName),
+      HomeWidget.saveWidgetData('locationCurrentConditon', curCondName),
+      HomeWidget.saveWidgetData('isDayWidget', isDay.toString()),
+    ]);
+
+    await Future.wait(widgetUpdates);
+
+    await Future.wait([
+      HomeWidget.updateWidget(name: 'WeatherWidgetProvider'),
+      HomeWidget.updateWidget(name: 'WeatherWidgetCastProvider'),
+      HomeWidget.updateWidget(name: 'PillWidgetProvider'),
+      HomeWidget.updateWidget(name: 'clockDateWidgetProvider'),
+      HomeWidget.updateWidget(name: 'DateCurrentWidgetProvider'),
+      HomeWidget.updateWidget(name: 'ClockHourlyWidgetProvider'),
+    ]);
+
+    debugPrint('[WidgetUpdate] Completed successfully');
+
   } catch (e, stack) {
-    print('[WidgetUpdate][ERROR] $e');
-    print(stack);
+    debugPrint('[WidgetUpdate][ERROR] $e');
+    debugPrint(stack.toString());
+  }
+}
+
+double _toDouble(dynamic value) {
+  if (value == null) return 0.0;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString()) ?? 0.0;
+}
+
+int _toInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is num) return value.toInt();
+  return int.tryParse(value.toString()) ?? 0;
+}
+
+Future<Map<String, dynamic>> _loadTranslations(String localeString) async {
+  try {
+    final parts = localeString.split(RegExp(r'[-_]'));
+    final lang = parts[0];
+    final country = parts.length > 1 ? parts[1].toUpperCase() : null;
+    
+    String path = 'assets/translations/$lang';
+    if (country != null) path += '-$country';
+    path += '.json';
+
+    try {
+      return jsonDecode(await rootBundle.loadString(path));
+    } catch (_) {
+      if (country != null) {
+        try {
+          return jsonDecode(await rootBundle.loadString('assets/translations/$lang.json'));
+        } catch (_) {}
+      }
+      return jsonDecode(await rootBundle.loadString('assets/translations/en.json'));
+    }
+  } catch (_) {
+    return {};
   }
 }

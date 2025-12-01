@@ -66,7 +66,6 @@ class WeatherService {
     }
 
     try {
-      // 1. Fetch Primary Data
       final requests = <Future<http.Response>>[
         http.get(uri).timeout(const Duration(seconds: 15)),
         http.get(airQualityUri).timeout(const Duration(seconds: 15)),
@@ -83,15 +82,11 @@ class WeatherService {
         }
       }
 
-      if (astronomyUri != null) log("Astronomy response: ${responses[2].body}");
-
       final weatherBody = responses[0].body;
       final airQualityBody = responses[1].body;
       final astronomyBody = astronomyUri != null ? responses[2].body : null;
       final cachedJson = isOnlyView ? null : box.get(key) as String?;
 
-      // 2. Process in Isolate (Phase 1: Check & Initial Parse)
-      // We pass necessary data to avoid closure capture
       var processingResult = await compute(_processWeatherData, {
         'weatherBody': weatherBody,
         'airQualityBody': airQualityBody,
@@ -99,32 +94,19 @@ class WeatherService {
         'cachedJson': cachedJson,
         'selectedModel': selectedModel,
         'isOnlyView': isOnlyView,
-        'checkIncomplete': true, // Flag to check for incompleteness
+        'checkIncomplete': true,
       });
 
-      // 3. Handle Fallback if needed
       if (processingResult['status'] == 'incomplete') {
         log("Data incomplete, fetching fallback...");
-        final fallbackUri = Uri.parse('https://api.open-meteo.com/v1/forecast')
-            .replace(queryParameters: {
-          'latitude': lat.toString(),
-          'longitude': lon.toString(),
-          'current':
-              'temperature_2m,is_day,apparent_temperature,pressure_msl,relative_humidity_2m,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m',
-          'hourly':
-              'wind_speed_10m,wind_direction_10m,relative_humidity_2m,pressure_msl,cloud_cover,temperature_2m,dew_point_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,visibility,uv_index',
-          'daily':
-              'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_sum,precipitation_probability_max,precipitation_hours,wind_speed_10m_max,wind_gusts_10m_max',
-          'timezone': timezone,
-          'forecast_days': '7',
+        final fallbackUri = uri.replace(queryParameters: {
+          ...uri.queryParameters,
           'models': 'best_match',
-          'past_days': '1'
         });
 
         final fallbackResponse = await http.get(fallbackUri);
         final fallbackBody = fallbackResponse.body;
 
-        // Reprocess with fallback data
         processingResult = await compute(_processWeatherData, {
           'weatherBody': weatherBody,
           'airQualityBody': airQualityBody,
@@ -133,11 +115,10 @@ class WeatherService {
           'cachedJson': cachedJson,
           'selectedModel': selectedModel,
           'isOnlyView': isOnlyView,
-          'checkIncomplete': false, // Already fetched fallback
+          'checkIncomplete': false,
         });
       }
 
-      // 4. Handle Final Result
       if (processingResult['status'] == 'error') {
         final reason = processingResult['reason'] ?? 'Unknown error';
         if (context != null) {
@@ -183,7 +164,6 @@ class WeatherService {
   }
 }
 
-/// Top-level function for Isolate
 Future<Map<String, dynamic>> _processWeatherData(Map<String, dynamic> args) async {
   final weatherBody = args['weatherBody'] as String;
   final airQualityBody = args['airQualityBody'] as String;
@@ -201,7 +181,6 @@ Future<Map<String, dynamic>> _processWeatherData(Map<String, dynamic> args) asyn
         ? json.decode(astronomyBody) as Map<String, dynamic>
         : <String, dynamic>{};
 
-    // Check for errors in raw data
     if (weatherData['error'] == true ||
         airQualityData['error'] == true ||
         astronomyData['error'] == true) {
@@ -213,14 +192,12 @@ Future<Map<String, dynamic>> _processWeatherData(Map<String, dynamic> args) asyn
       };
     }
 
-    // Check completeness if requested
     if (checkIncomplete && selectedModel != "best_match") {
       if (_hasIncompleteData(weatherData)) {
         return {'status': 'incomplete'};
       }
     }
 
-    // Merge fallback if provided
     Map<String, dynamic> finalWeatherData = weatherData;
     if (fallbackBody != null) {
       final fallbackData = json.decode(fallbackBody) as Map<String, dynamic>;
@@ -229,7 +206,6 @@ Future<Map<String, dynamic>> _processWeatherData(Map<String, dynamic> args) asyn
       }
     }
 
-    // Sanitize
     finalWeatherData['current'] = _sanitizeCurrent(finalWeatherData['current']);
     finalWeatherData['hourly'] = _sanitizeHourly(finalWeatherData['hourly']);
     finalWeatherData['daily'] = _sanitizeDaily(finalWeatherData['daily']);
@@ -242,23 +218,14 @@ Future<Map<String, dynamic>> _processWeatherData(Map<String, dynamic> args) asyn
 
     final now = DateTime.now().toIso8601String();
 
-    // Cache Comparison - Optimized with hash-based comparison
     if (cachedJson != null && !isOnlyView) {
       final cachedMap = json.decode(cachedJson);
       final cachedData = cachedMap['data'];
       final lastUpdated = cachedMap['last_updated'];
 
-      // Hash-based comparison (compute once, compare hashes)
-      final currentHash = _computeHash(finalWeatherData['current']);
-      final cachedCurrentHash = _computeHash(cachedData['current']);
-      final airQualityHash = _computeHash(airQualityData);
-      final cachedAirQualityHash = _computeHash(cachedData['air_quality'] ?? {});
-      final astronomyHash = _computeHash(astronomyData);
-      final cachedAstronomyHash = _computeHash(cachedData['astronomy'] ?? {});
-
-      if (currentHash == cachedCurrentHash &&
-          airQualityHash == cachedAirQualityHash &&
-          astronomyHash == cachedAstronomyHash) {
+      if (_fastDeepEquals(finalWeatherData['current'], cachedData['current']) &&
+          _fastDeepEquals(airQualityData, cachedData['air_quality']) &&
+          _fastDeepEquals(astronomyData, cachedData['astronomy'])) {
         return {
           'status': 'success',
           'data': {'data': cachedData, 'last_updated': lastUpdated, 'from_cache': true},
@@ -267,7 +234,6 @@ Future<Map<String, dynamic>> _processWeatherData(Map<String, dynamic> args) asyn
       }
     }
 
-    // Prepare result
     final result = {
       'data': combinedData,
       'last_updated': now,
@@ -276,11 +242,10 @@ Future<Map<String, dynamic>> _processWeatherData(Map<String, dynamic> args) asyn
 
     String? dataToCache;
     if (!isOnlyView) {
-      final wrappedData = {
+      dataToCache = json.encode({
         'data': combinedData,
         'last_updated': now,
-      };
-      dataToCache = json.encode(wrappedData);
+      });
     }
 
     return {
@@ -295,50 +260,23 @@ Future<Map<String, dynamic>> _processWeatherData(Map<String, dynamic> args) asyn
   }
 }
 
-// Optimized Helper Functions (Static/Top-level)
-
 bool _hasIncompleteData(Map<String, dynamic> weatherData) {
   final current = weatherData['current'] as Map<String, dynamic>?;
   if (current == null) return true;
-
-  const allCurrentFields = [
-    'temperature_2m', 'is_day', 'apparent_temperature', 'pressure_msl',
-    'relative_humidity_2m', 'precipitation', 'weather_code', 'cloud_cover',
-    'wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m'
-  ];
-
-  for (final field in allCurrentFields) {
-    if (current[field] == null) return true;
-  }
+  
+  if (current.values.any((v) => v == null)) return true;
 
   final hourly = weatherData['hourly'] as Map<String, dynamic>?;
   if (hourly == null) return true;
-
-  const allHourlyFields = [
-    'wind_speed_10m', 'wind_direction_10m', 'relative_humidity_2m', 'pressure_msl',
-    'cloud_cover', 'temperature_2m', 'dew_point_2m', 'apparent_temperature',
-    'precipitation_probability', 'precipitation', 'weather_code', 'visibility', 'uv_index'
-  ];
-
-  for (final field in allHourlyFields) {
-    final data = hourly[field] as List?;
-    if (data == null || data.isEmpty || !data.any((value) => value != null)) return true;
-  }
+  
+  final hourlyTemps = hourly['temperature_2m'] as List?;
+  if (hourlyTemps == null || hourlyTemps.isEmpty || hourlyTemps.contains(null)) return true;
 
   final daily = weatherData['daily'] as Map<String, dynamic>?;
   if (daily == null) return true;
-
-  const allDailyFields = [
-    'weather_code', 'temperature_2m_max', 'temperature_2m_min', 'sunrise',
-    'sunset', 'daylight_duration', 'uv_index_max', 'precipitation_sum',
-    'precipitation_probability_max', 'precipitation_hours', 'wind_speed_10m_max',
-    'wind_gusts_10m_max'
-  ];
-
-  for (final field in allDailyFields) {
-    final data = daily[field] as List?;
-    if (data == null || data.isEmpty || !data.any((value) => value != null)) return true;
-  }
+  
+  final dailyMax = daily['temperature_2m_max'] as List?;
+  if (dailyMax == null || dailyMax.isEmpty || dailyMax.contains(null)) return true;
 
   return false;
 }
@@ -346,43 +284,42 @@ bool _hasIncompleteData(Map<String, dynamic> weatherData) {
 Map<String, dynamic> _mergeWeatherData(
     Map<String, dynamic> primary, Map<String, dynamic> fallback) {
   final merged = Map<String, dynamic>.from(primary);
-  merged['current'] = _mergeSection(
-      primary['current'] as Map<String, dynamic>?,
-      fallback['current'] as Map<String, dynamic>?);
-  merged['hourly'] = _mergeSection(primary['hourly'] as Map<String, dynamic>?,
-      fallback['hourly'] as Map<String, dynamic>?);
-  merged['daily'] = _mergeSection(primary['daily'] as Map<String, dynamic>?,
-      fallback['daily'] as Map<String, dynamic>?);
+  
+  void mergeSection(String section) {
+    merged[section] = _mergeMap(
+      primary[section] as Map<String, dynamic>?,
+      fallback[section] as Map<String, dynamic>?
+    );
+  }
+
+  mergeSection('current');
+  mergeSection('hourly');
+  mergeSection('daily');
 
   for (final key in fallback.keys) {
-    if (!merged.containsKey(key) || merged[key] == null) {
+    if (merged[key] == null) {
       merged[key] = fallback[key];
     }
   }
   return merged;
 }
 
-Map<String, dynamic> _mergeSection(
-    Map<String, dynamic>? primary, Map<String, dynamic>? fallback) {
-  if (primary == null && fallback == null) return {};
-  if (primary == null) return Map<String, dynamic>.from(fallback!);
-  if (fallback == null) return Map<String, dynamic>.from(primary);
+Map<String, dynamic> _mergeMap(Map<String, dynamic>? primary, Map<String, dynamic>? fallback) {
+  if (primary == null) return fallback != null ? Map.from(fallback) : {};
+  if (fallback == null) return Map.from(primary);
 
   final merged = Map<String, dynamic>.from(primary);
-
   for (final key in fallback.keys) {
-    if (!merged.containsKey(key) || merged[key] == null) {
-      merged[key] = fallback[key];
-    } else if (merged[key] is List) {
-      final primaryList = merged[key] as List;
-      final fallbackList = fallback[key] as List;
-      final maxLength = primaryList.length > fallbackList.length
-          ? primaryList.length
-          : fallbackList.length;
-      
-      merged[key] = List.generate(maxLength, (i) {
-        final p = i < primaryList.length ? primaryList[i] : null;
-        final f = i < fallbackList.length ? fallbackList[i] : null;
+    final pVal = merged[key];
+    final fVal = fallback[key];
+
+    if (pVal == null) {
+      merged[key] = fVal;
+    } else if (pVal is List && fVal is List) {
+      final len = pVal.length > fVal.length ? pVal.length : fVal.length;
+      merged[key] = List.generate(len, (i) {
+        final p = i < pVal.length ? pVal[i] : null;
+        final f = i < fVal.length ? fVal[i] : null;
         return p ?? f;
       });
     }
@@ -390,23 +327,20 @@ Map<String, dynamic> _mergeSection(
   return merged;
 }
 
-// Optimized nullSafeValue replacements
 double _toDouble(dynamic value) {
   if (value == null) return 0.0;
-  if (value is double) return value;
   if (value is num) return value.toDouble();
-  return 0.0;
+  return double.tryParse(value.toString()) ?? 0.0;
 }
 
 int _toInt(dynamic value) {
   if (value == null) return 0;
-  if (value is int) return value;
   if (value is num) return value.toInt();
-  return 0;
+  return int.tryParse(value.toString()) ?? 0;
 }
 
 Map<String, dynamic> _sanitizeCurrent(Map? current) {
-  current ??= {};
+  if (current == null) return {};
   return {
     'temperature_2m': _toDouble(current['temperature_2m']),
     'apparent_temperature': _toDouble(current['apparent_temperature']),
@@ -423,13 +357,19 @@ Map<String, dynamic> _sanitizeCurrent(Map? current) {
 }
 
 Map<String, dynamic> _sanitizeHourly(Map? hourly) {
-  hourly ??= {};
+  if (hourly == null) return {};
   final time = (hourly['time'] as List?) ?? [];
-  // Helper to map list safely
+  final len = time.length;
+
   List<T> mapList<T>(String key, T Function(dynamic) mapper) {
     final list = hourly![key] as List?;
     if (list == null) return [];
-    return list.map(mapper).toList();
+    final effectiveLen = list.length < len ? list.length : len;
+    final result = List<T>.filled(effectiveLen, mapper(null)); 
+    for (int i = 0; i < effectiveLen; i++) {
+      result[i] = mapper(list[i]);
+    }
+    return result;
   }
 
   return {
@@ -451,12 +391,19 @@ Map<String, dynamic> _sanitizeHourly(Map? hourly) {
 }
 
 Map<String, dynamic> _sanitizeDaily(Map? daily) {
-  daily ??= {};
+  if (daily == null) return {};
   final time = (daily['time'] as List?) ?? [];
+  final len = time.length;
+
   List<T> mapList<T>(String key, T Function(dynamic) mapper) {
     final list = daily![key] as List?;
     if (list == null) return [];
-    return list.map(mapper).toList();
+    final effectiveLen = list.length < len ? list.length : len;
+    final result = List<T>.filled(effectiveLen, mapper(null));
+    for (int i = 0; i < effectiveLen; i++) {
+      result[i] = mapper(list[i]);
+    }
+    return result;
   }
 
   return {
@@ -476,23 +423,30 @@ Map<String, dynamic> _sanitizeDaily(Map? daily) {
   };
 }
 
-int _computeHash(dynamic data) {
-  if (data == null) return 0;
-  if (data is num || data is String || data is bool) return data.hashCode;
-  if (data is List) {
-    int hash = 0;
-    for (var item in data) {
-      hash = hash ^ _computeHash(item);
+bool _fastDeepEquals(dynamic a, dynamic b) {
+  if (identical(a, b)) return true;
+  if (a == null || b == null) return false;
+
+  if (a is List && b is List) {
+    if (a.length != b.length) return false;
+    if (a.isNotEmpty) {
+      if (!_fastDeepEquals(a.first, b.first)) return false;
+      if (!_fastDeepEquals(a.last, b.last)) return false;
     }
-    return hash;
-  }
-  if (data is Map) {
-    int hash = 0;
-    final keys = data.keys.toList()..sort();
-    for (var key in keys) {
-      hash = hash ^ key.hashCode ^ _computeHash(data[key]);
+    for (int i = 1; i < a.length - 1; i++) {
+      if (!_fastDeepEquals(a[i], b[i])) return false;
     }
-    return hash;
+    return true;
   }
-  return 0;
+
+  if (a is Map && b is Map) {
+    if (a.length != b.length) return false;
+    for (final key in a.keys) {
+      if (!b.containsKey(key)) return false;
+      if (!_fastDeepEquals(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
+  return a == b;
 }
