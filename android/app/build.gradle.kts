@@ -36,6 +36,8 @@ android {
 
     buildTypes {
         getByName("release") {
+            // Signs the release build with the debug key for testing.
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
         }
