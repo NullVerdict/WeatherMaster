@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class PreferencesHelper {
   static SharedPreferences? _prefs;
 
-  /// Initialize shared preferences
+  /// Initialize shared preferences (idempotent)
   static Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
   }
@@ -82,19 +82,18 @@ class PreferencesHelper {
       return null;
     }
   }
-  
 
   // -------------------- Color --------------------
 
-static Future<bool> setColor(String key, Color color) async {
-  return setInt(key, color.value);
-}
+  static Future<bool> setColor(String key, Color color) async {
+    return setInt(key, color.value);
+  }
 
-static Color? getColor(String key) {
-  final colorValue = getInt(key);
-  if (colorValue == null) return null;
-  return Color(colorValue);
-}
+  static Color? getColor(String key) {
+    final colorValue = getInt(key);
+    if (colorValue == null) return null;
+    return Color(colorValue);
+  }
 
   // -------------------- Utilities --------------------
 
@@ -121,7 +120,4 @@ static Color? getColor(String key) {
     }
     print('--------------------------');
   }
-
-
-  
 }

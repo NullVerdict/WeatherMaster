@@ -31,12 +31,14 @@ class _LocationsScreenState extends State<LocationsScreen> {
   List<SavedLocation> savedLocations = [];
   bool _isFirstBuild = true;
   bool _showLoader = true;
+  Box? _cacheBox; // Cache box instance to avoid repeated opens
 
   @override
   void initState() {
     super.initState();
 
     loadSavedLocations();
+    _initCacheBox();
 
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
@@ -45,6 +47,16 @@ class _LocationsScreenState extends State<LocationsScreen> {
         });
       }
     });
+  }
+
+  Future<void> _initCacheBox() async {
+    _cacheBox = await Hive.openBox('weatherMasterCache');
+  }
+
+  @override
+  void dispose() {
+    _cacheBox?.close();
+    super.dispose();
   }
 
   Future<void> loadSavedLocations() async {
@@ -102,7 +114,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Future<Map<String, dynamic>?> getWeatherFromCache(cacheKey) async {
-    final box = await Hive.openBox('weatherMasterCache');
+    final box = _cacheBox ?? await Hive.openBox('weatherMasterCache');
     final cached = box.get(cacheKey);
     if (cached == null) return null;
     final raw = json.decode(cached);
@@ -113,7 +125,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Future<String?> getWeatherLastUpdatedFromCache(cacheKey) async {
-    final box = await Hive.openBox('weatherMasterCache');
+    final box = _cacheBox ?? await Hive.openBox('weatherMasterCache');
     final rawJson = box.get(cacheKey);
 
     if (rawJson != null) {

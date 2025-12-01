@@ -18,7 +18,7 @@ class DailyCard extends StatelessWidget {
   final int selectedContainerBgIndex;
   final String utcOffsetSeconds;
 
-  DailyCard(
+  const DailyCard(
       {super.key,
       required this.dailyTime,
       required this.dailyTempsMin,
@@ -40,26 +40,29 @@ class DailyCard extends StatelessWidget {
         ? UnitConverter.celsiusToFahrenheit(celsius.toDouble()).round()
         : celsius.round();
 
-    final List<Map<String, dynamic>> validDailyData = [];
-
-    for (int i = 0; i < dailyTime.length; i++) {
-      if (i < dailyTempsMin.length &&
-          i < dailyTempsMax.length &&
-          i < dailyWeatherCodes.length &&
-          i < dailyPrecProb.length &&
-          dailyTime[i] != null &&
-          dailyTempsMin[i] != null &&
-          dailyTempsMax[i] != null &&
-          dailyWeatherCodes[i] != null) {
-        validDailyData.add({
-          "time": dailyTime[i],
-          "tempMin": dailyTempsMin[i],
-          "tempMax": dailyTempsMax[i],
-          "weatherCode": dailyWeatherCodes[i],
-          "precipProb": (dailyPrecProb[i] as num?)?.toDouble() ?? 0.0000001,
-        });
-      }
-    }
+    // Pre-compute valid data once - O(n) instead of O(n*scrolls)
+    final validDailyData = List<Map<String, dynamic>>.generate(
+      dailyTime.length,
+      (i) {
+        if (i < dailyTempsMin.length &&
+            i < dailyTempsMax.length &&
+            i < dailyWeatherCodes.length &&
+            i < dailyPrecProb.length &&
+            dailyTime[i] != null &&
+            dailyTempsMin[i] != null &&
+            dailyTempsMax[i] != null &&
+            dailyWeatherCodes[i] != null) {
+          return {
+            "time": dailyTime[i] as String,
+            "tempMin": dailyTempsMin[i] as num,
+            "tempMax": dailyTempsMax[i] as num,
+            "weatherCode": dailyWeatherCodes[i] as int,
+            "precipProb": (dailyPrecProb[i] as num?)?.toDouble() ?? 0.0000001,
+          };
+        }
+        return null;
+      },
+    ).whereType<Map<String, dynamic>>().toList();
 
     return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.7),
