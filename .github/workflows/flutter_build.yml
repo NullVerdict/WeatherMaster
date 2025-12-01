@@ -17,13 +17,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-          cache: 'gradle'
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -33,16 +26,12 @@ jobs:
       - name: Upgrade Flutter dependencies
         run: flutter pub upgrade
 
-      - name: Upgrade Gradle to Latest
-        working-directory: android
-        run: gradle wrapper --gradle-version latest --distribution-type all
-
-      - name: Commit updated dependencies and Gradle
+      - name: Commit updated dependencies
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: update gradle to latest & pub dependencies [skip ci]"
+          commit_message: "chore: update pub dependencies [skip ci]"
           add_options: '-f'
-          file_pattern: "pubspec.lock android/gradle/wrapper/gradle-wrapper.properties android/gradle/wrapper/gradle-wrapper.jar android/gradlew android/gradlew.bat"
+          file_pattern: "pubspec.lock"
 
       - name: Setup environment file
         run: |
