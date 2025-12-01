@@ -41,7 +41,7 @@ class DailyCard extends StatelessWidget {
         : celsius.round();
 
     // Pre-compute valid data once - O(n) instead of O(n*scrolls)
-    final validDailyData = List<Map<String, dynamic>>.generate(
+    final validDailyData = List<Map<String, dynamic>?>.generate(
       dailyTime.length,
       (i) {
         if (i < dailyTempsMin.length &&

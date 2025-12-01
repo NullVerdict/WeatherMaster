@@ -445,201 +445,6 @@ Map<String, dynamic> _sanitizeHourly(Map? hourly) {
     'precipitation_probability': mapList('precipitation_probability', _toInt),
     'precipitation': mapList('precipitation', _toDouble),
     'weather_code': mapList('weather_code', _toInt),
-      final fallbackData = json.decode(fallbackBody) as Map<String, dynamic>;
-      if (fallbackData['error'] != true) {
-        finalWeatherData = _mergeWeatherData(weatherData, fallbackData);
-      }
-    }
-
-    // Sanitize
-    finalWeatherData['current'] = _sanitizeCurrent(finalWeatherData['current']);
-    finalWeatherData['hourly'] = _sanitizeHourly(finalWeatherData['hourly']);
-    finalWeatherData['daily'] = _sanitizeDaily(finalWeatherData['daily']);
-
-    final combinedData = {
-      ...finalWeatherData,
-      'air_quality': airQualityData,
-      }
-    }
-
-    // Prepare result
-    final result = {
-      'data': combinedData,
-      'last_updated': now,
-      'from_cache': false,
-    };
-
-    String? dataToCache;
-    if (!isOnlyView) {
-      final wrappedData = {
-        'data': combinedData,
-        'last_updated': now,
-      };
-      dataToCache = json.encode(wrappedData);
-    }
-
-    return {
-      'status': 'success',
-      'data': result,
-      'from_cache': false,
-      'data_to_cache': dataToCache,
-    };
-
-  } catch (e) {
-    return {'status': 'error', 'reason': e.toString()};
-  }
-}
-
-// Optimized Helper Functions (Static/Top-level)
-
-bool _hasIncompleteData(Map<String, dynamic> weatherData) {
-  final current = weatherData['current'] as Map<String, dynamic>?;
-  if (current == null) return true;
-
-  const allCurrentFields = [
-    'temperature_2m', 'is_day', 'apparent_temperature', 'pressure_msl',
-    'relative_humidity_2m', 'precipitation', 'weather_code', 'cloud_cover',
-    'wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m'
-  ];
-
-  for (final field in allCurrentFields) {
-    if (current[field] == null) return true;
-  }
-
-  final hourly = weatherData['hourly'] as Map<String, dynamic>?;
-  if (hourly == null) return true;
-
-  const allHourlyFields = [
-    'wind_speed_10m', 'wind_direction_10m', 'relative_humidity_2m', 'pressure_msl',
-    'cloud_cover', 'temperature_2m', 'dew_point_2m', 'apparent_temperature',
-    'precipitation_probability', 'precipitation', 'weather_code', 'visibility', 'uv_index'
-  ];
-
-  for (final field in allHourlyFields) {
-    final data = hourly[field] as List?;
-    if (data == null || data.isEmpty || !data.any((value) => value != null)) return true;
-  }
-
-  final daily = weatherData['daily'] as Map<String, dynamic>?;
-  if (daily == null) return true;
-
-  const allDailyFields = [
-    'weather_code', 'temperature_2m_max', 'temperature_2m_min', 'sunrise',
-    'sunset', 'daylight_duration', 'uv_index_max', 'precipitation_sum',
-    'precipitation_probability_max', 'precipitation_hours', 'wind_speed_10m_max',
-    'wind_gusts_10m_max'
-  ];
-
-  for (final field in allDailyFields) {
-    final data = daily[field] as List?;
-    if (data == null || data.isEmpty || !data.any((value) => value != null)) return true;
-  }
-
-  return false;
-}
-
-Map<String, dynamic> _mergeWeatherData(
-    Map<String, dynamic> primary, Map<String, dynamic> fallback) {
-  final merged = Map<String, dynamic>.from(primary);
-  merged['current'] = _mergeSection(
-      primary['current'] as Map<String, dynamic>?,
-      fallback['current'] as Map<String, dynamic>?);
-  merged['hourly'] = _mergeSection(primary['hourly'] as Map<String, dynamic>?,
-      fallback['hourly'] as Map<String, dynamic>?);
-  merged['daily'] = _mergeSection(primary['daily'] as Map<String, dynamic>?,
-      fallback['daily'] as Map<String, dynamic>?);
-
-  for (final key in fallback.keys) {
-    if (!merged.containsKey(key) || merged[key] == null) {
-      merged[key] = fallback[key];
-    }
-  }
-  return merged;
-}
-
-Map<String, dynamic> _mergeSection(
-    Map<String, dynamic>? primary, Map<String, dynamic>? fallback) {
-  if (primary == null && fallback == null) return {};
-  if (primary == null) return Map<String, dynamic>.from(fallback!);
-  if (fallback == null) return Map<String, dynamic>.from(primary);
-
-  final merged = Map<String, dynamic>.from(primary);
-
-  for (final key in fallback.keys) {
-    if (!merged.containsKey(key) || merged[key] == null) {
-      merged[key] = fallback[key];
-    } else if (merged[key] is List) {
-      final primaryList = merged[key] as List;
-      final fallbackList = fallback[key] as List;
-      final maxLength = primaryList.length > fallbackList.length
-          ? primaryList.length
-          : fallbackList.length;
-      
-      merged[key] = List.generate(maxLength, (i) {
-        final p = i < primaryList.length ? primaryList[i] : null;
-        final f = i < fallbackList.length ? fallbackList[i] : null;
-        return p ?? f;
-      });
-    }
-  }
-  return merged;
-}
-
-// Optimized nullSafeValue replacements
-double _toDouble(dynamic value) {
-  if (value == null) return 0.0;
-  if (value is double) return value;
-  if (value is num) return value.toDouble();
-  return 0.0;
-}
-
-int _toInt(dynamic value) {
-  if (value == null) return 0;
-  if (value is int) return value;
-  if (value is num) return value.toInt();
-  return 0;
-}
-
-Map<String, dynamic> _sanitizeCurrent(Map? current) {
-  current ??= {};
-  return {
-    'temperature_2m': _toDouble(current['temperature_2m']),
-    'apparent_temperature': _toDouble(current['apparent_temperature']),
-    'pressure_msl': _toDouble(current['pressure_msl']),
-    'relative_humidity_2m': _toInt(current['relative_humidity_2m']),
-    'precipitation': _toDouble(current['precipitation']),
-    'weather_code': _toInt(current['weather_code']),
-    'cloud_cover': _toInt(current['cloud_cover']),
-    'wind_speed_10m': _toDouble(current['wind_speed_10m']),
-    'wind_direction_10m': _toInt(current['wind_direction_10m']),
-    'wind_gusts_10m': _toDouble(current['wind_gusts_10m']),
-    'is_day': _toInt(current['is_day']),
-  };
-}
-
-Map<String, dynamic> _sanitizeHourly(Map? hourly) {
-  hourly ??= {};
-  final time = (hourly['time'] as List?) ?? [];
-  // Helper to map list safely
-  List<T> mapList<T>(String key, T Function(dynamic) mapper) {
-    final list = hourly![key] as List?;
-    if (list == null) return [];
-    return list.map(mapper).toList();
-  }
-
-  return {
-    'time': time,
-    'wind_speed_10m': mapList('wind_speed_10m', _toDouble),
-    'wind_direction_10m': mapList('wind_direction_10m', _toInt),
-    'relative_humidity_2m': mapList('relative_humidity_2m', _toInt),
-    'pressure_msl': mapList('pressure_msl', _toDouble),
-    'cloud_cover': mapList('cloud_cover', _toInt),
-    'temperature_2m': mapList('temperature_2m', _toDouble),
-    'dew_point_2m': mapList('dew_point_2m', _toDouble),
-    'apparent_temperature': mapList('apparent_temperature', _toDouble),
-    'precipitation_probability': mapList('precipitation_probability', _toInt),
-    'precipitation': mapList('precipitation', _toDouble),
-    'weather_code': mapList('weather_code', _toInt),
     'visibility': mapList('visibility', _toDouble),
     'uv_index': mapList('uv_index', _toDouble),
   };
@@ -671,14 +476,23 @@ Map<String, dynamic> _sanitizeDaily(Map? daily) {
   };
 }
 
-// Hash computation for efficient cache comparison
 int _computeHash(dynamic data) {
   if (data == null) return 0;
-  if (data is Map) {
-    return Object.hashAll(data.entries.map((e) => Object.hash(e.key, _computeHash(e.value))));
-  }
+  if (data is num || data is String || data is bool) return data.hashCode;
   if (data is List) {
-    return Object.hashAll(data.map(_computeHash));
+    int hash = 0;
+    for (var item in data) {
+      hash = hash ^ _computeHash(item);
+    }
+    return hash;
   }
-  return data.hashCode;
+  if (data is Map) {
+    int hash = 0;
+    final keys = data.keys.toList()..sort();
+    for (var key in keys) {
+      hash = hash ^ key.hashCode ^ _computeHash(data[key]);
+    }
+    return hash;
+  }
+  return 0;
 }
