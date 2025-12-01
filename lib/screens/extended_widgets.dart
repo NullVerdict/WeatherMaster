@@ -2515,7 +2515,6 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                       ),
                       child: MoonWidget(
                         date: now,
-                        resolution: 128,
                         size: 100,
                         moonColor: Colors.amber,
                         earthshineColor: Colors.blueGrey.shade900,
