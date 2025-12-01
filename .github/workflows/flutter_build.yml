@@ -6,21 +6,30 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.32.4"
+          channel: 'stable'
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Upgrade dependencies
+        run: flutter pub upgrade
+
+      - name: Commit updated dependencies
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update dependencies [skip ci]"
+          file_pattern: "pubspec.lock"
 
       - name: Setup environment file
         run: |
@@ -28,16 +37,6 @@ jobs:
           echo "API_KEY_WEATHERAPI=${{ secrets.API_KEY_WEATHERAPI }}" >> .env
           echo "API_KEY_OPENROUTER=${{ secrets.API_KEY_OPENROUTER }}" >> .env
 
-      - name: Setup keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/weathermaster.jks
-
-      - name: Setup key.properties
-        run: |
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "storeFile=app/weathermaster.jks" >> android/key.properties
 
       - name: Build Split APKs
         run: flutter build apk --release --split-per-abi
@@ -45,7 +44,8 @@ jobs:
       - name: Rename APKs
         run: |
           VERSION_NAME=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
-          mkdir release_apks
+          mkdir release_apks 
+          
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.arm64-v8a.apk
           cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.armeabi-v7a.apk
           cp build/app/outputs/flutter-apk/app-x86_64-release.apk release_apks/WeatherMaster.${VERSION_NAME}.x86_64.apk
