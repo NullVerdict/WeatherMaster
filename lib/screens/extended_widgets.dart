@@ -26,12 +26,17 @@ class _ExtendWidgetState extends State<ExtendWidget> {
   late final Widget child;
   late final String extendedTitle;
   late final IconData? iconData;
+  Box? _cachedBox;
 
   Future<Map<String, dynamic>?> getWeatherWidgets() async {
     final cacheKey = PreferencesHelper.getJson('currentLocation')?['cacheKey'];
 
-    final box = await Hive.openBox('weatherMasterCache');
-    final cached = box.get(cacheKey);
+    // Use cached box reference or open once if not cached
+    _cachedBox ??= Hive.isBoxOpen('weatherMasterCache')
+        ? Hive.box('weatherMasterCache')
+        : await Hive.openBox('weatherMasterCache');
+    
+    final cached = _cachedBox!.get(cacheKey);
     if (cached == null) return null;
 
     return json.decode(cached);
