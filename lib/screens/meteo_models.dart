@@ -63,6 +63,11 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
         'desc': 'model_disc_3',
       },
       {
+        'key': 'ecmwf_aifs025',
+        'name': 'ECMWF AIFS 0.25°',
+        'desc': 'model_disc_3',
+      },
+      {
         'key': 'cma_grapes_global',
         'name': 'CMA GRAPES Global',
         'desc': 'model_disc_4',
