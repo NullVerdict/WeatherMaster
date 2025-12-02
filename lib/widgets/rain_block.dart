@@ -8,54 +8,17 @@ import '../helper/locale_helper.dart';
 import '../utils/condition_label_map.dart';
 
 class RainBlock extends StatelessWidget {
-  final List<String> hourlyTime;
-  final List<double> hourlyPrecp;
-  final List<dynamic> hourlyPrecpProb;
+  final List<String> next12Time;
+  final List<double> next12Precp;
+  final List<int> next12PrecpProb;
   final int selectedContainerBgIndex;
-  final String timezone;
-  final String utcOffsetSeconds;
 
   const RainBlock(
       {super.key,
-      required this.hourlyTime,
-      required this.hourlyPrecp,
+      required this.next12Time,
+      required this.next12Precp,
       required this.selectedContainerBgIndex,
-      required this.timezone,
-      required this.utcOffsetSeconds,
-      required this.hourlyPrecpProb});
-
-  int get _currentIndex {
-    int offsetSeconds = int.parse(utcOffsetSeconds);
-    DateTime utcNow = DateTime.now().toUtc();
-    DateTime now = utcNow.add(Duration(seconds: offsetSeconds));
-
-    now = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      now.hour,
-      now.minute,
-      now.second,
-      now.millisecond,
-      now.microsecond,
-    );
-
-    for (int i = 0; i < hourlyTime.length; i++) {
-      final dt = DateTime.parse(hourlyTime[i]);
-      if (!dt.isBefore(now)) return i;
-    }
-    return 0;
-  }
-
-  List<String> get next12Time =>
-      hourlyTime.skip(_currentIndex).take(12).toList();
-  List<double> get next12Precp =>
-      hourlyPrecp.skip(_currentIndex).take(12).toList();
-
-  List<String> get next12TimeProb =>
-      hourlyTime.skip(_currentIndex).take(12).toList();
-  List get next12PrecpProb =>
-      hourlyPrecpProb.skip(_currentIndex).take(12).toList();
+      required this.next12PrecpProb});
 
   double get maxRain {
     final r = next12Precp.reduce((a, b) => a > b ? a : b);

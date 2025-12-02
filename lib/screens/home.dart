@@ -48,6 +48,7 @@ import '../controllers/gradient.dart';
 import '../controllers/gradient_list.dart';
 import '../controllers/home_f.dart';
 import '../controllers/view_location.dart';
+import '../controllers/weather_data_processor.dart';
 
 // App notifiers
 import '../notifiers/layout_provider.dart';
@@ -884,59 +885,6 @@ class _WeatherHomeState extends State<WeatherHome> {
                   );
                 },
                 child: const Text("Choose Location"),
-              ),
-            );
-          }
-
-          final raw = snapshot.data!;
-          final weather = raw['data'];
-          final current = weather['current'];
-          final String? lastUpdated = raw['last_updated'];
-
-          final int weatherCodeFroggy = current['weather_code'] ?? 0;
-          final bool isDayFroggy = current['is_day'] == 1;
-
-          final hourly = weather['hourly'] ?? {};
-
-          final List<dynamic> hourlyTimeNoFilter = hourly['time'];
-          final List<dynamic> hourlyTempsNoFilter = hourly['temperature_2m'];
-          final List<dynamic> hourlyWeatherCodesNoFilter =
-              hourly['weather_code'];
-          final List<dynamic> hourlyPrecpProbNoFilter =
-              hourly['precipitation_probability'];
-
-          // Convert times to DateTime and filter out past-day entries
-          final now = DateTime.now();
-          final todayMidnightTimestamp = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
-
-          final hourlyTime = <dynamic>[];
-          final hourlyTemps = <dynamic>[];
-          final hourlyWeatherCodes = <dynamic>[];
-          final hourlyPrecpProb = <dynamic>[];
-
-          for (int i = 0; i < hourlyTimeNoFilter.length; i++) {
-            final timeTimestamp = DateTime.parse(hourlyTimeNoFilter[i]).millisecondsSinceEpoch;
-            if (timeTimestamp >= todayMidnightTimestamp) {
-              hourlyTime.add(hourlyTimeNoFilter[i]);
-              hourlyTemps.add(hourlyTempsNoFilter[i]);
-              hourlyWeatherCodes.add(hourlyWeatherCodesNoFilter[i]);
-              hourlyPrecpProb.add(hourlyPrecpProbNoFilter[i]);
-            }
-          }
-
-          final daily = weather['daily'];
-          final List<dynamic> dailyDates = daily['time'];
-          final List<dynamic> sunriseTimes = daily['sunrise'];
-          final List<dynamic> sunsetTimes = daily['sunset'];
-          final List<dynamic> dailyTempsMin = daily['temperature_2m_min'];
-          final List<dynamic> dailyTempsMax = daily['temperature_2m_max'];
-          final List<dynamic> dailyPrecProb =
-              daily['precipitation_probability_max'];
-          final List<dynamic> dailyWeatherCodes = daily['weather_code'];
-
-          void maybeUpdateWeatherAnimation(Map<String, dynamic> current,
-              {isForce = false}) {
-            final int weatherCode = current['weather_code'];
             final int isDay = current['is_day'];
 
             if (isForce) {
@@ -977,22 +925,8 @@ class _WeatherHomeState extends State<WeatherHome> {
             onLoadForceCall = true;
           }
 
-          final Map<String, (DateTime, DateTime)> daylightMap = {
-            for (int i = 0; i < dailyDates.length; i++)
-              dailyDates[i]: (
-                DateTime.parse(sunriseTimes[i]),
-                DateTime.parse(sunsetTimes[i])
-              ),
-          };
-
           bool isHourDuringDaylightOptimized(DateTime hourTime) {
-            final key =
-                "${hourTime.year.toString().padLeft(4, '0')}-${hourTime.month.toString().padLeft(2, '0')}-${hourTime.day.toString().padLeft(2, '0')}";
-            final times = daylightMap[key];
-            if (times != null) {
-              return hourTime.isAfter(times.$1) && hourTime.isBefore(times.$2);
-            }
-            return true;
+            return processor.isHourDuringDaylight(hourTime);
           }
 
           final int weatherCode = current['weather_code'] ?? 0;
@@ -1061,92 +995,7 @@ class _WeatherHomeState extends State<WeatherHome> {
           final double? ragweedPollen =
               weather['air_quality']['current']['ragweed_pollen'];
 
-          const double rainThreshold = 0.5;
-          const int probThreshold = 40;
-          int offsetSeconds =
-              int.parse(weather['utc_offset_seconds'].toString());
-          DateTime utcNow = DateTime.now().toUtc();
-          DateTime nowPrecip = utcNow.add(Duration(seconds: offsetSeconds));
-
-          nowPrecip = DateTime(
-            nowPrecip.year,
-            nowPrecip.month,
-            nowPrecip.day,
-            nowPrecip.hour,
-            nowPrecip.minute,
-            nowPrecip.second,
-            nowPrecip.millisecond,
-            nowPrecip.microsecond,
-          );
-
-          final List<String> allTimeStrings =
-              (hourly['time'] as List?)?.cast<String>() ?? [];
-          final List<double> allPrecip = (hourly['precipitation'] as List?)
-                  ?.map((e) => (e as num?)?.toDouble() ?? 0.0)
-                  .toList() ??
-              [];
-          final List<int> allPrecipProb =
-              (hourly['precipitation_probability'] as List?)
-                      ?.map((e) => (e as num?)?.toInt() ?? 0)
-                      .toList() ??
-                  [];
-
-          final List<String> timeNext12h = [];
-          final List<double> precpNext12h = [];
-          final List<int> precipProbNext12h = [];
-
-          for (int i = 0; i < allTimeStrings.length; i++) {
-            if (i >= allPrecip.length || i >= allPrecipProb.length) break;
-
-            final time = DateTime.parse(allTimeStrings[i]);
-            if (time.isAfter(nowPrecip) &&
-                time.isBefore(nowPrecip.add(Duration(hours: 12)))) {
-              timeNext12h.add(allTimeStrings[i]);
-              precpNext12h.add(allPrecip[i]);
-              precipProbNext12h.add(allPrecipProb[i]);
-            }
-          }
-
-          final List<double> next2hPrecip = [];
-
-          for (int i = 0; i < timeNext12h.length; i++) {
-            final time = DateTime.parse(timeNext12h[i]);
-            if (time.isBefore(nowPrecip.add(Duration(hours: 2)))) {
-              next2hPrecip.add(precpNext12h[i]);
-            }
-          }
-
-          int? rainStart;
-          int longestRainLength = 0;
-          int? bestStart;
-          int? bestEnd;
-
-          for (int i = 0; i < precpNext12h.length; i++) {
-            if (precpNext12h[i] >= rainThreshold &&
-                precipProbNext12h[i] >= probThreshold) {
-              rainStart ??= i;
-            } else {
-              if (rainStart != null) {
-                final length = i - rainStart;
-                if (length >= 2 && length > longestRainLength) {
-                  longestRainLength = length;
-                  bestStart = rainStart;
-                  bestEnd = i - 1;
-                }
-                rainStart = null;
-              }
-            }
-          }
-
-          if (rainStart != null) {
-            final length = precpNext12h.length - rainStart;
-            if (length >= 2 && length > longestRainLength) {
-              bestStart = rainStart;
-              bestEnd = precpNext12h.length - 1;
-            }
-          }
-
-          final bool shouldShowRainBlock = bestStart != null && bestEnd != null;
+          final bool shouldShowRainBlock = processor.shouldShowRainBlock;
           final colorTheme = Theme.of(context).colorScheme;
 
           if (!widgetsUpdated) {
@@ -1164,19 +1013,15 @@ class _WeatherHomeState extends State<WeatherHome> {
                 return shouldShowRainBlock
                     ? RainBlock(
                         key: const ValueKey('RainBlock'),
-                        hourlyTime: (hourly['time'] as List).cast<String>(),
-                        hourlyPrecp:
-                            (hourly['precipitation'] as List).cast<double>(),
-                        hourlyPrecpProb: hourly['precipitation_probability'],
+                        next12Time: processor.timeNext12h,
+                        next12Precp: processor.precpNext12h,
+                        next12PrecpProb: processor.precipProbNext12h,
                         selectedContainerBgIndex: useFullMaterialScheme
                             ? Theme.of(context)
                                 .colorScheme
                                 .surfaceContainerLowest
                                 .toARGB32()
                             : weatherContainerColors[selectedContainerBgIndex],
-                        timezone: weather['timezone'].toString(),
-                        utcOffsetSeconds:
-                            weather['utc_offset_seconds'].toString(),
                       )
                     : const SizedBox.shrink();
 
