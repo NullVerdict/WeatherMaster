@@ -892,35 +892,84 @@ class _WeatherHomeState extends State<WeatherHome> {
                   );
                 },
                 child: const Text("Choose Location"),
-            final int isDay = current['is_day'];
+              ),
+            );
+          }
+
+          // Extract weather data from snapshot
+          final weather = snapshot.data!;
+          
+          // Create processor for data processing
+          // Note: processor expects data in format with 'data' key
+          final processorData = {
+            'data': weather,
+            'utc_offset_seconds': weather['utc_offset_seconds'],
+          };
+          final processor = WeatherDataProcessor(processorData);
+          final current = weather['current'] ?? {};
+          final hourly = weather['hourly'] ?? {};
+          final daily = weather['daily'] ?? {};
+          
+          // Extract time-based data from processor (filtered)
+          final hourlyTime = processor.filteredHourlyTime;
+          final hourlyTemps = processor.filteredHourlyTemps;
+          final hourlyWeatherCodes = processor.filteredHourlyWeatherCodes;
+          final hourlyPrecpProb = processor.filteredHourlyPrecpProb;
+          
+          // Extract daily data
+          final dailyDates = daily['time'] ?? [];
+          final dailyTempsMin = daily['temperature_2m_min'] ?? [];
+          final dailyTempsMax = daily['temperature_2m_max'] ?? [];
+          final dailyWeatherCodes = daily['weather_code'] ?? [];
+          final dailyPrecProb = daily['precipitation_probability_max'] ?? [];
+          
+          // Extract last updated time
+          final lastUpdated = weather['last_updated'];
+
+          // Extract weather condition data
+          final int weatherCode = current['weather_code'] ?? 0;
+          final bool isDay = current['is_day'] == 1;
+          final int weatherCodeFroggy = weatherCode;
+          final bool isDayFroggy = isDay;
+
+          // Helper function for daylight check
+          bool isHourDuringDaylightOptimized(DateTime hourTime) {
+            return processor.isHourDuringDaylight(hourTime);
+          }
+          
+          // Update weather animation if needed
+          void maybeUpdateWeatherAnimation(Map<String, dynamic> currentData, {bool isForce = false}) {
+            final int animIsDay = currentData['is_day'];
+            final int animWeatherCode = currentData['weather_code'] ?? 0;
 
             if (isForce) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 setState(() {
                   weatherAnimationWidget =
                       WeatherConditionAnimationMapper.build(
-                          weatherCode: weatherCode,
-                          isDay: isDay,
+                          weatherCode: animWeatherCode,
+                          isDay: animIsDay,
                           context: context,
                           setFullDisplay: !isShowFrog);
                 });
               });
             }
 
-            if (_cachedWeatherCode != weatherCode || _cachedIsDay != isDay) {
+            if (_cachedWeatherCode != animWeatherCode || _cachedIsDay != animIsDay) {
               weatherAnimationWidget = WeatherConditionAnimationMapper.build(
-                  weatherCode: weatherCode,
-                  isDay: isDay,
+                  weatherCode: animWeatherCode,
+                  isDay: animIsDay,
                   context: context,
                   setFullDisplay: !isShowFrog);
 
-              _cachedWeatherCode = weatherCode;
-              _cachedIsDay = isDay;
+              _cachedWeatherCode = animWeatherCode;
+              _cachedIsDay = animIsDay;
               _cachedIsShowFrog = isShowFrog;
               onLoadForceCall = false;
             }
           }
 
+          // Handle show frog changes
           if (onLoadForceCall) {
             if (_cachedIsShowFrog != isShowFrog) {
               maybeUpdateWeatherAnimation(current, isForce: true);
@@ -932,12 +981,7 @@ class _WeatherHomeState extends State<WeatherHome> {
             onLoadForceCall = true;
           }
 
-          bool isHourDuringDaylightOptimized(DateTime hourTime) {
-            return processor.isHourDuringDaylight(hourTime);
-          }
 
-          final int weatherCode = current['weather_code'] ?? 0;
-          final bool isDay = current['is_day'] == 1;
 
           final useFullMaterialScheme =
               PreferencesHelper.getBool("OnlyMaterialScheme") ?? false;
