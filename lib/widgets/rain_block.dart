@@ -60,38 +60,6 @@ class RainBlock extends StatelessWidget {
   double get maxRain {
     final r = next12Precp.reduce((a, b) => a > b ? a : b);
     return (r < 3) ? 3 : (r * 1.3).ceilToDouble();
-  }
-
-  (int?, int?) getRainPeriod() {
-    int? bestStart;
-    int? bestEnd;
-    int longestLength = 0;
-
-    int? currentStart;
-
-    for (int i = 0; i < next12Precp.length; i++) {
-      final double precp = next12Precp[i];
-      final int prob = next12PrecpProb[i] ?? 0;
-      if (precp > 0.2 && prob >= 40) {
-        currentStart ??= i;
-      } else {
-        if (currentStart != null) {
-          final length = i - currentStart;
-          if (length >= 2 && length > longestLength) {
-            bestStart = currentStart;
-            bestEnd = i - 1;
-            longestLength = length;
-          }
-          currentStart = null;
-        }
-      }
-    }
-
-    if (currentStart != null) {
-      final length = next12Precp.length - currentStart;
-      if (length >= 2 && length > longestLength) {
-        bestStart = currentStart;
-        bestEnd = next12Precp.length - 1;
       }
     }
 

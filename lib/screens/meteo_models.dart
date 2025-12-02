@@ -936,16 +936,10 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
 
   int _findNearestHourIndex(List<String> hoursIso, DateTime targetLocal) {
     try {
-      final List<DateTime> parsed = hoursIso.map((s) {
-        final parts = s.split('T');
-        final date = parts[0].split('-').map((e) => int.parse(e)).toList();
-        final time = parts[1].split(':').map((e) => int.parse(e)).toList();
-        return DateTime(date[0], date[1], date[2], time[0], time[1]);
-      }).toList();
-
       int best = -1;
-      for (int i = 0; i < parsed.length; i++) {
-        if (!parsed[i].isAfter(targetLocal)) {
+      for (int i = 0; i < hoursIso.length; i++) {
+        final parsed = DateTime.parse(hoursIso[i]);
+        if (!parsed.isAfter(targetLocal)) {
           best = i;
         } else {
           break;

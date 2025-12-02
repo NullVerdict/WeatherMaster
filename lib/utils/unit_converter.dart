@@ -5,12 +5,20 @@ class UnitConverter {
   /// Wind Speed
   static double kmhToMph(double kmh) => kmh * 0.621371;
   static double kmhToMs(double kmh) => kmh / 3.6;
+  static const _beaufortThresholds = [1, 5, 11, 19, 28, 38, 49, 61, 74, 88, 102, 117];
+  
   static double kmhToBeaufort(double kmh) {
-    final thresholds = [1, 5, 11, 19, 28, 38, 49, 61, 74, 88, 102, 117];
-    for (int i = 0; i < thresholds.length; i++) {
-      if (kmh < thresholds[i]) return i.toDouble();
+    int left = 0, right = _beaufortThresholds.length - 1;
+    while (left <= right) {
+      final mid = (left + right) >> 1;
+      if (kmh < _beaufortThresholds[mid]) {
+        if (mid == 0 || kmh >= _beaufortThresholds[mid - 1]) return mid.toDouble();
+        right = mid - 1;
+      } else {
+        left = mid + 1;
+      }
     }
-    return 12;
+    return 12.0;
   }
 
   static double kmhToKt(double kmh) => kmh / 1.852;
