@@ -20,24 +20,38 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
           cache: true
 
-      - name: Upgrade Flutter dependencies
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Upgrade dependencies
         run: flutter pub upgrade
 
-      - name: Commit updated dependencies
+      - name: Auto-commit updated dependencies
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: update pub dependencies [skip ci]"
-          add_options: '-f'
-          file_pattern: "pubspec.lock"
+          commit_message: "chore: upgrade Flutter dependencies [skip ci]"
+          add_options: "-f"
+          file_pattern: |
+            pubspec.yaml
+            pubspec.lock
 
-      - name: Setup environment file
+      - name: Create .env file
         run: |
-          echo "API_TOKEN=${{ secrets.API_TOKEN }}" >> .env
-          echo "API_KEY_WEATHERAPI=${{ secrets.API_KEY_WEATHERAPI }}" >> .env
-          echo "API_KEY_OPENROUTER=${{ secrets.API_KEY_OPENROUTER }}" >> .env
+          cat <<EOF > .env
+          API_TOKEN=${{ secrets.API_TOKEN }}
+          API_KEY_WEATHERAPI=${{ secrets.API_KEY_WEATHERAPI }}
+          API_KEY_OPENROUTER=${{ secrets.API_KEY_OPENROUTER }}
+          EOF
 
       - name: Build Split APKs
         run: flutter build apk --release --split-per-abi
@@ -45,19 +59,12 @@ jobs:
       - name: Rename APKs
         run: |
           VERSION_NAME=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
-          mkdir release_apks 
-          
-          if [ -f build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ]; then
-            cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.arm64-v8a.apk
-          fi
-          
-          if [ -f build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ]; then
-            cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.armeabi-v7a.apk
-          fi
-          
-          if [ -f build/app/outputs/flutter-apk/app-x86_64-release.apk ]; then
-            cp build/app/outputs/flutter-apk/app-x86_64-release.apk release_apks/WeatherMaster.${VERSION_NAME}.x86_64.apk
-          fi
+          mkdir release_apks
+
+          for apk in build/app/outputs/flutter-apk/*-release.apk; do
+            abi=$(basename "$apk" | sed -E 's/app-(.*)-release\.apk/\1/')
+            cp "$apk" "release_apks/WeatherMaster.${VERSION_NAME}.${abi}.apk"
+          done
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
