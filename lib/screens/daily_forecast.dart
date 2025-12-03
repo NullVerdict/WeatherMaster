@@ -156,6 +156,106 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
                         dailyTempsMax: dailyTempsMax,
                         onDaySelected: (date) {
                           setState(() {
+                            selectedDate = date;
+                          });
+                        },
+                        timezone: weather['timezone'].toString(),
+                        utcOffsetSeconds:
+                            weather['utc_offset_seconds'].toString(),
+                        selectedDate: selectedDate,
+                      ),
+                      // Divider(),
+                      ForecastDetailsHeader(
+                        selectedDayData: selectedDayData,
+                      ),
+                      if (selectedDate != null) ...[
+                        const SizedBox(height: 12),
+                        isSameDay(
+                                selectedDate!,
+                                DateTime.now().toUtc().add(Duration(
+                                    seconds: int.parse(
+                                        weather['utc_offset_seconds']
+                                            .toString()))))
+                            ? HourlyCard(
+                                hourlyTime: hourlyTime,
+                                hourlyTemps: hourlyTemps,
+                                hourlyWeatherCodes: hourlyWeatherCodes,
+                                isHourDuringDaylightOptimized:
+                                    isHourDuringDaylightOptimized,
+                                selectedContainerBgIndex: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerLowest
+                                    .toARGB32(),
+                                timezone: weather['timezone'].toString(),
+                                utcOffsetSeconds:
+                                    weather['utc_offset_seconds'].toString(),
+                                hourlyPrecpProb: hourlyPrecpProb,
+                                tempUnit: PreferencesHelper.getString("selectedTempUnit") ?? "Celsius",
+                                timeUnit: PreferencesHelper.getString("selectedTimeUnit") ?? '12 hr',
+                              )
+                            : HourlyCardForecast(
+                                selectedDate: selectedDate!,
+                                hourlyTime: hourlyTime,
+                                hourlyTemps: hourlyTemps,
+                                hourlyWeatherCodes: hourlyWeatherCodes,
+                                isHourDuringDaylightOptimized:
+                                    isHourDuringDaylightOptimized,
+                                selectedContainerBgIndex: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerLowest
+                                    .toARGB32(),
+                                timezone: weather['timezone'].toString(),
+                                utcOffsetSeconds:
+                                    weather['utc_offset_seconds'].toString(),
+                                hourlyPrecpProb: hourlyPrecpProb,
+                                isYesterday: selectedIndex == 0),
+                      ],
+                      SizedBox(
+                        height: 10,
+                      ),
+                      isSameDay(
+                              selectedDate!,
+                              DateTime.now().toUtc().add(Duration(
+                                  seconds: int.parse(
+                                      weather['utc_offset_seconds']
+                                          .toString()))))
+                          ? SizedBox(
+                              child: ConditionsWidgets(
+                                  selectedContainerBgIndex: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerLowest
+                                      .toARGB32(),
+                                  currentHumidity: current['relative_humidity_2m'] ??
+                                      0.0000001,
+                                  currentDewPoint:
+                                      hourly['dew_point_2m'][0].toDouble() ??
+                                          0.0000001,
+                                  currentSunrise:
+                                      daily['sunrise'][0] ?? 0.0000001,
+                                  currentSunset:
+                                      daily['sunset'][0] ?? 0.0000001,
+                                  currentPressure:
+                                      current['pressure_msl'] ?? 0.0000001,
+                                  currentVisibility:
+                                      hourly['visibility'][0] ?? 0.0000001,
+                                  currentWindSpeed:
+                                      current['wind_speed_10m'] ?? 0.0000001,
+                                  currentWindDirc: current['wind_direction_10m'] ??
+                                      0.0000001,
+                                  timezone: weather['timezone'].toString(),
+                                  utcOffsetSeconds:
+                                      weather['utc_offset_seconds'].toString(),
+                                  currentUvIndex:
+                                      daily['uv_index_max'][0] ?? 0.0000001,
+                                  currentAQIUSA: weather['air_quality']
+                                          ['current']['us_aqi'] ??
+                                      0.0000001,
+                                  currentAQIEURO: weather['air_quality']
+                                          ['current']['european_aqi'] ??
+                                      0.0000001,
+                                  currentTotalPrec: daily['precipitation_sum'][0] ?? 0.0000001,
+                                  currentDayLength: daily['daylight_duration'][0] ?? 0.0000001,
+                                  isFromHome: false,
                                   moonrise: weather['astronomy']?['astronomy']?['astro']?['moonrise'] ?? '',
                                   moonset: weather['astronomy']?['astronomy']?['astro']?['moonset'] ?? '',
                                   moonPhase: weather['astronomy']?['astronomy']?['astro']?['moon_phase'] ?? '',

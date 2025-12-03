@@ -1167,7 +1167,7 @@ class _WeatherHomeState extends State<WeatherHome> {
             switch (type) {
               case LayoutBlockType.rain:
                 return shouldShowRainBlock
-                    ? RainBlock.preprocessed(
+                    ? RainBlock(
                         key: const ValueKey('RainBlock'),
                         hourlyTime: (hourly['time'] as List).cast<String>(),
                         hourlyPrecp:
@@ -1179,9 +1179,9 @@ class _WeatherHomeState extends State<WeatherHome> {
                                 .surfaceContainerLowest
                                 .toARGB32()
                             : weatherContainerColors[selectedContainerBgIndex],
+                        timezone: weather['timezone'].toString(),
                         utcOffsetSeconds:
                             weather['utc_offset_seconds'].toString(),
-                        colorScheme: colorTheme,
                       )
                     : const SizedBox.shrink();
 
@@ -1218,26 +1218,26 @@ class _WeatherHomeState extends State<WeatherHome> {
                     utcOffsetSeconds: weather['utc_offset_seconds'].toString());
               // return
               case LayoutBlockType.hourly:
-                return HourlyCard.preprocessed(
+                return HourlyCard(
                   hourlyTime: hourlyTime,
                   hourlyTemps: hourlyTemps,
                   hourlyWeatherCodes: hourlyWeatherCodes,
-                  isDaylight: isHourDuringDaylightOptimized,
+                  isHourDuringDaylightOptimized: isHourDuringDaylightOptimized,
                   selectedContainerBgIndex: useFullMaterialScheme
                       ? Theme.of(context)
                           .colorScheme
                           .surfaceContainerLowest
                           .toARGB32()
                       : weatherContainerColors[selectedContainerBgIndex],
+                  timezone: weather['timezone'].toString(),
                   utcOffsetSeconds: weather['utc_offset_seconds'].toString(),
                   hourlyPrecpProb: hourlyPrecpProb,
                   tempUnit: PreferencesHelper.getString("selectedTempUnit") ?? "Celsius",
                   timeUnit: PreferencesHelper.getString("selectedTimeUnit") ?? '12 hr',
-                  colorScheme: colorTheme,
                 );
 
               case LayoutBlockType.daily:
-                return DailyCard.preprocessed(
+                return DailyCard(
                     dailyTime: dailyDates,
                     dailyTempsMin: dailyTempsMin,
                     dailyWeatherCodes: dailyWeatherCodes,
@@ -1251,10 +1251,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                             .toARGB32()
                         : weatherContainerColors[selectedContainerBgIndex],
                     tempUnit: PreferencesHelper.getString("selectedTempUnit") ?? "Celsius",
-                    isDarkCards: PreferencesHelper.getBool("useDarkerBackground") ?? false,
-                    colorTheme: colorTheme,
-                    brightness: Theme.of(context).brightness,
-                    locale: Localizations.localeOf(context));
+                    isDarkCards: PreferencesHelper.getBool("useDarkerBackground") ?? false);
 
               case LayoutBlockType.conditions:
                 return SizedBox(
