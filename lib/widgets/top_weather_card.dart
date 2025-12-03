@@ -32,35 +32,39 @@ class WeatherTopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final convertedTemp = _convert(currentTemp, tempUnit);
-    final convertedMaxTemp = _convert(currentMaxTemp, tempUnit);
-    final convertedMinTemp = _convert(currentMinTemp, tempUnit);
-    final convertedFeelsLike = _convert(currentFeelsLike, tempUnit);
+    final isFahrenheit = tempUnit == "Fahrenheit";
+    final convertedTemp = _convert(currentTemp, isFahrenheit);
+    final convertedMaxTemp = _convert(currentMaxTemp, isFahrenheit);
+    final convertedMinTemp = _convert(currentMinTemp, isFahrenheit);
+    final convertedFeelsLike = _convert(currentFeelsLike, isFahrenheit);
 
-    return isShowFrog
-        ? _WeatherTopCardHorizontal(
-            convertedTemp: convertedTemp,
-            convertedMaxTemp: convertedMaxTemp,
-            convertedMinTemp: convertedMinTemp,
-            convertedFeelsLike: convertedFeelsLike,
-            currentWeatherIconCode: currentWeatherIconCode,
-            currentisDay: currentisDay,
-            currentFeelsLike: currentFeelsLike,
-            currentLastUpdated: currentLastUpdated,
-          )
-        : _WeatherTopCardVertical(
-            convertedTemp: convertedTemp,
-            convertedMaxTemp: convertedMaxTemp,
-            convertedMinTemp: convertedMinTemp,
-            convertedFeelsLike: convertedFeelsLike,
-            currentWeatherIconCode: currentWeatherIconCode,
-            currentisDay: currentisDay,
-            currentFeelsLike: currentFeelsLike,
-          );
+    return RepaintBoundary(
+      child: isShowFrog
+          ? _WeatherTopCardHorizontal(
+              convertedTemp: convertedTemp,
+              convertedMaxTemp: convertedMaxTemp,
+              convertedMinTemp: convertedMinTemp,
+              convertedFeelsLike: convertedFeelsLike,
+              currentWeatherIconCode: currentWeatherIconCode,
+              currentisDay: currentisDay,
+              currentFeelsLike: currentFeelsLike,
+              currentLastUpdated: currentLastUpdated,
+            )
+          : _WeatherTopCardVertical(
+              convertedTemp: convertedTemp,
+              convertedMaxTemp: convertedMaxTemp,
+              convertedMinTemp: convertedMinTemp,
+              convertedFeelsLike: convertedFeelsLike,
+              currentWeatherIconCode: currentWeatherIconCode,
+              currentisDay: currentisDay,
+              currentFeelsLike: currentFeelsLike,
+            ),
+    );
   }
 
-  static int _convert(num celsius, String tempUnit) =>
-      tempUnit == "Fahrenheit" ? UnitConverter.celsiusToFahrenheit(celsius.toDouble()).round() : celsius.round();
+  static int _convert(num celsius, bool isFahrenheit) => isFahrenheit
+      ? UnitConverter.celsiusToFahrenheit(celsius.toDouble()).round()
+      : celsius.round();
 }
 
 class _WeatherTopCardHorizontal extends StatelessWidget {
@@ -88,6 +92,8 @@ class _WeatherTopCardHorizontal extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
+    final isLight = brightness == Brightness.light;
+    final useTempAnimation = PreferencesHelper.getBool("useTempAnimation") != false;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 5, 16, 10),
@@ -103,17 +109,21 @@ class _WeatherTopCardHorizontal extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  PreferencesHelper.getBool("useTempAnimation") == false
-                      ? Text(
+                  useTempAnimation
+                      ? _AnimatedTemperature(
+                          targetTemp: convertedTemp.toDouble(),
+                          brightness: brightness,
+                          scheme: scheme,
+                        )
+                      : Text(
                           "$convertedTemp°",
                           style: TextStyle(
                             fontFamily: "FlexFontEn",
-                            color: brightness == Brightness.light ? scheme.inverseSurface : scheme.primary,
+                            color: isLight ? scheme.inverseSurface : scheme.primary,
                             fontSize: 65,
                             height: 1.3,
                           ),
-                        )
-                      : _AnimatedTemperature(targetTemp: convertedTemp.toDouble(), brightness: brightness, scheme: scheme),
+                        ),
                   SvgPicture.asset(
                     WeatherIconMapper.getIcon(currentWeatherIconCode, currentisDay),
                     width: 50,
@@ -205,6 +215,7 @@ class _WeatherTopCardVertical extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
+    final useTempAnimation = PreferencesHelper.getBool("useTempAnimation") != false;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
@@ -223,8 +234,14 @@ class _WeatherTopCardVertical extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              PreferencesHelper.getBool("useTempAnimation") == false
-                  ? Text(
+              useTempAnimation
+                  ? _AnimatedTemperature(
+                      targetTemp: convertedTemp.toDouble(),
+                      brightness: brightness,
+                      scheme: scheme,
+                      isLarge: true,
+                    )
+                  : Text(
                       "$convertedTemp",
                       style: TextStyle(
                         fontFamily: "FlexFontEn",
@@ -233,12 +250,6 @@ class _WeatherTopCardVertical extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         height: 1.3,
                       ),
-                    )
-                  : _AnimatedTemperature(
-                      targetTemp: convertedTemp.toDouble(),
-                      brightness: brightness,
-                      scheme: scheme,
-                      isLarge: true,
                     ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 50),

@@ -27,7 +27,7 @@ class RainBlock extends StatefulWidget {
 }
 
 class _RainBlockState extends State<RainBlock> {
-  late final _RainDataCache _cache;
+  late _RainDataCache _cache;
   late final DateFormat _hmFormat;
   late final DateFormat _jmFormat;
 
@@ -63,30 +63,32 @@ class _RainBlockState extends State<RainBlock> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.7),
-      child: Material(
-        elevation: 1,
-        borderRadius: BorderRadius.circular(20),
-        color: Color(widget.selectedContainerBgIndex),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _TitleSection(
-                cache: _cache,
-                scheme: scheme,
-              ),
-              const SizedBox(height: 16),
-              _ChartSection(
-                cache: _cache,
-                scheme: scheme,
-                hmFormat: _hmFormat,
-                jmFormat: _jmFormat,
-              ),
-            ],
+    return RepaintBoundary(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.7),
+        child: Material(
+          elevation: 1,
+          borderRadius: BorderRadius.circular(20),
+          color: Color(widget.selectedContainerBgIndex),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _TitleSection(
+                  cache: _cache,
+                  scheme: scheme,
+                ),
+                const SizedBox(height: 16),
+                _ChartSection(
+                  cache: _cache,
+                  scheme: scheme,
+                  hmFormat: _hmFormat,
+                  jmFormat: _jmFormat,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -252,7 +254,7 @@ class _TitleSection extends StatelessWidget {
 
       final hmFormat = DateFormat.Hm();
       final jmFormat = DateFormat.jm();
-      final timeUnit = '24 hr';
+      const timeUnit = '24 hr';
 
       final startTime = DateTime.parse(cache.next12Time[start]);
       final endTime = DateTime.parse(cache.next12Time[end]);
@@ -304,103 +306,106 @@ class _ChartSection extends StatelessWidget {
   Widget build(BuildContext context) {
     const precipitationUnit = 'mm';
     const timeUnit = '24 hr';
+    final locale = context.locale;
 
-    return SizedBox(
-      height: 90,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.start,
-          maxY: cache.maxRain,
-          barTouchData: BarTouchData(
-            enabled: true,
-            touchTooltipData: BarTouchTooltipData(
-              tooltipBorderRadius: BorderRadius.circular(50),
-              getTooltipColor: (_) => scheme.primaryContainer,
-              tooltipPadding: const EdgeInsets.symmetric(horizontal: 5),
-              getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                final val = rod.toY;
-                final convertedPrecip = precipitationUnit == 'cm'
-                    ? UnitConverter.mmToCm(val)
-                    : precipitationUnit == 'in'
-                        ? UnitConverter.mmToIn(val)
-                        : val;
-                return BarTooltipItem(
-                  '${convertedPrecip.toStringAsFixed(1)} $precipitationUnit',
-                  TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w500),
-                );
-              },
-            ),
-          ),
-          borderData: FlBorderData(
-            show: true,
-            border: Border(bottom: BorderSide(color: scheme.outlineVariant, width: 1)),
-          ),
-          gridData: FlGridData(
-            show: true,
-            drawHorizontalLine: true,
-            drawVerticalLine: false,
-            horizontalInterval: cache.maxRain / 3,
-            getDrawingHorizontalLine: (_) => FlLine(color: scheme.outlineVariant, strokeWidth: 1),
-          ),
-          titlesData: FlTitlesData(
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 50,
-                getTitlesWidget: (value, meta) {
-                  final step = cache.maxRain / 2;
-                  if (value == 0 || (value - step).abs() < 0.1 || (value - cache.maxRain).abs() < 0.1) {
-                    final convertedPrecip = precipitationUnit == 'cm'
-                        ? UnitConverter.mmToCm(value)
-                        : precipitationUnit == 'in'
-                            ? UnitConverter.mmToIn(value)
-                            : value;
-                    return Text(
-                      '${double.parse(convertedPrecip.toStringAsFixed(1))} ${localizePrecipUnit(precipitationUnit, context.locale)}',
-                      style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-                interval: cache.maxRain / 2,
-              ),
-            ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 16,
-                getTitlesWidget: (value, meta) {
-                  final idx = value.toInt();
-                  if (idx % 3 != 0 || idx >= cache.next12Time.length) return const SizedBox.shrink();
-                  final dt = DateTime.parse(cache.next12Time[idx]);
-                  return Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: Text(
-                      timeUnit == '24 hr' ? hmFormat.format(dt) : jmFormat.format(dt),
-                      style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 9),
-                    ),
+    return RepaintBoundary(
+      child: SizedBox(
+        height: 90,
+        child: BarChart(
+          BarChartData(
+            alignment: BarChartAlignment.start,
+            maxY: cache.maxRain,
+            barTouchData: BarTouchData(
+              enabled: true,
+              touchTooltipData: BarTouchTooltipData(
+                tooltipBorderRadius: BorderRadius.circular(50),
+                getTooltipColor: (_) => scheme.primaryContainer,
+                tooltipPadding: const EdgeInsets.symmetric(horizontal: 5),
+                getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                  final val = rod.toY;
+                  final convertedPrecip = precipitationUnit == 'cm'
+                      ? UnitConverter.mmToCm(val)
+                      : precipitationUnit == 'in'
+                          ? UnitConverter.mmToIn(val)
+                          : val;
+                  return BarTooltipItem(
+                    '${convertedPrecip.toStringAsFixed(1)} $precipitationUnit',
+                    TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w500),
                   );
                 },
               ),
             ),
-          ),
-          barGroups: List.generate(
-            cache.next12Precp.length,
-            (i) => BarChartGroupData(
-              x: i,
-              barRods: [
-                BarChartRodData(
-                  toY: cache.next12Precp[i],
-                  width: 15,
-                  color: _barColor(cache.next12Precp[i]),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(50),
-                    topRight: Radius.circular(50),
-                  ),
+            borderData: FlBorderData(
+              show: true,
+              border: Border(bottom: BorderSide(color: scheme.outlineVariant, width: 1)),
+            ),
+            gridData: FlGridData(
+              show: true,
+              drawHorizontalLine: true,
+              drawVerticalLine: false,
+              horizontalInterval: cache.maxRain / 3,
+              getDrawingHorizontalLine: (_) => FlLine(color: scheme.outlineVariant, strokeWidth: 1),
+            ),
+            titlesData: FlTitlesData(
+              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 50,
+                  getTitlesWidget: (value, meta) {
+                    final step = cache.maxRain / 2;
+                    if (value == 0 || (value - step).abs() < 0.1 || (value - cache.maxRain).abs() < 0.1) {
+                      final convertedPrecip = precipitationUnit == 'cm'
+                          ? UnitConverter.mmToCm(value)
+                          : precipitationUnit == 'in'
+                              ? UnitConverter.mmToIn(value)
+                              : value;
+                      return Text(
+                        '${double.parse(convertedPrecip.toStringAsFixed(1))} ${localizePrecipUnit(precipitationUnit, locale)}',
+                        style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                  interval: cache.maxRain / 2,
                 ),
-              ],
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 16,
+                  getTitlesWidget: (value, meta) {
+                    final idx = value.toInt();
+                    if (idx % 3 != 0 || idx >= cache.next12Time.length) return const SizedBox.shrink();
+                    final dt = DateTime.parse(cache.next12Time[idx]);
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Text(
+                        timeUnit == '24 hr' ? hmFormat.format(dt) : jmFormat.format(dt),
+                        style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 9),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            barGroups: List.generate(
+              cache.next12Precp.length,
+              (i) => BarChartGroupData(
+                x: i,
+                barRods: [
+                  BarChartRodData(
+                    toY: cache.next12Precp[i],
+                    width: 15,
+                    color: _barColor(cache.next12Precp[i]),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(50),
+                      topRight: Radius.circular(50),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

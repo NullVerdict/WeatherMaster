@@ -35,63 +35,64 @@ class DailyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorTheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
-
     final validDailyData = _preprocessDailyData();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.7),
-      child: Material(
-        elevation: 1,
-        borderRadius: BorderRadius.circular(20),
-        color: Color(selectedContainerBgIndex),
-        child: Container(
-          padding: const EdgeInsets.only(top: 15, bottom: 0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(width: 20),
-                  Icon(
-                    Symbols.calendar_month,
-                    weight: 500,
-                    color: colorTheme.secondary,
-                    size: 21,
-                    fill: 1,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    "daily_forecast".tr(),
-                    style: TextStyle(color: colorTheme.secondary, fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-              const Divider(height: 14, color: Colors.transparent),
-              SizedBox(
-                height: 213,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  physics:const BouncingScrollPhysics(),
-                  itemCount: validDailyData.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 5),
-                  itemBuilder: (context, index) {
-                    final item = validDailyData[index];
-                    return _DailyItem(
-                      item: item,
-                      index: index,
-                      totalCount: validDailyData.length,
-                      tempUnit: tempUnit,
-                      colorTheme: colorTheme,
-                      brightness: brightness,
-                      isDarkCards: isDarkCards,
-                      utcOffsetSeconds: utcOffsetSeconds,
-                    );
-                  },
+    return RepaintBoundary(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.7),
+        child: Material(
+          elevation: 1,
+          borderRadius: BorderRadius.circular(20),
+          color: Color(selectedContainerBgIndex),
+          child: Container(
+            padding: const EdgeInsets.only(top: 15, bottom: 0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(width: 20),
+                    Icon(
+                      Symbols.calendar_month,
+                      weight: 500,
+                      color: colorTheme.secondary,
+                      size: 21,
+                      fill: 1,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      "daily_forecast".tr(),
+                      style: TextStyle(color: colorTheme.secondary, fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 14),
-            ],
+                const Divider(height: 14, color: Colors.transparent),
+                SizedBox(
+                  height: 213,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: validDailyData.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 5),
+                    itemBuilder: (context, index) {
+                      final item = validDailyData[index];
+                      return _DailyItem(
+                        item: item,
+                        index: index,
+                        totalCount: validDailyData.length,
+                        tempUnit: tempUnit,
+                        colorTheme: colorTheme,
+                        brightness: brightness,
+                        isDarkCards: isDarkCards,
+                        utcOffsetSeconds: utcOffsetSeconds,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+            ),
           ),
         ),
       ),
@@ -100,7 +101,8 @@ class DailyCard extends StatelessWidget {
 
   List<_DailyDataItem> _preprocessDailyData() {
     final result = <_DailyDataItem>[];
-    for (int i = 0; i < dailyTime.length; i++) {
+    final length = dailyTime.length;
+    for (int i = 0; i < length; i++) {
       if (i < dailyTempsMin.length &&
           i < dailyTempsMax.length &&
           i < dailyWeatherCodes.length &&
@@ -161,30 +163,31 @@ class _DailyItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tempMax = tempUnit == "Fahrenheit"
+    final isFahrenheit = tempUnit == "Fahrenheit";
+    final tempMax = isFahrenheit
         ? UnitConverter.celsiusToFahrenheit(item.tempMax.toDouble()).round()
         : item.tempMax.round();
-
-    final tempMin = tempUnit == "Fahrenheit"
+    final tempMin = isFahrenheit
         ? UnitConverter.celsiusToFahrenheit(item.tempMin.toDouble()).round()
         : item.tempMin.round();
 
     final itemMargin = EdgeInsetsDirectional.only(
-      start: index == 0 ? 15 : 0,
-      end: index == totalCount - 1 ? 15 : 0,
+      start: index == 0 ? 15.0 : 0,
+      end: index == totalCount - 1 ? 15.0 : 0,
     );
+
+    final isFirstDay = index == 0;
+    final displayPrecip = item.precipProb == 0.0000001 ? '--' : "${item.precipProb.round()}%";
 
     return RepaintBoundary(
       child: GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => DailyForecastPage(initialSelectedDate: item.time),
-            ),
-          );
-        },
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DailyForecastPage(initialSelectedDate: item.time),
+          ),
+        ),
         child: Opacity(
-          opacity: index == 0 ? 0.6 : 1,
+          opacity: isFirstDay ? 0.6 : 1,
           child: Container(
             width: 68,
             margin: itemMargin,
@@ -225,7 +228,7 @@ class _DailyItem extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      item.precipProb == 0.0000001 ? '--' : "${item.precipProb.round()}%",
+                      displayPrecip,
                       style: TextStyle(
                         fontSize: 14,
                         color: colorTheme.primary,
@@ -270,7 +273,6 @@ class _DailyItem extends StatelessWidget {
     } else if (lang == 'de') {
       return DateFormat('dd.MM').format(time);
     }
-
     return DateFormat('dd/MM').format(time);
   }
 }
