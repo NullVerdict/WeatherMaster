@@ -33,10 +33,9 @@ class DailyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final validDailyData = _preprocessDailyData();
     final colorTheme = Theme.of(context).colorScheme;
     final brightness = Theme.of(context).brightness;
-
-    final validDailyData = _preprocessDailyData();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.7),
@@ -49,35 +48,19 @@ class DailyCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(width: 20),
-                  Icon(
-                    Symbols.calendar_month,
-                    weight: 500,
-                    color: colorTheme.secondary,
-                    size: 21,
-                    fill: 1,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    "daily_forecast".tr(),
-                    style: TextStyle(color: colorTheme.secondary, fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
+              _DailyHeader(colorScheme: colorTheme),
               const Divider(height: 14, color: Colors.transparent),
               SizedBox(
                 height: 213,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  physics:const BouncingScrollPhysics(),
+                  physics: const BouncingScrollPhysics(),
                   itemCount: validDailyData.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 5),
                   itemBuilder: (context, index) {
                     final item = validDailyData[index];
                     return _DailyItem(
+                      key: ValueKey('daily_${item.time.toIso8601String()}'),
                       item: item,
                       index: index,
                       totalCount: validDailyData.length,
@@ -138,6 +121,34 @@ class _DailyDataItem {
   });
 }
 
+class _DailyHeader extends StatelessWidget {
+  final ColorScheme colorScheme;
+
+  const _DailyHeader({required this.colorScheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const SizedBox(width: 20),
+        Icon(
+          Symbols.calendar_month,
+          weight: 500,
+          color: colorScheme.secondary,
+          size: 21,
+          fill: 1,
+        ),
+        const SizedBox(width: 5),
+        Text(
+          "daily_forecast".tr(),
+          style: TextStyle(color: colorScheme.secondary, fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+}
+
 class _DailyItem extends StatelessWidget {
   final _DailyDataItem item;
   final int index;
@@ -149,6 +160,7 @@ class _DailyItem extends StatelessWidget {
   final String utcOffsetSeconds;
 
   const _DailyItem({
+    super.key,
     required this.item,
     required this.index,
     required this.totalCount,
@@ -202,51 +214,20 @@ class _DailyItem extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 10),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "$tempMax°",
-                      style: TextStyle(fontSize: 16, color: colorTheme.onSurface, fontFamily: "FlexFontEn"),
-                    ),
-                    Text(
-                      "$tempMin°",
-                      style: TextStyle(fontSize: 16, color: colorTheme.onSurfaceVariant, fontFamily: "FlexFontEn"),
-                    ),
-                  ],
+                _TemperatureDisplay(
+                  tempMax: tempMax,
+                  tempMin: tempMin,
+                  colorTheme: colorTheme,
                 ),
                 const SizedBox(height: 10),
-                SvgPicture.asset(
-                  WeatherIconMapper.getIcon(item.weatherCode, 1),
-                  width: 35,
-                ),
+                _WeatherIcon(weatherCode: item.weatherCode),
                 const SizedBox(height: 5),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      item.precipProb == 0.0000001 ? '--' : "${item.precipProb.round()}%",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: colorTheme.primary,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: "FlexFontEn",
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      getDayLabel(item.time, index, utcOffsetSeconds).toLowerCase().tr(),
-                      style: const TextStyle(fontSize: 14),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      _getLocalizedDateFormat(item.time, Localizations.localeOf(context)),
-                      style: TextStyle(fontSize: 13, color: colorTheme.onSurfaceVariant),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                _DayInfo(
+                  time: item.time,
+                  precipProb: item.precipProb,
+                  index: index,
+                  utcOffsetSeconds: utcOffsetSeconds,
+                  colorTheme: colorTheme,
                 ),
                 const SizedBox(height: 10),
               ],
@@ -254,6 +235,98 @@ class _DailyItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TemperatureDisplay extends StatelessWidget {
+  final int tempMax;
+  final int tempMin;
+  final ColorScheme colorTheme;
+
+  const _TemperatureDisplay({
+    required this.tempMax,
+    required this.tempMin,
+    required this.colorTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          "$tempMax°",
+          style: TextStyle(fontSize: 16, color: colorTheme.onSurface, fontFamily: "FlexFontEn"),
+        ),
+        Text(
+          "$tempMin°",
+          style: TextStyle(fontSize: 16, color: colorTheme.onSurfaceVariant, fontFamily: "FlexFontEn"),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeatherIcon extends StatelessWidget {
+  final int weatherCode;
+
+  const _WeatherIcon({required this.weatherCode});
+
+  @override
+  Widget build(BuildContext context) {
+    return SvgPicture.asset(
+      WeatherIconMapper.getIcon(weatherCode, 1),
+      width: 35,
+    );
+  }
+}
+
+class _DayInfo extends StatelessWidget {
+  final DateTime time;
+  final double precipProb;
+  final int index;
+  final String utcOffsetSeconds;
+  final ColorScheme colorTheme;
+
+  const _DayInfo({
+    required this.time,
+    required this.precipProb,
+    required this.index,
+    required this.utcOffsetSeconds,
+    required this.colorTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          precipProb == 0.0000001 ? '--' : "${precipProb.round()}%",
+          style: TextStyle(
+            fontSize: 14,
+            color: colorTheme.primary,
+            fontWeight: FontWeight.w600,
+            fontFamily: "FlexFontEn",
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          getDayLabel(time, index, utcOffsetSeconds).toLowerCase().tr(),
+          style: const TextStyle(fontSize: 14),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        Text(
+          _getLocalizedDateFormat(time, locale),
+          style: TextStyle(fontSize: 13, color: colorTheme.onSurfaceVariant),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
