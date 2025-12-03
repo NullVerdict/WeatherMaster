@@ -360,62 +360,67 @@ Map<String, dynamic> _sanitizeHourly(Map? hourly) {
   if (hourly == null) return {};
   final time = (hourly['time'] as List?) ?? [];
   final len = time.length;
-  if (len == 0) return {'time': time};
 
-  // Use pre-allocated lists for better performance
+  List<T> mapList<T>(String key, T Function(dynamic) mapper) {
+    final list = hourly![key] as List?;
+    if (list == null) return [];
+    final effectiveLen = list.length < len ? list.length : len;
+    final result = List<T>.filled(effectiveLen, mapper(null)); 
+    for (int i = 0; i < effectiveLen; i++) {
+      result[i] = mapper(list[i]);
+    }
+    return result;
+  }
+
   return {
     'time': time,
-    'wind_speed_10m': _mapHourlyList(hourly, 'wind_speed_10m', len, _toDouble),
-    'wind_direction_10m': _mapHourlyList(hourly, 'wind_direction_10m', len, _toInt),
-    'relative_humidity_2m': _mapHourlyList(hourly, 'relative_humidity_2m', len, _toInt),
-    'pressure_msl': _mapHourlyList(hourly, 'pressure_msl', len, _toDouble),
-    'cloud_cover': _mapHourlyList(hourly, 'cloud_cover', len, _toInt),
-    'temperature_2m': _mapHourlyList(hourly, 'temperature_2m', len, _toDouble),
-    'dew_point_2m': _mapHourlyList(hourly, 'dew_point_2m', len, _toDouble),
-    'apparent_temperature': _mapHourlyList(hourly, 'apparent_temperature', len, _toDouble),
-    'precipitation_probability': _mapHourlyList(hourly, 'precipitation_probability', len, _toInt),
-    'precipitation': _mapHourlyList(hourly, 'precipitation', len, _toDouble),
-    'weather_code': _mapHourlyList(hourly, 'weather_code', len, _toInt),
-    'visibility': _mapHourlyList(hourly, 'visibility', len, _toDouble),
-    'uv_index': _mapHourlyList(hourly, 'uv_index', len, _toDouble),
+    'wind_speed_10m': mapList('wind_speed_10m', _toDouble),
+    'wind_direction_10m': mapList('wind_direction_10m', _toInt),
+    'relative_humidity_2m': mapList('relative_humidity_2m', _toInt),
+    'pressure_msl': mapList('pressure_msl', _toDouble),
+    'cloud_cover': mapList('cloud_cover', _toInt),
+    'temperature_2m': mapList('temperature_2m', _toDouble),
+    'dew_point_2m': mapList('dew_point_2m', _toDouble),
+    'apparent_temperature': mapList('apparent_temperature', _toDouble),
+    'precipitation_probability': mapList('precipitation_probability', _toInt),
+    'precipitation': mapList('precipitation', _toDouble),
+    'weather_code': mapList('weather_code', _toInt),
+    'visibility': mapList('visibility', _toDouble),
+    'uv_index': mapList('uv_index', _toDouble),
   };
-}
-
-List<T> _mapHourlyList<T>(Map hourly, String key, int len, T Function(dynamic) mapper) {
-  final list = hourly[key] as List?;
-  if (list == null) return [];
-  final effectiveLen = list.length < len ? list.length : len;
-  return List.generate(effectiveLen, (i) => mapper(list[i]), growable: false);
 }
 
 Map<String, dynamic> _sanitizeDaily(Map? daily) {
   if (daily == null) return {};
   final time = (daily['time'] as List?) ?? [];
   final len = time.length;
-  if (len == 0) return {'time': time};
+
+  List<T> mapList<T>(String key, T Function(dynamic) mapper) {
+    final list = daily![key] as List?;
+    if (list == null) return [];
+    final effectiveLen = list.length < len ? list.length : len;
+    final result = List<T>.filled(effectiveLen, mapper(null));
+    for (int i = 0; i < effectiveLen; i++) {
+      result[i] = mapper(list[i]);
+    }
+    return result;
+  }
 
   return {
     'time': time,
-    'weather_code': _mapDailyList(daily, 'weather_code', len, _toInt),
-    'temperature_2m_max': _mapDailyList(daily, 'temperature_2m_max', len, _toDouble),
-    'temperature_2m_min': _mapDailyList(daily, 'temperature_2m_min', len, _toDouble),
+    'weather_code': mapList('weather_code', _toInt),
+    'temperature_2m_max': mapList('temperature_2m_max', _toDouble),
+    'temperature_2m_min': mapList('temperature_2m_min', _toDouble),
     'sunrise': (daily['sunrise'] as List?) ?? [],
     'sunset': (daily['sunset'] as List?) ?? [],
-    'daylight_duration': _mapDailyList(daily, 'daylight_duration', len, _toDouble),
-    'uv_index_max': _mapDailyList(daily, 'uv_index_max', len, _toDouble),
-    'precipitation_sum': _mapDailyList(daily, 'precipitation_sum', len, _toDouble),
-    'precipitation_probability_max': _mapDailyList(daily, 'precipitation_probability_max', len, _toInt),
-    'precipitation_hours': _mapDailyList(daily, 'precipitation_hours', len, _toDouble),
-    'wind_speed_10m_max': _mapDailyList(daily, 'wind_speed_10m_max', len, _toDouble),
-    'wind_gusts_10m_max': _mapDailyList(daily, 'wind_gusts_10m_max', len, _toDouble),
+    'daylight_duration': mapList('daylight_duration', _toDouble),
+    'uv_index_max': mapList('uv_index_max', _toDouble),
+    'precipitation_sum': mapList('precipitation_sum', _toDouble),
+    'precipitation_probability_max': mapList('precipitation_probability_max', _toInt),
+    'precipitation_hours': mapList('precipitation_hours', _toDouble),
+    'wind_speed_10m_max': mapList('wind_speed_10m_max', _toDouble),
+    'wind_gusts_10m_max': mapList('wind_gusts_10m_max', _toDouble),
   };
-}
-
-List<T> _mapDailyList<T>(Map daily, String key, int len, T Function(dynamic) mapper) {
-  final list = daily[key] as List?;
-  if (list == null) return [];
-  final effectiveLen = list.length < len ? list.length : len;
-  return List.generate(effectiveLen, (i) => mapper(list[i]), growable: false);
 }
 
 bool _fastDeepEquals(dynamic a, dynamic b) {

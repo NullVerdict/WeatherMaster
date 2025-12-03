@@ -907,22 +907,27 @@ class _WeatherHomeState extends State<WeatherHome> {
 
           // Convert times to DateTime and filter out past-day entries
           final now = DateTime.now();
-          final todayMidnightTimestamp = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
+          final todayMidnight = DateTime(now.year, now.month, now.day);
 
-          final hourlyTime = <dynamic>[];
-          final hourlyTemps = <dynamic>[];
-          final hourlyWeatherCodes = <dynamic>[];
-          final hourlyPrecpProb = <dynamic>[];
-
+          final filteredIndices = <int>[];
           for (int i = 0; i < hourlyTimeNoFilter.length; i++) {
-            final timeTimestamp = DateTime.parse(hourlyTimeNoFilter[i]).millisecondsSinceEpoch;
-            if (timeTimestamp >= todayMidnightTimestamp) {
-              hourlyTime.add(hourlyTimeNoFilter[i]);
-              hourlyTemps.add(hourlyTempsNoFilter[i]);
-              hourlyWeatherCodes.add(hourlyWeatherCodesNoFilter[i]);
-              hourlyPrecpProb.add(hourlyPrecpProbNoFilter[i]);
+            final time = DateTime.parse(hourlyTimeNoFilter[i]);
+            if (time.isAfter(todayMidnight) ||
+                time.isAtSameMomentAs(todayMidnight)) {
+              filteredIndices.add(i);
             }
           }
+
+// Keep only today's + future hours
+          final hourlyTime =
+              filteredIndices.map((i) => hourlyTimeNoFilter[i]).toList();
+          final hourlyTemps =
+              filteredIndices.map((i) => hourlyTempsNoFilter[i]).toList();
+          final hourlyWeatherCodes = filteredIndices
+              .map((i) => hourlyWeatherCodesNoFilter[i])
+              .toList();
+          final hourlyPrecpProb =
+              filteredIndices.map((i) => hourlyPrecpProbNoFilter[i]).toList();
 
           final daily = weather['daily'];
           final List<dynamic> dailyDates = daily['time'];
