@@ -13,32 +13,18 @@ class RainBlock extends StatelessWidget {
   final List<int> next12PrecpProb;
   final int selectedContainerBgIndex;
 
-  // Cached computed values
-  late final double maxRain;
-  late final (int?, int?) rainPeriod;
-  late final String title;
-  late final String? subtitle;
-
-  RainBlock(
+  const RainBlock(
       {super.key,
       required this.next12Time,
       required this.next12Precp,
       required this.selectedContainerBgIndex,
-      required this.next12PrecpProb}) {
-    // Pre-compute all expensive calculations once in constructor
-    maxRain = _computeMaxRain();
-    rainPeriod = _getRainPeriod();
-    title = _generateTitle(rainPeriod.$1);
-    subtitle = _generateSubtitle(rainPeriod.$1, rainPeriod.$2);
-  }
+      required this.next12PrecpProb});
 
-  double _computeMaxRain() {
-    if (next12Precp.isEmpty) return 3.0;
+  double get maxRain {
     final r = next12Precp.reduce((a, b) => a > b ? a : b);
     return (r < 3) ? 3 : (r * 1.3).ceilToDouble();
-  }
-
-  (int?, int?) _getRainPeriod() {
+      }
+  (int?, int?) getRainPeriod() {
     int? bestStart;
     int? bestEnd;
     for (int i = 0; i < next12Precp.length; i++) {
@@ -56,7 +42,7 @@ class RainBlock extends StatelessWidget {
     if (start == null) return "rain_card_no_rain_exp".tr();
 
     if (start == 0 && next12Precp[0] > 0.2) {
-      return _willRainStopSoon()
+      return willRainStopSoon()
           ? "rain_will_stop_soon".tr()
           : "its_currently_raining".tr();
     }
@@ -71,17 +57,7 @@ class RainBlock extends StatelessWidget {
     return "rain_expected_later_today".tr();
   }
 
-  String? _generateSubtitle(int? start, int? end) {
-    if (start == null || end == null) return null;
-
-    final segment = next12Precp.sublist(start, end + 1);
-    final max = segment.reduce((a, b) => a > b ? a : b);
-
-    // Use cached timeUnit - will be resolved in build context
-    return null; // We'll compute this in build method since it needs context
-  }
-
-  bool _willRainStopSoon() {
+  bool willRainStopSoon() {
     if (next12Precp[0] <= 0.2 || (next12PrecpProb[0] ?? 0) < 30) return false;
 
     int dryCount = 0;
@@ -110,8 +86,7 @@ class RainBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final timeUnit = context.watch<UnitSettingsNotifier>().timeUnit;
 
-    // Compute subtitle with context (needs timeUnit from context)
-    String? generateSubtitle(int? start, int? end) {
+    String? generateSummary(int? start, int? end) {
       if (start == null || end == null) return null;
 
       final segment = next12Precp.sublist(start, end + 1);
@@ -133,7 +108,10 @@ class RainBlock extends StatelessWidget {
       return "$label ${'from_text'.tr()} $startStr ${'to_text'.tr()} $endStr";
     }
 
-    final computedSubtitle = generateSubtitle(rainPeriod.$1, rainPeriod.$2);
+    final (start, end) = getRainPeriod();
+    final title = _generateTitle(start);
+    final subtitle = generateSummary(start, end);
+    final rain = next12Precp;
     final unitSettings =
         Provider.of<UnitSettingsNotifier>(context, listen: false);
     final precipitationUnit = unitSettings.precipitationUnit;
@@ -154,10 +132,10 @@ class RainBlock extends StatelessWidget {
                       color: Theme.of(context).colorScheme.secondary,
                       fontSize: 16,
                       fontWeight: FontWeight.w600)),
-              if (computedSubtitle != null)
+              if (subtitle != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
-                  child: Text(computedSubtitle,
+                  child: Text(subtitle,
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 13)),
@@ -274,14 +252,14 @@ class RainBlock extends StatelessWidget {
                         ),
                       ),
                     ),
-                    barGroups: List.generate(next12Precp.length, (i) {
+                    barGroups: List.generate(rain.length, (i) {
                       return BarChartGroupData(
                         x: i,
                         barRods: [
                           BarChartRodData(
-                            toY: next12Precp[i],
+                            toY: rain[i],
                             width: 15,
-                            color: _barColor(next12Precp[i], context),
+                            color: _barColor(rain[i], context),
                             borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(50),
                                 topRight: Radius.circular(50)),

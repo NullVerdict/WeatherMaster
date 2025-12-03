@@ -16,9 +16,6 @@ class WeatherDataProcessor {
   
   late final Map<String, (DateTime, DateTime)> daylightMap;
   
-  // Memoization cache for daylight lookups
-  final Map<String, bool> _daylightCache = {};
-  
   // Rain Logic
   late final bool shouldShowRainBlock;
   late final int? rainStart;
@@ -80,21 +77,12 @@ class WeatherDataProcessor {
   }
 
   bool isHourDuringDaylight(DateTime hourTime) {
-    final cacheKey = "${hourTime.year.toString().padLeft(4, '0')}-${hourTime.month.toString().padLeft(2, '0')}-${hourTime.day.toString().padLeft(2, '0')}_${hourTime.hour}";
-    
-    // Check cache first
-    final cached = _daylightCache[cacheKey];
-    if (cached != null) return cached;
-    
-    // Compute and cache
-    final dateKey = "${hourTime.year.toString().padLeft(4, '0')}-${hourTime.month.toString().padLeft(2, '0')}-${hourTime.day.toString().padLeft(2, '0')}";
-    final times = daylightMap[dateKey];
-    final result = times != null 
-        ? (hourTime.isAfter(times.$1) && hourTime.isBefore(times.$2))
-        : true;
-    
-    _daylightCache[cacheKey] = result;
-    return result;
+    final key = "${hourTime.year.toString().padLeft(4, '0')}-${hourTime.month.toString().padLeft(2, '0')}-${hourTime.day.toString().padLeft(2, '0')}";
+    final times = daylightMap[key];
+    if (times != null) {
+      return hourTime.isAfter(times.$1) && hourTime.isBefore(times.$2);
+    }
+    return true;
   }
 
   void _processRainLogic() {
@@ -105,6 +93,11 @@ class WeatherDataProcessor {
     final DateTime utcNow = DateTime.now().toUtc();
     final DateTime nowPrecip = utcNow.add(Duration(seconds: offsetSeconds));
     
+    // Normalize to minute precision to match original logic if needed, 
+    // but original logic just used DateTime constructor to strip sub-second?
+    // Actually original logic: DateTime(y,m,d,h,m,s,ms,us) - wait, it didn't strip anything?
+    // "nowPrecip = DateTime(..., nowPrecip.microsecond)" -> it just copied it. Redundant.
+    
     final List<String> allTimeStrings = (hourly['time'] as List?)?.cast<String>() ?? [];
     final List<double> allPrecip = (hourly['precipitation'] as List?)
             ?.map((e) => (e as num?)?.toDouble() ?? 0.0)
@@ -113,8 +106,6 @@ class WeatherDataProcessor {
             ?.map((e) => (e as num?)?.toInt() ?? 0)
             .toList() ?? [];
 
-    // Pre-allocate with estimated capacity for better performance
-    final List<String> timeNext12h = [];
     final List<double> precpNext12h = [];
     final List<int> precipProbNext12h = [];
     
@@ -125,7 +116,6 @@ class WeatherDataProcessor {
 
       final time = DateTime.parse(allTimeStrings[i]);
       if (time.isAfter(nowPrecip) && time.isBefore(limit)) {
-        timeNext12h.add(allTimeStrings[i]);
         precpNext12h.add(allPrecip[i]);
         precipProbNext12h.add(allPrecipProb[i]);
       }
@@ -164,7 +154,6 @@ class WeatherDataProcessor {
     rainStart = bestStart;
     rainEnd = bestEnd;
     
-    // Assign to late final fields
     this.timeNext12h = timeNext12h;
     this.precpNext12h = precpNext12h;
     this.precipProbNext12h = precipProbNext12h;

@@ -4,60 +4,32 @@ import 'package:flutter/material.dart';
 
 class PreferencesHelper {
   static SharedPreferences? _prefs;
-  
-  // In-memory cache for frequently accessed preferences
-  static final Map<String, dynamic> _cache = {};
 
   /// Initialize shared preferences (idempotent)
   static Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
   }
 
-  /// Clear in-memory cache (use when preferences are updated externally)
-  static void clearCache() {
-    _cache.clear();
-  }
-
   // -------------------- String --------------------
 
   static Future<bool> setString(String key, String value) async {
     await init();
-    _cache[key] = value;
     return _prefs!.setString(key, value);
   }
 
   static String? getString(String key) {
-    // Check cache first
-    if (_cache.containsKey(key)) {
-      return _cache[key] as String?;
-    }
-    
-    final value = _prefs?.getString(key);
-    if (value != null) {
-      _cache[key] = value;
-    }
-    return value;
+    return _prefs?.getString(key);
   }
 
   // -------------------- Bool --------------------
 
   static Future<bool> setBool(String key, bool value) async {
     await init();
-    _cache[key] = value;
     return _prefs!.setBool(key, value);
   }
 
   static bool? getBool(String key) {
-    // Check cache first
-    if (_cache.containsKey(key)) {
-      return _cache[key] as bool?;
-    }
-    
-    final value = _prefs?.getBool(key);
-    if (value != null) {
-      _cache[key] = value;
-    }
-    return value;
+    return _prefs?.getBool(key);
   }
 
   // -------------------- Int --------------------
@@ -127,13 +99,11 @@ class PreferencesHelper {
 
   static Future<bool> remove(String key) async {
     await init();
-    _cache.remove(key);
     return _prefs!.remove(key);
   }
 
   static Future<bool> clear() async {
     await init();
-    _cache.clear();
     return _prefs!.clear();
   }
 
