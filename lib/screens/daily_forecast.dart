@@ -190,6 +190,8 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
                                 utcOffsetSeconds:
                                     weather['utc_offset_seconds'].toString(),
                                 hourlyPrecpProb: hourlyPrecpProb,
+                                tempUnit: PreferencesHelper.getString("selectedTempUnit") ?? "Celsius",
+                                timeUnit: PreferencesHelper.getString("selectedTimeUnit") ?? '12 hr',
                               )
                             : HourlyCardForecast(
                                 selectedDate: selectedDate!,

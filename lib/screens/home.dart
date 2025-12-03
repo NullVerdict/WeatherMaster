@@ -1232,6 +1232,8 @@ class _WeatherHomeState extends State<WeatherHome> {
                   timezone: weather['timezone'].toString(),
                   utcOffsetSeconds: weather['utc_offset_seconds'].toString(),
                   hourlyPrecpProb: hourlyPrecpProb,
+                  tempUnit: PreferencesHelper.getString("selectedTempUnit") ?? "Celsius",
+                  timeUnit: PreferencesHelper.getString("selectedTimeUnit") ?? '12 hr',
                 );
 
               case LayoutBlockType.daily:
@@ -1247,7 +1249,9 @@ class _WeatherHomeState extends State<WeatherHome> {
                             .colorScheme
                             .surfaceContainerLowest
                             .toARGB32()
-                        : weatherContainerColors[selectedContainerBgIndex]);
+                        : weatherContainerColors[selectedContainerBgIndex],
+                    tempUnit: PreferencesHelper.getString("selectedTempUnit") ?? "Celsius",
+                    isDarkCards: PreferencesHelper.getBool("useDarkerBackground") ?? false);
 
               case LayoutBlockType.conditions:
                 return SizedBox(
@@ -1568,6 +1572,8 @@ class _WeatherHomeState extends State<WeatherHome> {
                     currentWeatherIconCode: current['weather_code'],
                     currentisDay: current['is_day'],
                     currentLastUpdated: formattedTime,
+                    tempUnit: PreferencesHelper.getString("selectedTempUnit") ?? "Celsius",
+                    isShowFrog: isShowFrog,
                   ),
                   WeatherFrogIconWidget(iconUrl: _iconUrlFroggy),
                   const SizedBox(height: 14),
