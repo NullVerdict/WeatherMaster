@@ -1,13 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
 import '../notifiers/unit_settings_notifier.dart';
 import '../utils/unit_converter.dart';
-import 'package:provider/provider.dart';
 import '../helper/locale_helper.dart';
-import '../utils/condition_label_map.dart';
 
-class RainBlock extends StatelessWidget {
+class RainBlock extends StatefulWidget {
   final List<String> hourlyTime;
   final List<double> hourlyPrecp;
   final List<dynamic> hourlyPrecpProb;
@@ -15,63 +14,101 @@ class RainBlock extends StatelessWidget {
   final String timezone;
   final String utcOffsetSeconds;
 
-  const RainBlock(
-      {super.key,
-      required this.hourlyTime,
-      required this.hourlyPrecp,
-      required this.selectedContainerBgIndex,
-      required this.timezone,
-      required this.utcOffsetSeconds,
-      required this.hourlyPrecpProb});
+  const RainBlock({
+    super.key,
+    required this.hourlyTime,
+    required this.hourlyPrecp,
+    required this.selectedContainerBgIndex,
+    required this.timezone,
+    required this.utcOffsetSeconds,
+    required this.hourlyPrecpProb,
+  });
 
-  int get _currentIndex {
-    int offsetSeconds = int.parse(utcOffsetSeconds);
-    DateTime utcNow = DateTime.now().toUtc();
-    DateTime now = utcNow.add(Duration(seconds: offsetSeconds));
+  @override
+  State<RainBlock> createState() => _RainBlockState();
+}
 
-    now = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      now.hour,
-      now.minute,
-      now.second,
-      now.millisecond,
-      now.microsecond,
-    );
+class _RainBlockState extends State<RainBlock> {
+  // Cached data
+  late List<String> _next12Time;
+  late List<double> _next12Precp;
+  late List<dynamic> _next12PrecpProb;
+  late double _maxRain;
+  late (int?, int?) _rainPeriod;
+  
+  late DateFormat _hmFormat;
+  late DateFormat _jmFormat;
 
-    for (int i = 0; i < hourlyTime.length; i++) {
-      final dt = DateTime.parse(hourlyTime[i]);
-      if (!dt.isBefore(now)) return i;
+  @override
+  void initState() {
+    super.initState();
+    _hmFormat = DateFormat.Hm();
+    _jmFormat = DateFormat.jm();
+    _processData();
+  }
+
+  @override
+  void didUpdateWidget(covariant RainBlock oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.hourlyTime != widget.hourlyTime ||
+        oldWidget.hourlyPrecp != widget.hourlyPrecp ||
+        oldWidget.utcOffsetSeconds != widget.utcOffsetSeconds) {
+      _processData();
+    }
+  }
+
+  void _processData() {
+    final int currentIndex = _calculateCurrentIndex();
+    
+    _next12Time = widget.hourlyTime.skip(currentIndex).take(12).toList();
+    _next12Precp = widget.hourlyPrecp.skip(currentIndex).take(12).toList();
+    _next12PrecpProb = widget.hourlyPrecpProb.skip(currentIndex).take(12).toList();
+    
+    if (_next12Precp.isEmpty) {
+      _maxRain = 3;
+      _rainPeriod = (null, null);
+      return;
+    }
+
+    // Calculate max rain efficiently
+    double maxR = 0;
+    for (final val in _next12Precp) {
+      if (val > maxR) maxR = val;
+    }
+    _maxRain = (maxR < 3) ? 3 : (maxR * 1.3).ceilToDouble();
+
+    _rainPeriod = _calculateRainPeriod();
+  }
+
+  int _calculateCurrentIndex() {
+    try {
+      final int offsetSeconds = int.parse(widget.utcOffsetSeconds);
+      final DateTime utcNow = DateTime.now().toUtc();
+      final DateTime now = utcNow.add(Duration(seconds: offsetSeconds));
+      
+      
+      for (int i = 0; i < widget.hourlyTime.length; i++) {
+        // Parse only what's needed. 
+        final dt = DateTime.parse(widget.hourlyTime[i]);
+        if (!dt.isBefore(now)) return i;
+      }
+    } catch (e) {
+      // Fallback
     }
     return 0;
   }
 
-  List<String> get next12Time =>
-      hourlyTime.skip(_currentIndex).take(12).toList();
-  List<double> get next12Precp =>
-      hourlyPrecp.skip(_currentIndex).take(12).toList();
-
-  List<String> get next12TimeProb =>
-      hourlyTime.skip(_currentIndex).take(12).toList();
-  List get next12PrecpProb =>
-      hourlyPrecpProb.skip(_currentIndex).take(12).toList();
-
-  double get maxRain {
-    final r = next12Precp.reduce((a, b) => a > b ? a : b);
-    return (r < 3) ? 3 : (r * 1.3).ceilToDouble();
-  }
-
-  (int?, int?) getRainPeriod() {
+  (int?, int?) _calculateRainPeriod() {
     int? bestStart;
     int? bestEnd;
     int longestLength = 0;
-
     int? currentStart;
 
-    for (int i = 0; i < next12Precp.length; i++) {
-      final double precp = next12Precp[i];
-      final int prob = next12PrecpProb[i] ?? 0;
+    final len = _next12Precp.length;
+    for (int i = 0; i < len; i++) {
+      final double precp = _next12Precp[i];
+      final int prob = (_next12PrecpProb[i] is int) ? _next12PrecpProb[i] : 0;
+      
       if (precp > 0.2 && prob >= 40) {
         currentStart ??= i;
       } else {
@@ -88,42 +125,26 @@ class RainBlock extends StatelessWidget {
     }
 
     if (currentStart != null) {
-      final length = next12Precp.length - currentStart;
+      final length = len - currentStart;
       if (length >= 2 && length > longestLength) {
         bestStart = currentStart;
-        bestEnd = next12Precp.length - 1;
+        bestEnd = len - 1;
       }
     }
 
     return (bestStart, bestEnd);
   }
 
-  String _generateTitle(int? start) {
-    if (start == null) return "rain_card_no_rain_exp".tr();
-
-    if (start == 0 && next12Precp[0] > 0.2) {
-      return willRainStopSoon()
-          ? "rain_will_stop_soon".tr()
-          : "its_currently_raining".tr();
-    }
-
-    final hour = DateTime.parse(next12Time[start]).hour;
-
-    if (hour >= 0 && hour <= 5) return "rain_expected_overnight".tr();
-    if (hour >= 6 && hour < 12) return "rain_expected_this_morning".tr();
-    if (hour >= 12 && hour < 17) return "rain_expected_this_afternoon".tr();
-    if (hour >= 17 && hour <= 22) return "rain_expected_later_today".tr();
-
-    return "rain_expected_later_today".tr();
-  }
-
-  bool willRainStopSoon() {
-    if (next12Precp[0] <= 0.2 || (next12PrecpProb[0] ?? 0) < 30) return false;
+  bool _willRainStopSoon() {
+    if (_next12Precp.isEmpty) return false;
+    final firstProb = (_next12PrecpProb[0] is int) ? _next12PrecpProb[0] : 0;
+    
+    if (_next12Precp[0] <= 0.2 || firstProb < 30) return false;
 
     int dryCount = 0;
-    for (int i = 1; i < next12Precp.length; i++) {
-      final double precp = next12Precp[i];
-      final int prob = next12PrecpProb[i] ?? 0;
+    for (int i = 1; i < _next12Precp.length; i++) {
+      final double precp = _next12Precp[i];
+      final int prob = (_next12PrecpProb[i] is int) ? _next12PrecpProb[i] : 0;
 
       if (precp <= 0.2 || prob < 30) {
         dryCount++;
@@ -135,53 +156,75 @@ class RainBlock extends StatelessWidget {
     return false;
   }
 
-  Color _barColor(double mm, context) {
-    if (mm > 5) return Theme.of(context).colorScheme.error;
-    if (mm > 2) return Theme.of(context).colorScheme.tertiary;
-    if (mm > 0.2) return Theme.of(context).colorScheme.primary;
-    return Theme.of(context).colorScheme.primary;
+  String _generateTitle(int? start) {
+    if (start == null) return "rain_card_no_rain_exp".tr();
+
+    if (start == 0 && _next12Precp.isNotEmpty && _next12Precp[0] > 0.2) {
+      return _willRainStopSoon()
+          ? "rain_will_stop_soon".tr()
+          : "its_currently_raining".tr();
+    }
+
+    if (start != null && start < _next12Time.length) {
+       final hour = DateTime.parse(_next12Time[start]).hour;
+       if (hour >= 0 && hour <= 5) return "rain_expected_overnight".tr();
+       if (hour >= 6 && hour < 12) return "rain_expected_this_morning".tr();
+       if (hour >= 12 && hour < 17) return "rain_expected_this_afternoon".tr();
+       if (hour >= 17 && hour <= 22) return "rain_expected_later_today".tr();
+    }
+
+    return "rain_expected_later_today".tr();
+  }
+
+  Color _barColor(double mm, ColorScheme scheme) {
+    if (mm > 5) return scheme.error;
+    if (mm > 2) return scheme.tertiary;
+    if (mm > 0.2) return scheme.primary;
+    return scheme.primary;
   }
 
   @override
   Widget build(BuildContext context) {
-    final timeUnit = context.watch<UnitSettingsNotifier>().timeUnit;
+    // Access providers once
+    final unitSettings = context.watch<UnitSettingsNotifier>();
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    
+    final timeUnit = unitSettings.timeUnit;
+    final precipitationUnit = unitSettings.precipitationUnit;
 
-    String? generateSummary(int? start, int? end) {
-      if (start == null || end == null) return null;
+    final (start, end) = _rainPeriod;
+    final title = _generateTitle(start);
+    
+    String? subtitle;
+    if (start != null && end != null && start < _next12Precp.length && end < _next12Precp.length) {
+       // Calculate max for segment
+       double segmentMax = 0;
+       for (int i = start; i <= end; i++) {
+         if (_next12Precp[i] > segmentMax) segmentMax = _next12Precp[i];
+       }
 
-      final segment = next12Precp.sublist(start, end + 1);
-      final max = segment.reduce((a, b) => a > b ? a : b);
-
-      String label = switch (max) {
+       final label = switch (segmentMax) {
         > 5 => "heavy_rain".tr(),
         > 2 => "moderate_rain".tr(),
         _ => "light_rain".tr()
       };
 
-      final startStr = timeUnit == '24 hr'
-          ? DateFormat.Hm().format(DateTime.parse(next12Time[start]))
-          : DateFormat.jm().format(DateTime.parse(next12Time[start]));
-      final endStr = timeUnit == '24 hr'
-          ? DateFormat.Hm().format(DateTime.parse(next12Time[end]))
-          : DateFormat.jm().format(DateTime.parse(next12Time[end]));
+      final startTime = DateTime.parse(_next12Time[start]);
+      final endTime = DateTime.parse(_next12Time[end]);
+      
+      final startStr = timeUnit == '24 hr' ? _hmFormat.format(startTime) : _jmFormat.format(startTime);
+      final endStr = timeUnit == '24 hr' ? _hmFormat.format(endTime) : _jmFormat.format(endTime);
 
-      return "$label ${'from_text'.tr()} $startStr ${'to_text'.tr()} $endStr";
+      subtitle = "$label ${'from_text'.tr()} $startStr ${'to_text'.tr()} $endStr";
     }
-
-    final (start, end) = getRainPeriod();
-    final title = _generateTitle(start);
-    final subtitle = generateSummary(start, end);
-    final rain = next12Precp;
-    final unitSettings =
-        Provider.of<UnitSettingsNotifier>(context, listen: false);
-    final precipitationUnit = unitSettings.precipitationUnit;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.7),
       child: Material(
         elevation: 1,
         borderRadius: BorderRadius.circular(20),
-        color: Color(selectedContainerBgIndex),
+        color: Color(widget.selectedContainerBgIndex),
         child: Container(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -189,7 +232,7 @@ class RainBlock extends StatelessWidget {
             children: [
               Text(title,
                   style: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary,
+                      color: scheme.secondary,
                       fontSize: 16,
                       fontWeight: FontWeight.w600)),
               if (subtitle != null)
@@ -197,7 +240,7 @@ class RainBlock extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(subtitle,
                       style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: scheme.onSurfaceVariant,
                           fontSize: 13)),
                 ),
 
@@ -208,26 +251,24 @@ class RainBlock extends StatelessWidget {
                 child: BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.start,
-                    maxY: maxRain,
+                    maxY: _maxRain,
                     barTouchData: BarTouchData(
                       enabled: true,
                       touchTooltipData: BarTouchTooltipData(
                         tooltipBorderRadius: BorderRadius.circular(50),
-                        getTooltipColor: (group) =>
-                            Theme.of(context).colorScheme.primaryContainer,
-                        tooltipPadding: EdgeInsets.only(left: 5, right: 5),
+                        getTooltipColor: (group) => scheme.primaryContainer,
+                        tooltipPadding: const EdgeInsets.symmetric(horizontal: 5),
                         getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          final val = rod.toY;
                           final convertedPrecip = precipitationUnit == 'cm'
-                              ? UnitConverter.mmToCm(rod.toY)
+                              ? UnitConverter.mmToCm(val)
                               : precipitationUnit == 'in'
-                                  ? UnitConverter.mmToIn(rod.toY)
-                                  : rod.toY;
+                                  ? UnitConverter.mmToIn(val)
+                                  : val;
                           return BarTooltipItem(
                             '${convertedPrecip.toStringAsFixed(1)} $precipitationUnit',
                             TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
+                                color: scheme.onPrimaryContainer,
                                 fontWeight: FontWeight.w500),
                           );
                         },
@@ -237,7 +278,7 @@ class RainBlock extends StatelessWidget {
                       show: true,
                       border: Border(
                         bottom: BorderSide(
-                          color: Theme.of(context).colorScheme.outlineVariant,
+                          color: scheme.outlineVariant,
                           width: 1,
                         ),
                       ),
@@ -246,81 +287,77 @@ class RainBlock extends StatelessWidget {
                       show: true,
                       drawHorizontalLine: true,
                       drawVerticalLine: false,
-                      horizontalInterval: maxRain / 3,
+                      horizontalInterval: _maxRain / 3,
                       getDrawingHorizontalLine: (_) => FlLine(
-                        color: Theme.of(context).colorScheme.outlineVariant,
+                        color: scheme.outlineVariant,
                         strokeWidth: 1,
                       ),
                     ),
                     titlesData: FlTitlesData(
-                      topTitles:
-                          AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                      rightTitles:
-                          AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 50,
-                          getTitlesWidget: (value, _) {
-                            final roundedMax = maxRain;
+                          getTitlesWidget: (value, meta) {
+                            final roundedMax = _maxRain;
                             final step = roundedMax / 2;
-                            final convertedPrecip = precipitationUnit == 'cm'
-                                ? UnitConverter.mmToCm(value)
-                                : precipitationUnit == 'in'
-                                    ? UnitConverter.mmToIn(value)
-                                    : value;
-
-                            if (value == 0 ||
-                                value == step ||
-                                value == roundedMax) {
+                            
+                            // Only show 0, middle, and max
+                            if (value == 0 || (value - step).abs() < 0.1 || (value - roundedMax).abs() < 0.1) {
+                               final convertedPrecip = precipitationUnit == 'cm'
+                                  ? UnitConverter.mmToCm(value)
+                                  : precipitationUnit == 'in'
+                                      ? UnitConverter.mmToIn(value)
+                                      : value;
+                                      
                               return Text(
                                 '${double.parse(convertedPrecip.toStringAsFixed(1))} ${localizePrecipUnit(precipitationUnit, context.locale)}',
                                 style: TextStyle(
                                     fontSize: 10,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant),
+                                    color: scheme.onSurfaceVariant),
                               );
                             }
                             return const SizedBox.shrink();
                           },
-                          interval: maxRain / 2,
+                          interval: _maxRain / 2,
                         ),
                       ),
                       bottomTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
                           reservedSize: 16,
-                          getTitlesWidget: (value, _) {
+                          getTitlesWidget: (value, meta) {
                             final idx = value.toInt();
-                            if (idx % 3 != 0 || idx >= next12Time.length)
+                            if (idx % 3 != 0 || idx >= _next12Time.length) {
                               return const SizedBox.shrink();
-                            final dt = DateTime.parse(next12Time[idx]);
+                            }
+                            final dt = DateTime.parse(_next12Time[idx]);
                             return Padding(
-                                padding: EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.only(left: 8),
                                 child: Text(
                                   timeUnit == '24 hr'
-                                      ? DateFormat.Hm().format(dt)
-                                      : DateFormat.jm().format(dt),
+                                      ? _hmFormat.format(dt)
+                                      : _jmFormat.format(dt),
                                   style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
+                                      color: scheme.onSurfaceVariant,
                                       fontSize: 9),
                                 ));
                           },
                         ),
                       ),
                     ),
-                    barGroups: List.generate(rain.length, (i) {
+                    barGroups: List.generate(_next12Precp.length, (i) {
+                      final val = _next12Precp[i];
                       return BarChartGroupData(
                         x: i,
                         barRods: [
                           BarChartRodData(
-                            toY: rain[i],
+                            toY: val,
                             width: 15,
-                            color: _barColor(rain[i], context),
-                            borderRadius: BorderRadius.only(
+                            color: _barColor(val, scheme),
+                            borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(50),
                                 topRight: Radius.circular(50)),
                           ),
@@ -330,8 +367,6 @@ class RainBlock extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // ),
             ],
           ),
         ),
