@@ -13,7 +13,6 @@ import '../utils/preferences_helper.dart';
 import '../utils/condition_label_map.dart';
 import '../helper/locale_helper.dart';
 import '../controllers/home_f.dart';
-import '../controllers/weather_data_processor.dart';
 import '../utils/visual_utils.dart';
 import 'package:animations/animations.dart';
 
@@ -71,29 +70,47 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
                   if (!snapshot.hasData) return const Text("No data");
 
                   weatherData ??= snapshot.data!['data'];
-                  final processor = WeatherDataProcessor(snapshot.data!);
 
                   final weather = weatherData!;
-                  final daily = processor.daily;
-                  
+
+                  final daily = weather['daily'];
                   final List<dynamic> dailyDates = daily['time'];
                   final List<dynamic> sunriseTimes = daily['sunrise'];
                   final List<dynamic> sunsetTimes = daily['sunset'];
-                  final List<dynamic> dailyTempsMin = daily['temperature_2m_min'];
-                  final List<dynamic> dailyTempsMax = daily['temperature_2m_max'];
+                  final List<dynamic> dailyTempsMin =
+                      daily['temperature_2m_min'];
+                  final List<dynamic> dailyTempsMax =
+                      daily['temperature_2m_max'];
                   final List<dynamic> dailyWeatherCodes = daily['weather_code'];
 
-                  final hourly = processor.hourly;
+                  final hourly = weather['hourly'];
                   final List<dynamic> hourlyTime = hourly['time'];
                   final List<dynamic> hourlyTemps = hourly['temperature_2m'];
-                  final List<dynamic> hourlyWeatherCodes = hourly['weather_code'];
+                  final List<dynamic> hourlyWeatherCodes =
+                      hourly['weather_code'];
 
-                  final current = processor.current;
+                  final current = weather['current'];
 
-                  final List<dynamic> hourlyPrecpProb = hourly['precipitation_probability'];
+                  final List<dynamic> hourlyPrecpProb =
+                      hourly['precipitation_probability'];
+
+                  final Map<String, (DateTime, DateTime)> daylightMap = {
+                    for (int i = 0; i < dailyDates.length; i++)
+                      dailyDates[i]: (
+                        DateTime.parse(sunriseTimes[i]),
+                        DateTime.parse(sunsetTimes[i])
+                      ),
+                  };
 
                   bool isHourDuringDaylightOptimized(DateTime hourTime) {
-                    return processor.isHourDuringDaylight(hourTime);
+                    final key =
+                        "${hourTime.year.toString().padLeft(4, '0')}-${hourTime.month.toString().padLeft(2, '0')}-${hourTime.day.toString().padLeft(2, '0')}";
+                    final times = daylightMap[key];
+                    if (times != null) {
+                      return hourTime.isAfter(times.$1) &&
+                          hourTime.isBefore(times.$2);
+                    }
+                    return true;
                   }
 
                   int selectedIndex = -1;
@@ -160,9 +177,9 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
                                         weather['utc_offset_seconds']
                                             .toString()))))
                             ? HourlyCard(
-                                hourlyTime: processor.filteredHourlyTime,
-                                hourlyTemps: processor.filteredHourlyTemps,
-                                hourlyWeatherCodes: processor.filteredHourlyWeatherCodes,
+                                hourlyTime: hourlyTime,
+                                hourlyTemps: hourlyTemps,
+                                hourlyWeatherCodes: hourlyWeatherCodes,
                                 isHourDuringDaylightOptimized:
                                     isHourDuringDaylightOptimized,
                                 selectedContainerBgIndex: Theme.of(context)
@@ -172,7 +189,7 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
                                 timezone: weather['timezone'].toString(),
                                 utcOffsetSeconds:
                                     weather['utc_offset_seconds'].toString(),
-                                hourlyPrecpProb: processor.filteredHourlyPrecpProb,
+                                hourlyPrecpProb: hourlyPrecpProb,
                               )
                             : HourlyCardForecast(
                                 selectedDate: selectedDate!,
