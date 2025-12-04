@@ -131,9 +131,8 @@ class _WeatherHomeState extends State<WeatherHome> {
   bool _cachedUseDarkerBackground = false;
   bool _cachedShowFrog = true;
 
-  // Memoized color arrays - computed once per theme change
+  // Memoized color arrays - computed once per theme change\r
   List<Color>? _memoizedSearchBgColors;
-  List<int>? _memoizedContainerColors;
 
   final WeatherFroggyManager _weatherManager = WeatherFroggyManager();
 
@@ -563,9 +562,8 @@ class _WeatherHomeState extends State<WeatherHome> {
     _cachedUseDarkerBackground = settings.useDarkBackgroundCards;
     _cachedShowFrog = settings.showFrog;
     
-    // Invalidate memoized colors when theme changes
-    _memoizedSearchBgColors = null;
-    _memoizedContainerColors = null;
+    // Invalidate memoized colors when theme changes\r
+    _memoizedSearchBgColors = null;\r
   }
 
   final List<Color> weatherConditionColors = [
