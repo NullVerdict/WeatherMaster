@@ -548,6 +548,7 @@ class LocationPromptScreen extends StatelessWidget {
                     context,
                   );
                   if (!ready) return;
+                  if (!context.mounted) return;
                   showDialog(
                     context: context,
                     barrierDismissible: false,
@@ -672,7 +673,9 @@ class LocationPromptScreen extends StatelessWidget {
               ),
               onPressed: () {
                 Hive.openBox('weatherMasterCache').then((_) {
-                  DataBackupService.importAndReplaceAllData(context);
+                  if (context.mounted) {
+                    DataBackupService.importAndReplaceAllData(context);
+                  }
                 });
               },
               icon: Icon(

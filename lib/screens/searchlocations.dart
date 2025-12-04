@@ -511,6 +511,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                           final count = await getLocationCount();
 
                           if (count == 0) {
+                            if (!context.mounted) return;
                             showDialog(
                               context: context,
                               barrierDismissible: false,
@@ -528,6 +529,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                 .replaceAll(' ', '_');
                             final weatherService = WeatherService();
                             try {
+                              if (!context.mounted) return;
                               await weatherService.fetchWeather(lat, lon,
                                   locationName: cacheKey, context: context);
                             } catch (e) {
@@ -600,7 +602,9 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                   'lon': lon,
                                   'isGPS': false,
                                 }));
-                            Navigator.pop(context, false);
+                            if (context.mounted) {
+                              Navigator.pop(context, false);
+                            }
                           }
                         });
                   },

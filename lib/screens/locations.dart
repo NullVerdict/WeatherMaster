@@ -91,8 +91,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
           final box = await Hive.openBox('weatherMasterCache');
           final rawJson = box.get(cacheKey);
-          String? lastUpdated;
-
           if (rawJson != null) {
             // final map = json.decode(rawJson);
             // lastUpdated = map['last_updated'];
