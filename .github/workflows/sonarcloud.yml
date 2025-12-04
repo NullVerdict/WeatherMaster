@@ -14,6 +14,15 @@ jobs:
         with:
           fetch-depth: 0
 
+
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          API_TOKEN=${{ secrets.API_TOKEN }}
+          API_KEY_WEATHERAPI=${{ secrets.API_KEY_WEATHERAPI }}
+          API_KEY_OPENROUTER=${{ secrets.API_KEY_OPENROUTER }}
+          EOF
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
