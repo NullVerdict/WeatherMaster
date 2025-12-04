@@ -759,8 +759,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
     }
   }
 
-    await _fetchWeatherForAllModels();
-  }
+
 
   Future<void> _fetchWeatherForAllModels() async {
     if (_currentLat == null || _currentLon == null) return;

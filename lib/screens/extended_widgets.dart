@@ -482,17 +482,6 @@ class _ExtendWidgetState extends State<ExtendWidget> {
             ).toLocal();
 
             final formatter =
-                timeUnit == '24 hr' ? DateFormat.Hm() : DateFormat.jm();
-
-            return formatter.format(dateTime);
-          }
-
-          final calc = SolarCalculator(
-              instant, weather['latitude'], weather['longitude']);
-
-          final dawn = calc.morningCivilTwilight.begining;
-          final dusk = calc.eveningCivilTwilight.ending;
-
           final dawnFormatted =
               formatInstantToLocalTime(dawn, timeUnit: timeUnit);
           final duskFormatted =

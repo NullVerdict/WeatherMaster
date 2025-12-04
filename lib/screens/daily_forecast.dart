@@ -1557,7 +1557,6 @@ class ConditionsWidgetsForecast extends StatelessWidget {
                     }),
               ],
             ),
-          ),
         ],
       ),
     );
