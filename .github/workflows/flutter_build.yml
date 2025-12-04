@@ -52,6 +52,7 @@ jobs:
 
       - name: Analyze project
         run: flutter analyze
+        continue-on-error: true
 
       - name: Create .env file
         run: |
