@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -44,7 +43,7 @@ class NativeLocation {
         'city': result['city'] ?? '',
         'country': result['country'] ?? '',
       };
-    } on PlatformException catch (e) {
+    } on PlatformException {
       // Return empty strings on failure
       return {'city': '', 'country': ''};
     }

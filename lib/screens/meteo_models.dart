@@ -3,7 +3,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../utils/preferences_helper.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import '../utils/geo_location.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzmap;
@@ -670,7 +669,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
         final cachedData = box.get('data_$cacheKey');
         if (cachedData != null && cachedData is Map) {
           _modelWeatherData.clear();
-          (cachedData as Map).forEach((k, v) {
+          (cachedData).forEach((k, v) {
             if (v == null) {
               _modelWeatherData[k.toString()] = null;
             } else if (v is Map) {
@@ -883,16 +882,15 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
       _modelWeatherData.forEach((k, v) {
         if (v == null) {
           serializable[k] = null;
-        } else if (v is Map) {
-          try {
-            serializable[k] = Map<String, dynamic>.from(v);
-          } catch (e) {
-            debugPrint('Failed to serialize model $k: $e');
-            serializable[k] = null;
-          }
         } else {
-          serializable[k] = v;
+          try {
+          serializable[k] = Map<String, dynamic>.from(v);
+        } catch (e) {
+          debugPrint('Failed to serialize model $k: $e');
+          serializable[k] = null;
         }
+        }
+      
       });
 
       box.put('data_$cacheKey', serializable);

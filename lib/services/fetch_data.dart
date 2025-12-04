@@ -26,7 +26,7 @@ class WeatherService {
       bool isOnlyView = false,
       bool isBackground = false}) async {
     final timezone = tzmap.latLngToTimezoneString(lat, lon);
-    final key = locationName ?? 'loc_${lat}_${lon}';
+    final key = locationName ?? 'loc_${lat}_$lon';
     final box = await _openBox();
 
     final selectedModel =
@@ -362,7 +362,7 @@ Map<String, dynamic> _sanitizeHourly(Map? hourly) {
   final len = time.length;
 
   List<T> mapList<T>(String key, T Function(dynamic) mapper) {
-    final list = hourly![key] as List?;
+    final list = hourly[key] as List?;
     if (list == null) return [];
     final effectiveLen = list.length < len ? list.length : len;
     final result = List<T>.filled(effectiveLen, mapper(null)); 
@@ -396,7 +396,7 @@ Map<String, dynamic> _sanitizeDaily(Map? daily) {
   final len = time.length;
 
   List<T> mapList<T>(String key, T Function(dynamic) mapper) {
-    final list = daily![key] as List?;
+    final list = daily[key] as List?;
     if (list == null) return [];
     final effectiveLen = list.length < len ? list.length : len;
     final result = List<T>.filled(effectiveLen, mapper(null));
