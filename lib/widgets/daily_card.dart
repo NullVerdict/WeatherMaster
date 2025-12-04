@@ -258,14 +258,6 @@ class _DailyItem extends StatelessWidget {
         ),
       ),
     );
-  if (lang == 'en') {
-    return DateFormat('MM/dd').format(time);
-  } else if (lang == 'ja') {
-    return DateFormat('MM月dd日', 'ja').format(time);
-  } else if (lang == 'fa') {
-    return DateFormat('yyyy/MM/dd', 'fa').format(time);
-  } else if (lang == 'de') {
-    return DateFormat('dd.MM').format(time);
   }
 
   static String _getLocalizedDateFormat(DateTime time, Locale locale) {
