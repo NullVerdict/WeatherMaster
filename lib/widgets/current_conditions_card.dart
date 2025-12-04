@@ -154,7 +154,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
     );
 
     final timeUnit = context.watch<UnitSettingsNotifier>().timeUnit;
-    final isShowFrog = context.read<UnitSettingsNotifier>().showFrog;
+
 
     final sunriseFormat = timeUnit == '24 hr'
         ? DateFormat.Hm().format(sunrise)
@@ -610,7 +610,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                             widget.currentPressure.round()),
                         fit: BoxFit.contain),
                   ),
-                  headerWidgetConditions(
+                  HeaderWidgetConditions(
                     headerText: "pressure".tr(),
                     headerIcon: Symbols.compress,
                   ),
@@ -721,7 +721,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "visibility".tr(),
                               headerIcon: Symbols.visibility,
                             ),
@@ -833,7 +833,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                               currentWindDirc: widget.currentWindDirc,
                               backgroundColor:
                                   Color(widget.selectedContainerBgIndex)),
-                          headerWidgetConditions(
+                          HeaderWidgetConditions(
                             headerText: "wind".tr(),
                             headerIcon: Symbols.explore,
                           ),
@@ -1525,7 +1525,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "cloudiness".tr(),
                               headerIcon: Symbols.cloud,
                             ),
@@ -1577,8 +1577,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
       margin: EdgeInsets.fromLTRB(12.7, 0, 12.7, 0),
       child: Column(
         children: [
-          Container(
-              child: ReorderableGridView.builder(
+          ReorderableGridView.builder(
             itemCount: gridItems.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
@@ -1613,7 +1612,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.only(top: 0),
-          )),
+          ),
         ],
       ),
     );
@@ -1622,11 +1621,11 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
 
 // svgs
 
-class headerWidgetConditions extends StatelessWidget {
+class HeaderWidgetConditions extends StatelessWidget {
   final String headerText;
   final IconData headerIcon;
 
-  const headerWidgetConditions(
+  const HeaderWidgetConditions(
       {super.key, required this.headerText, required this.headerIcon});
 
   @override
