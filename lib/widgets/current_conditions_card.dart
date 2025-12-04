@@ -1589,7 +1589,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             itemBuilder: (context, index) {
               final item = itemOrder[index];
 
-              return Container(
+              return RepaintBoundary(
                 key: ValueKey(item),
                 child: gridItems[index],
               );

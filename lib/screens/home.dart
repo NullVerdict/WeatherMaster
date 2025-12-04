@@ -126,6 +126,15 @@ class _WeatherHomeState extends State<WeatherHome> {
   bool? _cachedIsShowFrog;
   bool? lastIsDay;
 
+  // Cached settings to avoid repeated context.watch() rebuilds
+  bool _cachedUseAnimations = true;
+  bool _cachedUseDarkerBackground = false;
+  bool _cachedShowFrog = true;
+
+  // Memoized color arrays - computed once per theme change
+  List<Color>? _memoizedSearchBgColors;
+  List<int>? _memoizedContainerColors;
+
   final WeatherFroggyManager _weatherManager = WeatherFroggyManager();
 
   String? _iconUrlFroggy;
@@ -547,6 +556,16 @@ class _WeatherHomeState extends State<WeatherHome> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     isLight = Theme.of(context).brightness == Brightness.light;
+    
+    // Cache settings once per dependency change instead of per-build
+    final settings = context.read<UnitSettingsNotifier>();
+    _cachedUseAnimations = settings.useCardBackgroundAnimations;
+    _cachedUseDarkerBackground = settings.useDarkBackgroundCards;
+    _cachedShowFrog = settings.showFrog;
+    
+    // Invalidate memoized colors when theme changes
+    _memoizedSearchBgColors = null;
+    _memoizedContainerColors = null;
   }
 
   final List<Color> weatherConditionColors = [
@@ -574,6 +593,77 @@ class _WeatherHomeState extends State<WeatherHome> {
     // snow
     Colors.cyan,
   ];
+
+  /// Lazily computes and memoizes search background colors.
+  /// Only recomputed when theme changes (via didChangeDependencies).
+  List<Color> _getSearchBgColors() {
+    if (_memoizedSearchBgColors != null) return _memoizedSearchBgColors!;
+    
+    _memoizedSearchBgColors = [
+      // cloudy
+      isLight
+          ? Color(paletteWeather.secondary.get(150))
+          : Color(paletteWeather.secondary.get(10)),
+      // overcast
+      isLight ? const Color(0xFFe8f2ff) : Color(paletteWeather.secondary.get(13)),
+      // clear day
+      isLight ? const Color(0xFFe8f2ff) : Color(paletteWeather.primary.get(10)),
+      // clear night
+      isLight
+          ? Color(paletteWeather.neutral.get(100))
+          : Color(paletteWeather.primary.get(10)),
+      // fog
+      isLight
+          ? Color(CorePalette.of(const Color.fromARGB(255, 255, 153, 0).toARGB32()).secondary.get(100))
+          : Color(CorePalette.of(const Color.fromARGB(255, 255, 153, 0).toARGB32()).secondary.get(20)),
+      // rain
+      isLight ? const Color(0xFFe8f2ff) : Color(paletteWeather.secondary.get(15)),
+      // thunder
+      isLight
+          ? const Color.fromARGB(255, 247, 232, 255)
+          : Color(CorePalette.of(const Color(0xFFe4b7f3).toARGB32()).secondary.get(20)),
+      // snow
+      isLight
+          ? const Color.fromARGB(255, 232, 254, 255)
+          : Color(CorePalette.of(const Color.fromARGB(255, 0, 13, 31).toARGB32()).secondary.get(18)),
+    ];
+    return _memoizedSearchBgColors!;
+  }
+
+  /// Computes container colors with current settings.
+  /// Recomputed when needed based on settings parameters.
+  List<int> _getContainerColors(bool useDarkerBackground, bool isShowFrog) {
+    return [
+      // cloudy
+      isLight
+          ? paletteWeather.secondary.get(98)
+          : paletteWeather.secondary.get(useDarkerBackground ? 2 : !isShowFrog ? (iscurrentDay! ? 8 : 3) : 8),
+      // overcast
+      isLight ? 0xFFfcfcff : paletteWeather.secondary.get(useDarkerBackground ? 2 : 6),
+      // clear day
+      isLight ? 0xFFfcfcff : paletteWeather.primary.get(useDarkerBackground ? 2 : 8),
+      // clear night
+      isLight
+          ? CorePalette.of(const Color.fromARGB(255, 58, 77, 141).toARGB32()).primary.get(98)
+          : CorePalette.of(const Color.fromARGB(255, 58, 77, 141).toARGB32()).primary.get(useDarkerBackground ? 2 : 4),
+      // fog
+      isLight
+          ? CorePalette.of(const Color.fromARGB(255, 255, 213, 165).toARGB32()).secondary.get(98)
+          : CorePalette.of(const Color.fromARGB(255, 255, 213, 165).toARGB32()).secondary.get(useDarkerBackground ? 2 : 6),
+      // rain
+      isLight
+          ? 0xFFfcfcff
+          : CorePalette.of(Colors.blueAccent.toARGB32()).secondary.get(useDarkerBackground ? 2 : 8),
+      // thunder
+      isLight
+          ? CorePalette.of(const Color(0xFFe4b7f3).toARGB32()).secondary.get(96)
+          : CorePalette.of(const Color(0xFFe4b7f3).toARGB32()).secondary.get(useDarkerBackground ? 2 : 10),
+      // snow
+      isLight
+          ? 0xFFfcfcff
+          : CorePalette.of(const Color.fromARGB(255, 0, 13, 31).toARGB32()).secondary.get(1),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -752,121 +842,17 @@ class _WeatherHomeState extends State<WeatherHome> {
   }
 
   Widget _buildWeatherContent() {
-    final bool usAnimations =
-        context.watch<UnitSettingsNotifier>().useCardBackgroundAnimations;
-    final bool useDarkerBackground =
-        context.watch<UnitSettingsNotifier>().useDarkBackgroundCards;
-    final isShowFrog = context.watch<UnitSettingsNotifier>().showFrog;
+    // Use cached settings instead of context.watch() to prevent cascading rebuilds
+    final bool usAnimations = _cachedUseAnimations;
+    final bool useDarkerBackground = _cachedUseDarkerBackground;
+    final isShowFrog = _cachedShowFrog;
 
     final colorTheme = Theme.of(context).colorScheme;
 
-    final List<Color> searchBgColors = [
-      // cloudy
-      isLight
-          ? Color(paletteWeather.secondary.get(150))
-          : Color(paletteWeather.secondary.get(10)),
+    // Use memoized color arrays - computed lazily once per theme change
+    final searchBgColors = _getSearchBgColors();
+    final weatherContainerColors = _getContainerColors(useDarkerBackground, isShowFrog);
 
-      // overcast
-      isLight ? Color(0xFFe8f2ff) : Color(paletteWeather.secondary.get(13)),
-
-      // clear day
-      isLight ? Color(0xFFe8f2ff) : Color(paletteWeather.primary.get(10)),
-
-      // clear night
-      isLight
-          ? Color(paletteWeather.neutral.get(100))
-          : Color(paletteWeather.primary.get(10)),
-
-      // fog
-      isLight
-          ? Color(
-              CorePalette.of(const Color.fromARGB(255, 255, 153, 0).toARGB32())
-                  .secondary
-                  .get(100))
-          : Color(
-              CorePalette.of(const Color.fromARGB(255, 255, 153, 0).toARGB32())
-                  .secondary
-                  .get(20)),
-      // rain
-      isLight ? Color(0xFFe8f2ff) : Color(paletteWeather.secondary.get(15)),
-
-      // thunder
-      isLight
-          ? Color.fromARGB(255, 247, 232, 255)
-          : Color(CorePalette.of(const Color(0xFFe4b7f3).toARGB32())
-              .secondary
-              .get(20)),
-
-      // snow
-      isLight
-          ? Color.fromARGB(255, 232, 254, 255)
-          : Color(
-              CorePalette.of(const Color.fromARGB(255, 0, 13, 31).toARGB32())
-                  .secondary
-                  .get(18)),
-    ];
-
-    final List<int> weatherContainerColors = [
-      // cloudy
-      isLight
-          ? paletteWeather.secondary.get(98)
-          : paletteWeather.secondary.get(useDarkerBackground
-              ? 2
-              : !isShowFrog
-                  ? iscurrentDay!
-                      ? 8
-                      : 3
-                  : 8),
-
-      // overcast
-      isLight
-          ? 0xFFfcfcff
-          : paletteWeather.secondary.get(useDarkerBackground ? 2 : 6),
-
-      // clear day
-      isLight
-          ? 0xFFfcfcff
-          : paletteWeather.primary.get(useDarkerBackground ? 2 : 8),
-
-      // clear night
-      isLight
-          ? CorePalette.of(const Color.fromARGB(255, 58, 77, 141).toARGB32())
-              .primary
-              .get(98)
-          : CorePalette.of(const Color.fromARGB(255, 58, 77, 141).toARGB32())
-              .primary
-              .get(useDarkerBackground ? 2 : 4),
-
-      // fog
-      isLight
-          ? CorePalette.of(Color.fromARGB(255, 255, 213, 165).toARGB32())
-              .secondary
-              .get(98)
-          : CorePalette.of(Color.fromARGB(255, 255, 213, 165).toARGB32())
-              .secondary
-              .get(useDarkerBackground ? 2 : 6),
-
-      // rain
-      isLight
-          ? 0xFFfcfcff
-          : CorePalette.of(Colors.blueAccent.toARGB32())
-              .secondary
-              .get(useDarkerBackground ? 2 : 8),
-
-      // thunder
-      isLight
-          ? CorePalette.of(const Color(0xFFe4b7f3).toARGB32()).secondary.get(96)
-          : CorePalette.of(const Color(0xFFe4b7f3).toARGB32())
-              .secondary
-              .get(useDarkerBackground ? 2 : 10),
-
-      // snow
-      isLight
-          ? 0xFFfcfcff
-          : CorePalette.of(const Color.fromARGB(255, 0, 13, 31).toARGB32())
-              .secondary
-              .get(1),
-    ];
 
     return FutureBuilder<Map<String, dynamic>?>(
         future: weatherFuture,
