@@ -133,7 +133,6 @@ class _WeatherHomeState extends State<WeatherHome> {
 
   // Memoized color arrays - computed once per theme change
   List<Color>? _memoizedSearchBgColors;
-  List<int>? _memoizedContainerColors;
 
   final WeatherFroggyManager _weatherManager = WeatherFroggyManager();
 
@@ -960,7 +959,7 @@ class _WeatherHomeState extends State<WeatherHome> {
           if (onLoadForceCall) {
             if (_cachedIsShowFrog != isShowFrog) {
               maybeUpdateWeatherAnimation(current, isForce: true);
-              print('called');
+              debugPrint('called');
 
               _cachedIsShowFrog = isShowFrog;
             }

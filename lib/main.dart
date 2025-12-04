@@ -32,7 +32,7 @@ final CorePalette paletteStartScreen = CorePalette.of(
 
 @pragma('vm:entry-point')
 Future<void> workerUpdateWidget() async {
-  print("CALLED");
+  debugPrint("CALLED");
   WidgetsFlutterBinding.ensureInitialized();
   final dir = await getApplicationDocumentsDirectory();
   Hive.init(dir.path);
@@ -218,12 +218,12 @@ class MyApp extends StatelessWidget {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     final colorThemeDark = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor ?? Colors.blue,
+      seedColor: themeController.seedColor,
       brightness: Brightness.dark,
     );
 
     final colorThemeLight = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor ?? Colors.blue,
+      seedColor: themeController.seedColor,
       brightness: Brightness.light,
     );
 
@@ -254,12 +254,12 @@ class MyApp extends StatelessWidget {
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.light,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.light,
                   ),
         useMaterial3: true,
@@ -302,18 +302,18 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData.from(
         colorScheme: isMonochrome(themeController.seedColor)
             ? ColorScheme.fromSeed(
-                seedColor: themeController.seedColor ?? Colors.blue,
+                seedColor: themeController.seedColor,
                 brightness: Brightness.dark,
                 dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.dark,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.dark,
                   ),
         useMaterial3: true,
@@ -549,7 +549,7 @@ class LocationPromptScreen extends StatelessWidget {
                     context: context,
                     barrierDismissible: false,
                     builder: (_) => LoadingDialog(
-                      key: dialogKey,
+                      dialogKey: dialogKey,
                       initialMessage: "Getting your location...",
                     ),
                   );
@@ -696,10 +696,10 @@ class LocationPromptScreen extends StatelessWidget {
 
 class LoadingDialog extends StatefulWidget {
   final String initialMessage;
-  final GlobalKey<LoadingDialogState> key;
+  final GlobalKey<LoadingDialogState> dialogKey;
 
-  const LoadingDialog({required this.key, required this.initialMessage})
-      : super(key: key);
+  const LoadingDialog({required this.dialogKey, required this.initialMessage})
+      : super(key: dialogKey);
 
   @override
   LoadingDialogState createState() => LoadingDialogState();
@@ -733,7 +733,6 @@ class LoadingDialogState extends State<LoadingDialog> {
           const SizedBox(height: 6),
           CircularProgressIndicator(
             color: customDarkScheme.primary,
-            year2023: false,
           ),
           Text(
             message,
