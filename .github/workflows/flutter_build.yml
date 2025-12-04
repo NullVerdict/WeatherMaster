@@ -44,6 +44,11 @@ jobs:
         with:
           commit_message: "chore: upgrade dependencies and apply dart fixes [skip ci]"
           add_options: "-f"
+          file_pattern: |
+            pubspec.yaml
+            pubspec.lock
+            lib/**
+            test/**
 
       - name: Analyze project
         run: flutter analyze
