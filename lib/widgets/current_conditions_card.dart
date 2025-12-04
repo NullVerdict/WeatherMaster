@@ -1355,7 +1355,6 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                       ListTile(
                         leading: MoonWidget(
                           date: now,
-                          resolution: 128,
                           size: 22,
                           moonColor: Colors.amber,
                           earthshineColor: Colors.blueGrey.shade900,
@@ -1590,7 +1589,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             itemBuilder: (context, index) {
               final item = itemOrder[index];
 
-              return Container(
+              return RepaintBoundary(
                 key: ValueKey(item),
                 child: gridItems[index],
               );
@@ -1710,8 +1709,12 @@ class _WindCompassWidgetState extends State<WindCompassWidget> {
           if (rawHeading == null) return const SizedBox();
 
           double normalizeAngle(double angle) {
-            while (angle > pi) angle -= 2 * pi;
-            while (angle < -pi) angle += 2 * pi;
+            while (angle > pi) {
+              angle -= 2 * pi;
+            }
+            while (angle < -pi) {
+              angle += 2 * pi;
+            }
             return angle;
           }
 
