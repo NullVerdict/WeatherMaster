@@ -188,11 +188,13 @@ class _EditLayoutPageState extends State<EditLayoutPage> {
                   )),
               IconButton(
                   onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final navigator = Navigator.of(context);
                     await layoutProvider.saveLayout(layoutConfig);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(content: Text('layout_saved'.tr())),
                     );
-                    Navigator.pop(context);
+                    navigator.pop();
                   },
                   icon: Icon(
                     Icons.save,

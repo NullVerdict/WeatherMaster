@@ -133,6 +133,7 @@ class _WeatherHomeState extends State<WeatherHome> {
 
   // Memoized color arrays - computed once per theme change
   List<Color>? _memoizedSearchBgColors;
+  List<int>? _memoizedContainerColors;
 
   final WeatherFroggyManager _weatherManager = WeatherFroggyManager();
 
@@ -845,8 +846,6 @@ class _WeatherHomeState extends State<WeatherHome> {
     final bool usAnimations = _cachedUseAnimations;
     final bool useDarkerBackground = _cachedUseDarkerBackground;
     final isShowFrog = _cachedShowFrog;
-
-    final colorTheme = Theme.of(context).colorScheme;
 
     // Use memoized color arrays - computed lazily once per theme change
     final searchBgColors = _getSearchBgColors();

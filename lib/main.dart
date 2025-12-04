@@ -538,6 +538,9 @@ class LocationPromptScreen extends StatelessWidget {
               ),
               onPressed: () async {
                 final dialogKey = GlobalKey<LoadingDialogState>();
+                final navigator = Navigator.of(context, rootNavigator: true);
+                final navigatorForPush = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
 
                 try {
                   bool ready =
@@ -595,12 +598,11 @@ class LocationPromptScreen extends StatelessWidget {
                     saved.latitude,
                     saved.longitude,
                     locationName: cacheKey,
-                    context: context,
                   );
 
-                  Navigator.of(context, rootNavigator: true).pop();
+                  navigator.pop();
 
-                  Navigator.of(context).pushReplacement(
+                  navigatorForPush.pushReplacement(
                     MaterialPageRoute(
                       builder: (_) => WeatherHome(
                         cacheKey: cacheKey,
@@ -613,8 +615,8 @@ class LocationPromptScreen extends StatelessWidget {
                     ),
                   );
                 } catch (e) {
-                  Navigator.of(context, rootNavigator: true).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop();
+                  messenger.showSnackBar(
                     SnackBar(content: Text('Error: ${e.toString()}')),
                   );
                 }
@@ -668,9 +670,10 @@ class LocationPromptScreen extends StatelessWidget {
                   BorderSide(color: customDarkScheme.outline, width: 2),
                 ),
               ),
-              onPressed: () async {
-                await Hive.openBox('weatherMasterCache');
-                await DataBackupService.importAndReplaceAllData(context);
+              onPressed: () {
+                Hive.openBox('weatherMasterCache').then((_) {
+                  DataBackupService.importAndReplaceAllData(context);
+                });
               },
               icon: Icon(
                 Icons.download_outlined,
