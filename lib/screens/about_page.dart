@@ -307,8 +307,8 @@ class _AboutPageState extends State<AboutPage> {
                 radius: 23,
                 child: Icon(Symbols.favorite),
               ),
-              title: Text("Contributors"),
-              subtitle: Text("Translators"),
+              title: Text("contributors".tr()),
+              subtitle: Text("translators".tr()),
               onTap: () {
                 TranslatorsDialog.show(
                   context,
@@ -342,7 +342,7 @@ class _AboutPageState extends State<AboutPage> {
                       pageBuilder: (context, animation, secondaryAnimation) {
                         return LicensePage(
                           applicationName: 'WeatherMaster',
-                          applicationVersion: 'v2.6.5 (F)',
+                          applicationVersion: 'v2.6.6 (F)',
                           applicationIcon: Container(
                             clipBehavior: Clip.hardEdge,
                             margin: const EdgeInsets.only(bottom: 16, top: 16),
@@ -542,7 +542,7 @@ class CheckUpdateButton extends StatefulWidget {
 }
 
 class _CheckUpdateButtonState extends State<CheckUpdateButton> {
-  final String currentVersion = 'v2.6.5';
+  final String currentVersion = 'v2.6.6';
   final String githubRepo = 'PranshulGG/WeatherMaster';
   bool isChecking = false;
 
@@ -973,7 +973,7 @@ class TranslatorsDialog {
                     width: double.infinity,
                     child: FilledButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Close'),
+                      child: Text('close'.tr()),
                     ),
                   ),
                   SizedBox(height: MediaQuery.of(context).padding.bottom + 10),
