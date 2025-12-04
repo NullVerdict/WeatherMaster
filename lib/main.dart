@@ -146,7 +146,11 @@ void main() async {
     lon = locationData['lon'];
   }
   await Hive.openBox('ai_summary_cache');
-  await FlutterDisplayMode.setHighRefreshRate();
+  try {
+    await FlutterDisplayMode.setHighRefreshRate();
+  } catch (e) {
+    debugPrint('Failed to set high refresh rate: $e');
+  }
   runApp(
     EasyLocalization(
       supportedLocales: easySupportedLocales,
