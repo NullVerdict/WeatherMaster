@@ -43,16 +43,12 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: upgrade dependencies and apply dart fixes [skip ci]"
-          add_options: "-f"
-          file_pattern: |
-            pubspec.yaml
-            pubspec.lock
-            lib/**
-            test/**
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"
 
       - name: Analyze project
         run: flutter analyze
-        continue-on-error: true
+        continue-on-error: true 
 
       - name: Create .env file
         run: |
