@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:weather_master_app/utils/preferences_helper.dart';
@@ -215,7 +216,7 @@ class TranslationProgressService {
 
       return progressData;
     } else {
-      print('Failed to fetch data: ${response.statusCode}');
+      debugPrint('Failed to fetch data: ${response.statusCode}');
       return {};
     }
   }
@@ -314,7 +315,6 @@ class _LanguageTileState extends State<LanguageTile> {
                   height: 60,
                   child: CircularProgressIndicator(
                     value: widget.progress / 100,
-                    year2023: false,
                     backgroundColor: Colors.red,
                   ))
             ]),

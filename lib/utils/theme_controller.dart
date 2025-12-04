@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:material_color_utilities/material_color_utilities.dart';
 import '../utils/preferences_helper.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -48,14 +49,14 @@ class ThemeController extends ChangeNotifier {
 
   void setSeedColor(Color newColor) {
     _seedColor = newColor;
-    _corePalette = CorePalette.of(newColor.value);
+    _corePalette = CorePalette.of(newColor.toARGB32());
     _isUsingDynamicColor = false;
     notifyListeners();
   }
 
   void setSeedColorSilently(Color newColor) {
     _seedColor = newColor;
-    _corePalette = CorePalette.of(newColor.value);
+    _corePalette = CorePalette.of(newColor.toARGB32());
     _isUsingDynamicColor = false;
   }
 
@@ -71,7 +72,7 @@ class ThemeController extends ChangeNotifier {
       case ThemeMode.dark:
         return Brightness.dark;
       case ThemeMode.system:
-        return WidgetsBinding.instance.window.platformBrightness;
+        return PlatformDispatcher.instance.platformBrightness;
     }
   }
 
@@ -83,7 +84,6 @@ class ThemeController extends ChangeNotifier {
       final brightness = currentBrightness;
 
       int primaryTone = brightness == Brightness.light ? 40 : 80;
-      int secondaryTone = brightness == Brightness.light ? 40 : 80;
 
       _seedColor = Color(corePalette.primary.get(primaryTone));
       _isUsingDynamicColor = true;

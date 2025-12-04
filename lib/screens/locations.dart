@@ -241,7 +241,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Widget buildDismissibleListView({Key? key}) {
-    final colorTheme = Theme.of(context).colorScheme;
     return savedLocations.isEmpty
         ? const Center(child: Text("No saved locations."))
         : ListView.builder(
@@ -619,23 +618,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
                       '${loc.city}-${loc.country}-${loc.latitude}-${loc.longitude}'),
                   child: const SizedBox.shrink(),
                 );
-              }
-
-              final isLastItem = index == savedLocations.length;
-
-              Future<Map<String, dynamic>> _getCurrentHomeInfo() async {
-                final prefs = await SharedPreferences.getInstance();
-                final homeLocationJson = prefs.getString('homeLocation');
-                if (homeLocationJson != null) {
-                  final data = jsonDecode(homeLocationJson);
-                  return {
-                    'cacheKey': data['cacheKey'] ?? '',
-                    'isGPS': data['isGPS'] ?? false,
-                    'city': data['city'] ?? '',
-                    'country': data['country'] ?? '',
-                  };
-                }
-                return {'cacheKey': '', 'isGPS': false};
               }
 
               Future<void> setHomeLocation(

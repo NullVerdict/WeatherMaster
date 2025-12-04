@@ -648,7 +648,9 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
             _currentLat = (locationData['lat'] as num).toDouble();
             _currentLon = (locationData['lon'] as num).toDouble();
           }
-        } catch (e) {}
+        } catch (e) {
+          // Silently ignore JSON parsing failures for location data
+        }
       }
 
       if (_currentLat == null || _currentLon == null) {
@@ -700,7 +702,9 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
 
         await _checkCacheAndFetchWeather();
       }
-    } catch (e) {}
+    } catch (e) {
+      // Silently ignore errors during initial load/cache read
+    }
   }
 
   Future<void> _checkCacheAndFetchWeather() async {
@@ -754,20 +758,6 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
       if (mounted) setState(() {});
     }
   }
-
-  Future<void> _forceRefresh() async {
-    if (_currentLat == null || _currentLon == null) return;
-
-    _lastFetchTime = DateTime.now();
-    PreferencesHelper.setInt(
-        "lastFetchTimestamp", _lastFetchTime!.millisecondsSinceEpoch);
-
-    _cachedLocationKey = _makeCacheKey(_currentLat!, _currentLon!);
-
-    final box = Hive.box('weatherModelsCache');
-    box.put('cachedLocationKey', _cachedLocationKey);
-    box.put('timestamp_$_cachedLocationKey',
-        _lastFetchTime!.millisecondsSinceEpoch);
 
     await _fetchWeatherForAllModels();
   }
@@ -976,7 +966,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
       return Container(
         padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.7),
+          color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -996,7 +986,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
       return Container(
         padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.7),
+          color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
