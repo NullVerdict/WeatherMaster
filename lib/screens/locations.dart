@@ -94,8 +94,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
           String? lastUpdated;
 
           if (rawJson != null) {
-            final map = json.decode(rawJson);
-            lastUpdated = map['last_updated'];
+            // final map = json.decode(rawJson);
+            // lastUpdated = map['last_updated'];
           }
 
           final locationData = {
@@ -228,6 +228,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
             onClosed: (updated) async {
               if (updated == true) {
                 await loadSavedLocations();
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('location_saved'.tr())),
                 );
@@ -327,6 +328,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                               await prefs.setString(
                                   'currentLocation', jsonEncode(locationData));
 
+                              if (!context.mounted) return;
                               Navigator.pop(context, {
                                 'cacheKey': cacheKey,
                                 'city': PreferencesHelper.getJson(
@@ -755,6 +757,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                 'currentLocation', jsonEncode(locationData));
 
                             // Return data to previous screen
+                            if (!context.mounted) return;
                             Navigator.pop(context, {
                               'cacheKey': cacheKey,
                               'city': loc.city,

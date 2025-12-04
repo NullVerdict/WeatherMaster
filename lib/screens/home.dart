@@ -263,6 +263,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     }
 
     final hasInternet = await NativeNetwork.isOnline();
+    if (!mounted) return null;
 
     if (!hasInternet) {
       if (!_istriggeredFromLocations) {
@@ -383,7 +384,7 @@ class _WeatherHomeState extends State<WeatherHome> {
         _isAppFullyLoaded = true;
       });
 
-      if (context != null) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('data_fetch_error'.tr()),
@@ -513,6 +514,7 @@ class _WeatherHomeState extends State<WeatherHome> {
         themeCalled = false;
         await saveLocation(saved);
 
+        if (!mounted) return;
         final weatherService = WeatherService();
         try {
           await weatherService.fetchWeather(
@@ -526,7 +528,7 @@ class _WeatherHomeState extends State<WeatherHome> {
             _isAppFullyLoaded = true;
           });
 
-          if (context != null) {
+          if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('data_fetch_error'.tr()),
@@ -562,8 +564,8 @@ class _WeatherHomeState extends State<WeatherHome> {
     _cachedUseDarkerBackground = settings.useDarkBackgroundCards;
     _cachedShowFrog = settings.showFrog;
     
-    // Invalidate memoized colors when theme changes\r
-    _memoizedSearchBgColors = null;\r
+    // Invalidate memoized colors when theme changes
+    _memoizedSearchBgColors = null;
   }
 
   final List<Color> weatherConditionColors = [

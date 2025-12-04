@@ -2162,9 +2162,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                         final precipAmountMain = precipAmount[dataIndex];
                         final precipProbMain = precipProb[dataIndex];
 
-                        final double rainValue = (precipAmountMain is num)
-                            ? precipAmountMain.toDouble()
-                            : 0;
+                        final double rainValue = precipAmountMain;
 
                         final double rainPercentage =
                             (maxprecipAmount - minprecipAmount) == 0
@@ -2742,9 +2740,9 @@ class AQISliderBar extends StatelessWidget {
 }
 
 int getStartIndex(utc_offset_seconds, hourlyTime) {
-  final offset = Duration(seconds: int.parse(utc_offset_seconds));\r
-  final nowUtc = DateTime.now().toUtc();\r
-  final nowLocal = nowUtc.add(offset);\r
+  final offset = Duration(seconds: int.parse(utc_offset_seconds));
+  final nowUtc = DateTime.now().toUtc();
+  final nowLocal = nowUtc.add(offset);
 
   final roundedNow =
       DateTime(nowLocal.year, nowLocal.month, nowLocal.day, nowLocal.hour);

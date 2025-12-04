@@ -88,7 +88,7 @@ class HomeLocationScreen extends StatelessWidget {
             builder: (context, homeSnapshot) {
               final homeData =
                   homeSnapshot.data ?? {'cacheKey': '', 'isGPS': false};
-              final currentCacheKey = homeData['cacheKey'] ?? '';
+              // final currentCacheKey = homeData['cacheKey'] ?? '';
               final isGPS = homeData['isGPS'] ?? false;
 
               return CustomScrollView(
@@ -280,6 +280,7 @@ class HomeLocationScreen extends StatelessWidget {
                                             }));
 
                                         final weatherService = WeatherService();
+                                        if (!context.mounted) return;
                                         await weatherService.fetchWeather(
                                             saved.latitude, saved.longitude,
                                             locationName: cacheKey,
