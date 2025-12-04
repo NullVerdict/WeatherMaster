@@ -115,6 +115,18 @@ class WeatherService {
           'cachedJson': cachedJson,
           'selectedModel': selectedModel,
           'isOnlyView': isOnlyView,
+          'checkIncomplete': false,
+        });
+      }
+
+      if (processingResult['status'] == 'error') {
+        final reason = processingResult['reason'] ?? 'Unknown error';
+        if (context != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              duration: const Duration(seconds: 10),
+              content: Text("$reason. Please change your model"),
+              action: SnackBarAction(
                 label: 'Change model',
                 onPressed: () {
                   Navigator.of(context).push(

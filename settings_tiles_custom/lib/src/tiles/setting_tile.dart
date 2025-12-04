@@ -76,9 +76,7 @@ abstract class SettingTile extends StatelessWidget {
   }
 
   Widget? _buildStyledTitle(BuildContext context) {
-    if (title == null) {
-      return null;
-    }
+    if (title == null) return null;
 
     if (title is Text) {
       final textWidget = title as Text;
