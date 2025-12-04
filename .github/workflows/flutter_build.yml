@@ -36,14 +36,17 @@ jobs:
       - name: Upgrade dependencies
         run: flutter pub upgrade
 
-      - name: Auto-commit updated dependencies
+      - name: Apply Dart fixes
+        run: dart fix --apply
+
+      - name: Auto-commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: upgrade Flutter dependencies [skip ci]"
+          commit_message: "chore: upgrade dependencies and apply dart fixes [skip ci]"
           add_options: "-f"
-          file_pattern: |
-            pubspec.yaml
-            pubspec.lock
+
+      - name: Analyze project
+        run: flutter analyze
 
       - name: Create .env file
         run: |
