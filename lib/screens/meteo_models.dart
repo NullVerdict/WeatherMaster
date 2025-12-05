@@ -642,7 +642,9 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
             _currentLat = (locationData['lat'] as num).toDouble();
             _currentLon = (locationData['lon'] as num).toDouble();
           }
-        } catch (e) {}
+        } catch (e) {
+          debugPrint('Error parsing currentLocation: $e');
+        }
       }
 
       if (_currentLat == null || _currentLon == null) {
@@ -694,7 +696,9 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
 
         await _checkCacheAndFetchWeather();
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error loading location and fetching weather: $e');
+    }
   }
 
   Future<void> _checkCacheAndFetchWeather() async {
@@ -749,6 +753,8 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
     }
   }
 
+  // _forceRefresh is currently unused but kept for potential future use
+  // ignore: unused_element
   Future<void> _forceRefresh() async {
     if (_currentLat == null || _currentLon == null) return;
 

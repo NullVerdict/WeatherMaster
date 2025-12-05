@@ -2192,9 +2192,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                         final precipAmountMain = precipAmount[dataIndex];
                         final precipProbMain = precipProb[dataIndex];
 
-                        final double rainValue = (precipAmountMain is num)
-                            ? precipAmountMain.toDouble()
-                            : 0;
+                        final double rainValue = precipAmountMain.toDouble();
 
                         final double rainPercentage =
                             (maxprecipAmount - minprecipAmount) == 0

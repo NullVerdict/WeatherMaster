@@ -342,8 +342,6 @@ class WeatherTopCardVertical extends StatefulWidget {
 }
 
 class _WeatherTopCardStateVertical extends State<WeatherTopCardVertical> {
-  final GlobalKey _labelKey = GlobalKey();
-  double _labelHeight = 0;
   UnitSettingsNotifier? _notifier;
   bool _useTempAnimation = true;
 
@@ -351,9 +349,6 @@ class _WeatherTopCardStateVertical extends State<WeatherTopCardVertical> {
   void initState() {
     super.initState();
     _useTempAnimation = PreferencesHelper.getBool("useTempAnimation") ?? true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateLabelHeight();
-    });
   }
 
   @override
@@ -365,26 +360,13 @@ class _WeatherTopCardStateVertical extends State<WeatherTopCardVertical> {
   }
 
   void _onSettingsChanged() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateLabelHeight();
-    });
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
     _notifier?.removeListener(_onSettingsChanged);
     super.dispose();
-  }
-
-  void _updateLabelHeight() {
-    final context = _labelKey.currentContext;
-    if (context != null) {
-      final box = context.findRenderObject() as RenderBox;
-      final height = box.size.height;
-      setState(() {
-        _labelHeight = height;
-      });
-    }
   }
 
   @override

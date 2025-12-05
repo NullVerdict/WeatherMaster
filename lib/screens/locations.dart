@@ -602,20 +602,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
               // final isLastItem = index == savedLocations.length; // Unused
 
-              Future<Map<String, dynamic>> getCurrentHomeInfo() async {
-                final prefs = await SharedPreferences.getInstance();
-                final homeLocationJson = prefs.getString('homeLocation');
-                if (homeLocationJson != null) {
-                  final data = jsonDecode(homeLocationJson);
-                  return {
-                    'cacheKey': data['cacheKey'] ?? '',
-                    'isGPS': data['isGPS'] ?? false,
-                    'city': data['city'] ?? '',
-                    'country': data['country'] ?? '',
-                  };
-                }
-                return {'cacheKey': '', 'isGPS': false};
-              }
+              // getCurrentHomeInfo is unused - logic handled by homeSnapshot.data directly
 
               Future<void> setHomeLocation(
                   BuildContext context, SavedLocation loc) async {

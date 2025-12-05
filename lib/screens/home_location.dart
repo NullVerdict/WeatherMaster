@@ -87,7 +87,7 @@ class HomeLocationScreen extends StatelessWidget {
             builder: (context, homeSnapshot) {
               final homeData =
                   homeSnapshot.data ?? {'cacheKey': '', 'isGPS': false};
-              final currentCacheKey = homeData['cacheKey'] ?? '';
+              // cacheKey used via homeData directly where needed
               final isGPS = homeData['isGPS'] ?? false;
 
               return CustomScrollView(
