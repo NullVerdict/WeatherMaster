@@ -36,10 +36,12 @@ class _WeatherTopCardState extends State<WeatherTopCard> {
   final GlobalKey _labelKey = GlobalKey();
   double _labelHeight = 0;
   UnitSettingsNotifier? _notifier;
+  bool _useTempAnimation = true;
 
   @override
   void initState() {
     super.initState();
+    _useTempAnimation = PreferencesHelper.getBool("useTempAnimation") ?? true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateLabelHeight();
     });
@@ -110,7 +112,7 @@ class _WeatherTopCardState extends State<WeatherTopCard> {
                     ),
                     Row(
                       children: [
-                        PreferencesHelper.getBool("useTempAnimation") == false
+                        !_useTempAnimation
                             ? Text("$convertedTemp°",
                                 style: TextStyle(
                                     fontFamily: "FlexFontEn",
@@ -337,13 +339,36 @@ class WeatherTopCardVertical extends StatefulWidget {
 class _WeatherTopCardStateVertical extends State<WeatherTopCardVertical> {
   final GlobalKey _labelKey = GlobalKey();
   double _labelHeight = 0;
+  UnitSettingsNotifier? _notifier;
+  bool _useTempAnimation = true;
 
   @override
   void initState() {
     super.initState();
+    _useTempAnimation = PreferencesHelper.getBool("useTempAnimation") ?? true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateLabelHeight();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _notifier?.removeListener(_onSettingsChanged);
+    _notifier = context.read<UnitSettingsNotifier>();
+    _notifier?.addListener(_onSettingsChanged);
+  }
+
+  void _onSettingsChanged() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateLabelHeight();
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifier?.removeListener(_onSettingsChanged);
+    super.dispose();
   }
 
   void _updateLabelHeight() {
@@ -398,7 +423,7 @@ class _WeatherTopCardStateVertical extends State<WeatherTopCardVertical> {
                 spacing: 3,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  PreferencesHelper.getBool("useTempAnimation") == false
+                  !_useTempAnimation
                       ? Text("$convertedTemp",
                           style: TextStyle(
                               fontFamily: "FlexFontEn",

@@ -545,6 +545,13 @@ class _WeatherHomeState extends State<WeatherHome> {
     isLight = Theme.of(context).brightness == Brightness.light;
   }
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _showHeaderNotifier.dispose();
+    super.dispose();
+  }
+
   final List<Color> weatherConditionColors = [
     // cloudy
     Color.fromARGB(255, 3, 88, 216),

@@ -21,10 +21,12 @@ class ScrollReactiveGradient extends StatefulWidget {
 
 class _ScrollReactiveGradientState extends State<ScrollReactiveGradient> {
   bool _isScrolled = false;
+  bool _useFullMaterialScheme = false;
 
   @override
   void initState() {
     super.initState();
+    _useFullMaterialScheme = PreferencesHelper.getBool("OnlyMaterialScheme") ?? false;
     widget.scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkScroll();
@@ -63,8 +65,7 @@ class _ScrollReactiveGradientState extends State<ScrollReactiveGradient> {
 
   @override
   Widget build(BuildContext context) {
-    final useFullMaterialScheme =
-        PreferencesHelper.getBool("OnlyMaterialScheme") ?? false;
+    final useFullMaterialScheme = _useFullMaterialScheme;
 
     return Stack(
       children: [
