@@ -88,21 +88,21 @@ Future<void> updateHomeWidget(Map<String, dynamic>? weather, {bool updatedFromHo
 
       utcOffsetSeconds = result['data']['utc_offset_seconds'].toString();
     } else {
-      final currentData = weather['current'];
+      final currentData = weather?['current'] ?? {};
 
-      temp = currentData['temperature_2m'].toDouble();
-      code = currentData['weather_code'];
-      final dailyData = weather['daily'];
-      final hourly = weather['hourly'] ?? {};
+      temp = (currentData['temperature_2m'] ?? 0).toDouble();
+      code = currentData['weather_code'] ?? 0;
+      final dailyData = weather?['daily'] ?? {};
+      final hourly = weather?['hourly'] ?? {};
       dailyDataMain = dailyData;
-      maxTemp = dailyData['temperature_2m_max'][0];
-      minTemp = dailyData['temperature_2m_min'][0];
-      isDay = currentData['is_day'];
+      maxTemp = (dailyData['temperature_2m_max']?[0] ?? 0).toDouble();
+      minTemp = (dailyData['temperature_2m_min']?[0] ?? 0).toDouble();
+      isDay = currentData['is_day'] ?? 1;
 
-      hourlyTime = hourly['time'];
-      hourlyTemps = hourly['temperature_2m'];
-      hourlyWeatherCodes = hourly['weather_code'];
-      utcOffsetSeconds = weather['utc_offset_seconds'].toString();
+      hourlyTime = hourly['time'] ?? [];
+      hourlyTemps = hourly['temperature_2m'] ?? [];
+      hourlyWeatherCodes = hourly['weather_code'] ?? [];
+      utcOffsetSeconds = (weather?['utc_offset_seconds'] ?? 0).toString();
     }
 
     int offsetSeconds = int.parse(utcOffsetSeconds);
