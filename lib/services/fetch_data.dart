@@ -13,7 +13,10 @@ class WeatherService {
   static const String _boxName = 'weatherMasterCache';
 
   Future<Box> _openBox() async {
-    return Hive.box(name: _boxName);
+    if (!Hive.isBoxOpen(_boxName)) {
+      return await Hive.openBox(_boxName);
+    }
+    return Hive.box(_boxName);
   }
 
   Future<Map<String, dynamic>?> fetchWeather(double lat, double lon,

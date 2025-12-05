@@ -641,11 +641,7 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
 
 class ChangelogService {
   final String githubRepo = "PranshulGG/WeatherMaster";
-  late final Box _box;
-
-  ChangelogService() {
-    _box = Hive.box(name: 'changelogs');
-  }
+  final Box _box = Hive.box('changelogs');
 
   Future<List<Map<String, dynamic>>> getChangelogs() async {
     final now = DateTime.now();
