@@ -164,6 +164,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
       setState(() => results = unique);
     } catch (e) {
       setState(() => results = []);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("data_fetch_error".tr())),
       );
@@ -416,6 +417,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                             locationName: cacheKey,
                                             context: context);
                                       } catch (e) {
+                                        if (!mounted) return;
                                         Navigator.pop(context);
 
                                         ScaffoldMessenger.of(context)
@@ -467,6 +469,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                           });
                                         }
 
+                                        if (!mounted) return;
                                         Navigator.pop(context);
 
                                         Navigator.pop(context, true);
@@ -528,6 +531,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                               await weatherService.fetchWeather(lat, lon,
                                   locationName: cacheKey, context: context);
                             } catch (e) {
+                              if (!mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('data_fetch_error'.tr()),
@@ -575,6 +579,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                 });
                               }
 
+                              if (!mounted) return;
                               Navigator.pop(context);
 
                               Navigator.pop(context, true);
@@ -595,6 +600,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                   'lon': lon,
                                   'isGPS': false,
                                 }));
+                            if (!mounted) return;
                             Navigator.pop(context, false);
                           }
                         });

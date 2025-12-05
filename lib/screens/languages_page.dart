@@ -58,7 +58,9 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
                     );
 
                     if (selectedLocale != null) {
+                      if (!context.mounted) return;
                       await context.setLocale(selectedLocale);
+                      if (!mounted) return;
                       setState(() {
                         _selectedLocale = selectedLocale;
                       });
@@ -147,6 +149,7 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
                           isLast: isLast,
                           onTap: () async {
                             await context.setLocale(locale);
+                            if (!mounted) return;
                             setState(() {
                               _selectedLocale = locale;
                             });

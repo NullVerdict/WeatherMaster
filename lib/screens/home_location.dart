@@ -284,9 +284,11 @@ class HomeLocationScreen extends StatelessWidget {
                                             locationName: cacheKey,
                                             context: context);
 
+                                        if (!context.mounted) return;
                                         Navigator.pop(context);
                                         Navigator.pop(context, true);
                                       } catch (e) {
+                                        if (!context.mounted) return;
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(

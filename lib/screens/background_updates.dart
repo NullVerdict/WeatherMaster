@@ -29,6 +29,7 @@ class _BackgroundUpdatesPageState extends State<BackgroundUpdatesPage> {
 
   Future<void> _loadPermission() async {
     final bool granted = await NotificationService.checkPermission();
+    if (!mounted) return;
     setState(() {
       _permissionGranted = granted;
     });
@@ -254,6 +255,7 @@ class _BatteryOptWidgetState extends State<BatteryOptWidget>
   Future<void> _checkBatteryStatus() async {
     final isWhitelisted =
         await BatteryOptimization.isIgnoringBatteryOptimizations();
+    if (!mounted) return;
     setState(() {
       _isWhitelisted = isWhitelisted;
     });

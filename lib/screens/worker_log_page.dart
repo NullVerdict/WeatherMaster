@@ -31,6 +31,7 @@ class _WorkInfoWidgetState extends State<WorkInfoWidget> {
             PreferencesHelper.getInt("savedRefreshInterval") ?? 90,
       });
 
+      if (!mounted) return;
       setState(() {
         if (result.containsKey('error')) {
           _workInfo = result['error'];
@@ -39,6 +40,7 @@ class _WorkInfoWidgetState extends State<WorkInfoWidget> {
         }
       });
     } on PlatformException catch (e) {
+      if (!mounted) return;
       setState(() {
         _workInfo = "Failed to get work info: '${e.message}'.";
       });

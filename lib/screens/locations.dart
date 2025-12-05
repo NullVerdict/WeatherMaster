@@ -213,6 +213,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 );
               } else if (updated == false &&
                   PreferencesHelper.getString("selectedViewLocation") != null) {
+                if (!mounted) return;
                 Navigator.pop(context, {'viewLocaton': true});
               }
             },
@@ -307,6 +308,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                               await prefs.setString(
                                   'currentLocation', jsonEncode(locationData));
 
+                              if (!context.mounted) return;
                               Navigator.pop(context, {
                                 'cacheKey': cacheKey,
                                 'city': PreferencesHelper.getJson(
@@ -739,6 +741,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                 'currentLocation', jsonEncode(locationData));
 
                             // Return data to previous screen
+                            if (!context.mounted) return;
                             Navigator.pop(context, {
                               'cacheKey': cacheKey,
                               'city': loc.city,

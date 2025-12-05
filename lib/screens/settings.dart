@@ -101,6 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
 
                         if (updated == true) {
+                          if (!mounted) return;
                           loadLocation();
                         }
                       },

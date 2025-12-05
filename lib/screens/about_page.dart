@@ -602,6 +602,7 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
       debugPrint('Error: $e');
     }
 
+    if (!mounted) return;
     setState(() {
       isChecking = false;
     });
@@ -920,10 +921,12 @@ class TranslatorsDialog {
             if (isLoading) {
               fetchTranslators(projectId: projectId, apiToken: apiToken)
                   .then((fetched) {
-                setState(() {
-                  translators = fetched;
-                  isLoading = false;
-                });
+                if (context.mounted) {
+                  setState(() {
+                    translators = fetched;
+                    isLoading = false;
+                  });
+                }
               });
             }
 

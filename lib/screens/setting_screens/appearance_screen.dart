@@ -283,6 +283,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                               Colors.blue,
                         );
                       }
+                      if (!mounted) return;
                       setState(() {
                         if (value) {
                           _useCustomTile = false;

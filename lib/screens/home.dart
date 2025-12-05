@@ -371,10 +371,12 @@ class _WeatherHomeState extends State<WeatherHome> {
       result = await weatherService.fetchWeather(lat!, lon!,
           locationName: cacheKey, context: context);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isAppFullyLoaded = true;
       });
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('data_fetch_error'.tr()),
@@ -423,6 +425,7 @@ class _WeatherHomeState extends State<WeatherHome> {
       bool serviceAvailable =
           await LocationPermissionHelper.checkServicesAndPermission(context);
 
+      if (!mounted) return;
       if (!serviceAvailable) {
         _refreshWeatherData();
         return;
@@ -512,10 +515,12 @@ class _WeatherHomeState extends State<WeatherHome> {
             context: context,
           );
         } catch (e) {
+          if (!mounted) return;
           setState(() {
             _isAppFullyLoaded = true;
           });
 
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('data_fetch_error'.tr()),
@@ -523,6 +528,7 @@ class _WeatherHomeState extends State<WeatherHome> {
             ),
           );
                 }
+        if (!mounted) return;
         setState(() {
           weatherFuture = getWeatherFromCache();
         });
@@ -1482,9 +1488,12 @@ class _WeatherHomeState extends State<WeatherHome> {
                                         context: context);
                                   } catch (e) {
                                     result = null;
+                                    if (!mounted) return;
                                     setState(() {
                                       _isAppFullyLoaded = true;
                                     });
+
+                                    if (!mounted) return;
 
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(
@@ -1498,6 +1507,7 @@ class _WeatherHomeState extends State<WeatherHome> {
 
                                   if (result == null) {
                                   } else {
+                                    if (!mounted) return;
                                     setState(() {
                                       cityName = PreferencesHelper.getJson(
                                           'selectedViewLocation')?['city'];
