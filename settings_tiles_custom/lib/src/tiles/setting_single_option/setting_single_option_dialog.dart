@@ -53,19 +53,21 @@ class _SettingSingleOptionDialogState<T extends Object>
     return AlertDialog.adaptive(
       contentPadding: const EdgeInsets.symmetric(vertical: 16),
       title: Text(widget.title),
-      content: SingleChildScrollView(
-        child: ListBody(
-          children: widget.options.map((option) {
-            final (:value as T, :title, :subtitle) = option;
-            return RadioListTile<T>(
-              dense: true,
-              value: value,
-              groupValue: _selectedOption,
-              title: Text(title, style:  TextStyle(fontSize: 15, color: _isSelected(value) ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface)),
-              subtitle: subtitle != null ? Text(subtitle) : null,
-              onChanged: (selected) => _onChanged(selected),
-            );
-          }).toList(),
+      content: RadioGroup<T>(
+        groupValue: _selectedOption,
+        onChanged: (selected) => _onChanged(selected),
+        child: SingleChildScrollView(
+          child: ListBody(
+            children: widget.options.map((option) {
+              final (:value as T, :title, :subtitle) = option;
+              return RadioListTile<T>(
+                dense: true,
+                value: value,
+                title: Text(title, style:  TextStyle(fontSize: 15, color: _isSelected(value) ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface)),
+                subtitle: subtitle != null ? Text(subtitle) : null,
+              );
+            }).toList(),
+          ),
         ),
       ),
       actions: [
