@@ -676,7 +676,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                         .toLowerCase()
                         .replaceAll(' ', '_');
                     final box = Hive.box(name: 'weatherMasterCache');
-                    await box.delete(cacheKey);
+                    box.delete(cacheKey);
                     _scaffoldMessengerKey.currentState?.showSnackBar(
                       SnackBar(
                         content:
