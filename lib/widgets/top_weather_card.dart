@@ -34,7 +34,6 @@ class WeatherTopCard extends StatefulWidget {
 
 class _WeatherTopCardState extends State<WeatherTopCard> {
   final GlobalKey _labelKey = GlobalKey();
-  double _labelHeight = 0;
   UnitSettingsNotifier? _notifier;
   bool _useTempAnimation = true;
 
@@ -70,13 +69,8 @@ class _WeatherTopCardState extends State<WeatherTopCard> {
   }
 
   void _updateLabelHeight() {
-    final context = _labelKey.currentContext;
-    if (context != null) {
-      final box = context.findRenderObject() as RenderBox;
-      final height = box.size.height;
-      setState(() {
-        _labelHeight = height;
-      });
+    if (_labelKey.currentContext != null && mounted) {
+      setState(() {});
     }
   }
 

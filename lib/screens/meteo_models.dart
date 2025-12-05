@@ -969,7 +969,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
       return Container(
         padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.7),
+          color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -989,7 +989,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
       return Container(
         padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.7),
+          color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.7),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(

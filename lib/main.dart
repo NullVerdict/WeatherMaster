@@ -737,7 +737,6 @@ class LoadingDialogState extends State<LoadingDialog> {
           const SizedBox(height: 6),
           CircularProgressIndicator(
             color: customDarkScheme.primary,
-            year2023: false,
           ),
           Text(
             message,

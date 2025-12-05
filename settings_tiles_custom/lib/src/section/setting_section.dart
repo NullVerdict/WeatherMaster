@@ -12,7 +12,7 @@ class SettingSection extends StatelessWidget {
     this.title,
     this.divider,
     this.styleTile = false,
-    this.PrimarySwitch = false,
+    this.primarySwitch = false,
     this.errorTile = false,
   });
 
@@ -25,12 +25,12 @@ class SettingSection extends StatelessWidget {
   /// A divider displayed between the setting tiles.
   final Divider? divider;
   final bool styleTile;
-  final bool PrimarySwitch;
+  final bool primarySwitch;
   final bool errorTile;
 
   Widget _wrapStyledTile(BuildContext context, Widget tile,
       {required bool isFirst, required bool isLast, required bool isOnly}) {
-    final borderRadius = PrimarySwitch
+    final borderRadius = primarySwitch
         ? BorderRadius.circular(50)
         : isOnly
             ? BorderRadius.circular(18)
@@ -51,7 +51,7 @@ class SettingSection extends StatelessWidget {
                     : BorderRadius.circular(2.6);
 
     return Material(
-      color: PrimarySwitch
+      color: primarySwitch
           ? Theme.of(context).colorScheme.primaryContainer
           : errorTile
               ? Theme.of(context).colorScheme.errorContainer
