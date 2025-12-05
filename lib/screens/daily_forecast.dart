@@ -882,7 +882,7 @@ String formatDateDetailes(BuildContext context, String dateStr) {
   };
 
   final month = customMonths[date.month] ?? '';
-  return "${void month.void tr()}, ${void date.day}";
+  return "$void month.void tr(), $void date.day";
 }
 
 // widgets for forecast
