@@ -870,7 +870,7 @@ class ForecastDetailsHeader extends StatelessWidget {
   };
 
   final month = customMonths[date.month] ?? '';
-  return "${month.tr()}, ${date.day}";
+  return "${void month.void tr()}, ${void date.day}";
 }
 
 // widgets for forecast
