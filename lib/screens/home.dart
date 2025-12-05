@@ -263,7 +263,6 @@ class _WeatherHomeState extends State<WeatherHome> {
       } else {}
 
       if (isFirstAppBuild) {
-        if (!context.mounted) return;
         SnackUtil.showSnackBar(
             context: context, message: "network_unavailable".tr());
         isFirstAppBuild = false;

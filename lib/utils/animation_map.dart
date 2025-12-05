@@ -159,8 +159,9 @@ class WeatherConditionAnimationMapper {
                   animationUrl,
                   fit: BoxFit.cover,
                   repeat: true,
+                  frameRate: FrameRate.max,
                   addRepaintBoundary: true,
-                  renderCache: RenderCache.drawingCommands,
+                  renderCache: RenderCache.raster,
                 ),
               ),
             ),
@@ -184,8 +185,9 @@ class WeatherConditionAnimationMapper {
                   secondaryAnimationUrl,
                   fit: BoxFit.cover,
                   repeat: true,
+                  frameRate: FrameRate.max,
                   addRepaintBoundary: true,
-                  renderCache: RenderCache.drawingCommands,
+                  renderCache: RenderCache.raster,
                 ),
               ),
             ),
@@ -204,13 +206,16 @@ class WeatherConditionAnimationMapper {
               ? MediaQuery.of(context).size.height
               : 300,
       child: RepaintBoundary(
-        child: Opacity(
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
           opacity: animationUrl.contains('haze_foreground.lottie') ? 0.4 : 1,
           child: Lottie.asset(
             animationUrl,
             fit: BoxFit.cover,
             repeat: true,
-            renderCache: RenderCache.drawingCommands,
+            frameRate: FrameRate.max,
+            renderCache: RenderCache.raster,
           ),
         ),
       ),
