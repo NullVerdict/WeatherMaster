@@ -18,11 +18,11 @@ class WeatherConditionAnimationMapper {
     switch (weatherCode) {
       case 0:
         animationUrl = isDay == 1
-            ? 'assets/foreground-animations/sunny_foreground.lottie'
-            : 'assets/foreground-animations/stars_foreground.lottie';
+            ? 'assets/foreground-animations/sunny_foreground.json'
+            : 'assets/foreground-animations/stars_foreground.json';
         secondaryAnimationUrl = isDay == 1
-            ? 'assets/foreground-animations/sunny_background.lottie'
-            : 'assets/foreground-animations/stars_foreground.lottie';
+            ? 'assets/foreground-animations/sunny_background.json'
+            : 'assets/foreground-animations/stars_foreground.json';
         topMain = 60;
         diffHeight = 400;
         isSunAnim = true;
@@ -31,23 +31,23 @@ class WeatherConditionAnimationMapper {
       case 1:
       case 2:
         animationUrl = isDay == 1
-            ? 'assets/foreground-animations/cloudy_foreground.lottie'
-            : 'assets/foreground-animations/mostly_clear_night.lottie';
+            ? 'assets/foreground-animations/cloudy_foreground.json'
+            : 'assets/foreground-animations/mostly_clear_night.json';
         secondaryAnimationUrl = isDay == 1
             ? setFullDisplay
-                ? 'assets/foreground-animations/cloudy.lottie'
-                : "assets/foreground-animations/cloudy_background.lottie"
-            : 'assets/foreground-animations/mostly_clear_night.lottie';
+                ? 'assets/foreground-animations/cloudy.json'
+                : "assets/foreground-animations/cloudy_background.json"
+            : 'assets/foreground-animations/mostly_clear_night.json';
         topMain = MediaQuery.of(context).padding.top + 40;
         diffHeight = isDay == 1 ? 400 : 450;
         break;
 
       case 3:
         animationUrl = setFullDisplay
-            ? 'assets/foreground-animations/cloudy.lottie'
-            : 'assets/foreground-animations/cloudy_background.lottie';
+            ? 'assets/foreground-animations/cloudy.json'
+            : 'assets/foreground-animations/cloudy_background.json';
         secondaryAnimationUrl =
-            'assets/foreground-animations/cloudy_background.lottie';
+            'assets/foreground-animations/cloudy_background.json';
         topMain = setFullDisplay
             ? MediaQuery.of(context).padding.top + 100
             : MediaQuery.of(context).padding.top + 50;
@@ -55,7 +55,7 @@ class WeatherConditionAnimationMapper {
 
       case 45:
       case 48:
-        animationUrl = 'assets/foreground-animations/haze_foreground.lottie';
+        animationUrl = 'assets/foreground-animations/haze_foreground.json';
         topMain = 13;
         break;
 
@@ -65,8 +65,8 @@ class WeatherConditionAnimationMapper {
       case 56:
       case 57:
         animationUrl = setFullDisplay
-            ? 'assets/foreground-animations/showers.lottie'
-            : 'assets/foreground-animations/rain_foreground.lottie';
+            ? 'assets/foreground-animations/showers.json'
+            : 'assets/foreground-animations/rain_foreground.json';
         topMain = 15;
         break;
 
@@ -75,19 +75,19 @@ class WeatherConditionAnimationMapper {
       case 65:
         animationUrl = isDay == 1
             ? setFullDisplay
-                ? 'assets/foreground-animations/showers.lottie'
-                : 'assets/foreground-animations/rain_foreground.lottie'
+                ? 'assets/foreground-animations/showers.json'
+                : 'assets/foreground-animations/rain_foreground.json'
             : setFullDisplay
-                ? 'assets/foreground-animations/showers.lottie'
-                : 'assets/foreground-animations/rain_foreground.lottie';
+                ? 'assets/foreground-animations/showers.json'
+                : 'assets/foreground-animations/rain_foreground.json';
         topMain = 15;
         break;
 
       case 66:
       case 67:
         animationUrl = setFullDisplay
-            ? 'assets/foreground-animations/showers.lottie'
-            : 'assets/foreground-animations/rain_foreground.lottie';
+            ? 'assets/foreground-animations/showers.json'
+            : 'assets/foreground-animations/rain_foreground.json';
         topMain = 15;
         break;
 
@@ -95,37 +95,37 @@ class WeatherConditionAnimationMapper {
       case 73:
       case 75:
         animationUrl = isDay == 1
-            ? 'assets/foreground-animations/flurries_foreground.lottie'
-            : 'assets/foreground-animations/flurries_foreground.lottie';
+            ? 'assets/foreground-animations/flurries_foreground.json'
+            : 'assets/foreground-animations/flurries_foreground.json';
         break;
 
       case 77:
-        animationUrl = 'assets/foreground-animations/flurries_foreground.lottie';
+        animationUrl = 'assets/foreground-animations/flurries_foreground.json';
         break;
 
       case 80:
       case 81:
       case 82:
         animationUrl = setFullDisplay
-            ? 'assets/foreground-animations/showers.lottie'
-            : 'assets/foreground-animations/rain_foreground.lottie';
+            ? 'assets/foreground-animations/showers.json'
+            : 'assets/foreground-animations/rain_foreground.json';
         topMain = 15;
         break;
 
       case 85:
       case 86:
         animationUrl =
-            'assets/foreground-animations/snow_shower_foreground.lottie';
+            'assets/foreground-animations/snow_shower_foreground.json';
         break;
 
       case 95:
       case 96:
       case 99:
         animationUrl = setFullDisplay
-            ? 'assets/foreground-animations/showers.lottie'
-            : 'assets/foreground-animations/rain_foreground.lottie';
+            ? 'assets/foreground-animations/showers.json'
+            : 'assets/foreground-animations/rain_foreground.json';
         secondaryAnimationUrl =
-            'assets/foreground-animations/thunder_background.lottie';
+            'assets/foreground-animations/thunder_background.json';
         topMain = 10;
         break;
 
@@ -145,7 +145,7 @@ class WeatherConditionAnimationMapper {
         left: isSunAnim ? -MediaQuery.of(context).size.width * 0.12 : 0,
         right: 0,
         height: (isSunAnim == true && !isNightBool ||
-                secondaryAnimationUrl.contains('cloudy_background.lottie'))
+                secondaryAnimationUrl.contains('cloudy_background.json'))
             ? 300
             : setFullDisplay
                 ? MediaQuery.of(context).size.height
@@ -168,8 +168,8 @@ class WeatherConditionAnimationMapper {
             Positioned(
               top: (setFullDisplay &&
                       secondaryAnimationUrl
-                          .contains('cloudy_background.lottie') &&
-                      animationUrl.contains('cloudy_background.lottie'))
+                          .contains('cloudy_background.json') &&
+                      animationUrl.contains('cloudy_background.json'))
                   ? -MediaQuery.of(context).padding.top - (topMain ?? 0)
                   : -MediaQuery.of(context).padding.top,
               left: 0,
@@ -209,7 +209,7 @@ class WeatherConditionAnimationMapper {
         child: AnimatedOpacity(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          opacity: animationUrl.contains('haze_foreground.lottie') ? 0.4 : 1,
+          opacity: animationUrl.contains('haze_foreground.json') ? 0.4 : 1,
           child: Lottie.asset(
             animationUrl,
             fit: BoxFit.cover,
