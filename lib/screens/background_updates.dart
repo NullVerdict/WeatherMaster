@@ -89,7 +89,7 @@ class _BackgroundUpdatesPageState extends State<BackgroundUpdatesPage> {
             ),
             SettingSection(
               styleTile: true,
-              PrimarySwitch: true,
+              primarySwitch: true,
               tiles: [
                 SettingSwitchTile(
                     title: Padding(
@@ -186,7 +186,7 @@ class _BackgroundUpdatesPageState extends State<BackgroundUpdatesPage> {
   }
 }
 
-Future<void> triggerBgUpdates(value) async {
+Future<void> triggerBgUpdates(bool value) async {
   if (value == false) {
     stopWeatherService();
     PreferencesHelper.setBool("runningTaskBackground", false);

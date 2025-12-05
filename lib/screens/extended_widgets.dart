@@ -2771,7 +2771,7 @@ class AQISliderBar extends StatelessWidget {
   }
 }
 
-int getStartIndex(utcOffsetSeconds, hourlyTime) {
+int getStartIndex(String utcOffsetSeconds, List<dynamic> hourlyTime) {
   final offset = Duration(seconds: int.parse(utcOffsetSeconds));
   final nowUtc = DateTime.now().toUtc();
   final nowLocal = nowUtc.add(offset);

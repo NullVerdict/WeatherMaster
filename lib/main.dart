@@ -217,13 +217,14 @@ class MyApp extends StatelessWidget {
     );
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
+    final effectiveSeedColor = themeController.seedColor ?? Colors.blue;
     final colorThemeDark = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor ?? Colors.blue,
+      seedColor: effectiveSeedColor,
       brightness: Brightness.dark,
     );
 
     final colorThemeLight = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor ?? Colors.blue,
+      seedColor: effectiveSeedColor,
       brightness: Brightness.light,
     );
 
@@ -254,12 +255,12 @@ class MyApp extends StatelessWidget {
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: effectiveSeedColor,
                     brightness: Brightness.light,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: effectiveSeedColor,
                     brightness: Brightness.light,
                   ),
         useMaterial3: true,
@@ -302,18 +303,18 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData.from(
         colorScheme: isMonochrome(themeController.seedColor)
             ? ColorScheme.fromSeed(
-                seedColor: themeController.seedColor ?? Colors.blue,
+                seedColor: effectiveSeedColor,
                 brightness: Brightness.dark,
                 dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: effectiveSeedColor,
                     brightness: Brightness.dark,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: effectiveSeedColor,
                     brightness: Brightness.dark,
                   ),
         useMaterial3: true,
@@ -545,11 +546,12 @@ class LocationPromptScreen extends StatelessWidget {
                     context,
                   );
                   if (!ready) return;
+                  if (!context.mounted) return;
                   showDialog(
                     context: context,
                     barrierDismissible: false,
                     builder: (_) => LoadingDialog(
-                      key: dialogKey,
+                      dialogKey: dialogKey,
                       initialMessage: "Getting your location...",
                     ),
                   );
@@ -598,6 +600,7 @@ class LocationPromptScreen extends StatelessWidget {
                     context: context,
                   );
 
+                  if (!context.mounted) return;
                   Navigator.of(context, rootNavigator: true).pop();
 
                   Navigator.of(context).pushReplacement(
@@ -613,6 +616,7 @@ class LocationPromptScreen extends StatelessWidget {
                     ),
                   );
                 } catch (e) {
+                  if (!context.mounted) return;
                   Navigator.of(context, rootNavigator: true).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Error: ${e.toString()}')),
@@ -670,6 +674,7 @@ class LocationPromptScreen extends StatelessWidget {
               ),
               onPressed: () async {
                 await Hive.openBox('weatherMasterCache');
+                if (!context.mounted) return;
                 await DataBackupService.importAndReplaceAllData(context);
               },
               icon: Icon(
@@ -696,11 +701,9 @@ class LocationPromptScreen extends StatelessWidget {
 
 class LoadingDialog extends StatefulWidget {
   final String initialMessage;
-  @override
-  final GlobalKey<LoadingDialogState> key;
+  final GlobalKey<LoadingDialogState> dialogKey;
 
-  const LoadingDialog({required this.key, required this.initialMessage})
-      : super(key: key);
+  const LoadingDialog({required this.dialogKey, required this.initialMessage, super.key});
 
   @override
   LoadingDialogState createState() => LoadingDialogState();

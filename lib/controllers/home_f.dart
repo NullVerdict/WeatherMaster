@@ -12,7 +12,7 @@ List<Map<String, dynamic>> convertToListOfMaps(Map<String, dynamic> data) {
   });
 }
 
-int getStartIndex(utcOffsetSeconds, hourlyTime) {
+int getStartIndex(String utcOffsetSeconds, List<dynamic> hourlyTime) {
   final offset = Duration(seconds: int.parse(utcOffsetSeconds));
   final nowUtc = DateTime.now().toUtc();
   final nowLocal = nowUtc.add(offset);
@@ -94,6 +94,7 @@ Future<void> checkForUpdatesOnStart(BuildContext context) async {
 
     await Future.delayed(Duration(seconds: 2));
 
+    if (!context.mounted) return;
     if (latestStable != null && latestStable['tag_name'] != currentVersion) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

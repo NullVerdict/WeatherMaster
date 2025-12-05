@@ -855,18 +855,6 @@ class ForecastDetailsHeader extends StatelessWidget {
   }
 }
 
-String formatDateDetailes(BuildContext context, String dateStr) {
-  final date = DateTime.parse(dateStr);
-
-  final locale = context.locale;
-
-  final lang = (locale.languageCode ?? '').toLowerCase();
-  final country = (locale.countryCode ?? '').toUpperCase();
-
-  if (lang == 'zh' && (country == 'CN' || country == 'TW')) {
-    return '${date.month}月${date.day}日';
-  }
-  const customMonths = {
     1: "month_jan",
     2: "month_feb",
     3: "month_mar",
