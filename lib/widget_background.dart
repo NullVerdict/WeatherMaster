@@ -9,7 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 @pragma('vm:entry-point')
-Future<void> updateHomeWidget(Map<String, dynamic>? weather, {bool updatedFromHome = false}) async {
+Future<void> updateHomeWidget(weather, {bool updatedFromHome = false}) async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -29,7 +29,7 @@ Future<void> updateHomeWidget(Map<String, dynamic>? weather, {bool updatedFromHo
     final dynamic isDay;
     final List<dynamic> hourlyTime;
     final List<dynamic> hourlyTemps;
-    late final Map<String, dynamic> dailyDataMain;
+    late final dailyDataMain;
 
     final List<dynamic> hourlyWeatherCodes;
     final String utcOffsetSeconds;
@@ -183,7 +183,7 @@ Future<void> updateHomeWidget(Map<String, dynamic>? weather, {bool updatedFromHo
             .loadString('assets/translations/$translationFileName.json');
         translations = jsonDecode(data);
       } catch (_) {
-        debugPrint(
+        print(
             '[Translation] $translationFileName.json not found, falling back to ${locale.languageCode}.json');
         final String data = await rootBundle
             .loadString('assets/translations/${locale.languageCode}.json');
@@ -256,7 +256,7 @@ Future<void> updateHomeWidget(Map<String, dynamic>? weather, {bool updatedFromHo
           .loadString('assets/translations/$translationFileName.json');
       translations = jsonDecode(data);
     } catch (e) {
-      debugPrint(
+      print(
           '[Translation] Could not load $translationFileName.json, falling back to en.json');
       final String data =
           await rootBundle.loadString('assets/translations/en.json');
@@ -289,9 +289,9 @@ Future<void> updateHomeWidget(Map<String, dynamic>? weather, {bool updatedFromHo
     await HomeWidget.updateWidget(
         name: 'ClockHourlyWidgetProvider', iOSName: null);
 
-    debugPrint('[WidgetUpdate] Called updateWidget');
+    print('[WidgetUpdate] Called updateWidget');
   } catch (e, stack) {
-    debugPrint('[WidgetUpdate][ERROR] $e');
-    debugPrint(stack.toString());
+    print('[WidgetUpdate][ERROR] $e');
+    print(stack);
   }
 }

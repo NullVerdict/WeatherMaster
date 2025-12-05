@@ -217,14 +217,13 @@ class MyApp extends StatelessWidget {
     );
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-    final effectiveSeedColor = themeController.seedColor ?? Colors.blue;
     final colorThemeDark = ColorScheme.fromSeed(
-      seedColor: effectiveSeedColor,
+      seedColor: themeController.seedColor,
       brightness: Brightness.dark,
     );
 
     final colorThemeLight = ColorScheme.fromSeed(
-      seedColor: effectiveSeedColor,
+      seedColor: themeController.seedColor,
       brightness: Brightness.light,
     );
 
@@ -255,12 +254,12 @@ class MyApp extends StatelessWidget {
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: effectiveSeedColor,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.light,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: effectiveSeedColor,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.light,
                   ),
         useMaterial3: true,
@@ -303,18 +302,18 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData.from(
         colorScheme: isMonochrome(themeController.seedColor)
             ? ColorScheme.fromSeed(
-                seedColor: effectiveSeedColor,
+                seedColor: themeController.seedColor,
                 brightness: Brightness.dark,
                 dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: effectiveSeedColor,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.dark,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: effectiveSeedColor,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.dark,
                   ),
         useMaterial3: true,
@@ -544,7 +543,6 @@ class LocationPromptScreen extends StatelessWidget {
                   bool ready =
                       await LocationPermissionHelper.checkServicesAndPermission(
                     context,
-                  );
                   if (!ready) return;
                   if (!context.mounted) return;
                   showDialog(
@@ -703,7 +701,8 @@ class LoadingDialog extends StatefulWidget {
   final String initialMessage;
   final GlobalKey<LoadingDialogState> dialogKey;
 
-  const LoadingDialog({required this.dialogKey, required this.initialMessage, super.key});
+  const LoadingDialog({required this.dialogKey, required this.initialMessage})
+      : super(key: dialogKey);
 
   @override
   LoadingDialogState createState() => LoadingDialogState();

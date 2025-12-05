@@ -78,10 +78,11 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
           final box = await Hive.openBox('weatherMasterCache');
           final rawJson = box.get(cacheKey);
+          String? lastUpdated;
+
           if (rawJson != null) {
             final map = json.decode(rawJson);
-            // ignore: unused_local_variable
-            final lastUpdated = map['last_updated'];
+            lastUpdated = map['last_updated'];
           }
 
           final locationData = {
@@ -99,7 +100,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     }
   }
 
-  Future<Map<String, dynamic>?> getWeatherFromCache(String cacheKey) async {
+  Future<Map<String, dynamic>?> getWeatherFromCache(cacheKey) async {
     final box = await Hive.openBox('weatherMasterCache');
     final cached = box.get(cacheKey);
     if (cached == null) return null;
@@ -110,7 +111,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     return current;
   }
 
-  Future<String?> getWeatherLastUpdatedFromCache(String cacheKey) async {
+  Future<String?> getWeatherLastUpdatedFromCache(cacheKey) async {
     final box = await Hive.openBox('weatherMasterCache');
     final rawJson = box.get(cacheKey);
 
@@ -214,7 +215,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
             onClosed: (updated) async {
               if (updated == true) {
                 await loadSavedLocations();
-                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('location_saved'.tr())),
                 );

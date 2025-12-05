@@ -94,8 +94,8 @@ Future<void> checkForUpdatesOnStart(BuildContext context) async {
 
     await Future.delayed(Duration(seconds: 2));
 
-    if (!context.mounted) return;
     if (latestStable != null && latestStable['tag_name'] != currentVersion) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
