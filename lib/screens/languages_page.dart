@@ -94,7 +94,7 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
                   },
                 ),
               ),
-              SettingSection(PrimarySwitch: true, styleTile: true, tiles: [
+              SettingSection(primarySwitch: true, styleTile: true, tiles: [
                 SettingSwitchTile(
                     title: Text("force_ltr_layout".tr()),
                     toggled: forceLTRLAYOUT,

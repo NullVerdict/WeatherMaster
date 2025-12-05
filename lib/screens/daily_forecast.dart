@@ -1167,7 +1167,7 @@ class ConditionsWidgetsForecast extends StatelessWidget {
                                       currentPressure.round()),
                                   fit: BoxFit.contain),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "pressure".tr(),
                               headerIcon: Symbols.compress,
                             ),
@@ -1241,7 +1241,7 @@ class ConditionsWidgetsForecast extends StatelessWidget {
                                       fit: BoxFit.contain,
                                     ),
                                   ),
-                                  headerWidgetConditions(
+                                  HeaderWidgetConditions(
                                     headerText: "visibility".tr(),
                                     headerIcon: Symbols.visibility,
                                   ),
@@ -1316,7 +1316,7 @@ class ConditionsWidgetsForecast extends StatelessWidget {
                                         currentWindDirc: currentWindDirc,
                                         backgroundColor:
                                             Color(selectedContainerBgIndex)),
-                                    headerWidgetConditions(
+                                    HeaderWidgetConditions(
                                       headerText: "direction".tr(),
                                       headerIcon: Symbols.explore,
                                     ),
@@ -1386,7 +1386,7 @@ class ConditionsWidgetsForecast extends StatelessWidget {
                             fit: BoxFit.contain,
                           ),
                         ),
-                        headerWidgetConditions(
+                        HeaderWidgetConditions(
                           headerText: "uv_index".tr(),
                           headerIcon: Symbols.light_mode,
                         ),

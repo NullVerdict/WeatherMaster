@@ -720,7 +720,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "visibility".tr(),
                               headerIcon: Symbols.visibility,
                             ),
@@ -832,7 +832,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                               currentWindDirc: widget.currentWindDirc,
                               backgroundColor:
                                   Color(widget.selectedContainerBgIndex)),
-                          headerWidgetConditions(
+                          HeaderWidgetConditions(
                             headerText: "wind".tr(),
                             headerIcon: Symbols.explore,
                           ),
@@ -952,7 +952,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "uv_index".tr(),
                               headerIcon: Symbols.light_mode,
                             ),
@@ -1524,8 +1524,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
-                              headerText: "cloudiness".tr(),
+                            HeaderWidgetConditions(
+                              headerText: "cloud_cover".tr(),
                               headerIcon: Symbols.cloud,
                             ),
                             Align(

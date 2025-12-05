@@ -37,6 +37,17 @@ class _WeatherTopCardState extends State<WeatherTopCard> {
   UnitSettingsNotifier? _notifier;
   bool _useTempAnimation = true;
 
+  double get _labelHeight {
+    final ctx = _labelKey.currentContext;
+    if (ctx != null) {
+      final box = ctx.findRenderObject() as RenderBox?;
+      if (box != null) {
+        return box.size.height;
+      }
+    }
+    return 0;
+  }
+
   @override
   void initState() {
     super.initState();
