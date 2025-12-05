@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
@@ -541,7 +542,7 @@ class CheckUpdateButton extends StatefulWidget {
   const CheckUpdateButton({super.key});
 
   @override
-  _CheckUpdateButtonState createState() => _CheckUpdateButtonState();
+  State<CheckUpdateButton> createState() => _CheckUpdateButtonState();
 }
 
 class _CheckUpdateButtonState extends State<CheckUpdateButton> {
@@ -572,6 +573,7 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
       await Future.delayed(Duration(seconds: 2));
 
       if (latestStable != null && latestStable['tag_name'] != currentVersion) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('new_version_available!'.tr()),
@@ -584,6 +586,7 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
         final url = 'https://github.com/$githubRepo/releases';
         openLink(url);
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('you_are_using_the_latest_version!'.tr()),
@@ -591,12 +594,13 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
         );
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text('error_checking_for_updates'.tr()),
             behavior: SnackBarBehavior.floating),
       );
-      print('Error: $e');
+      debugPrint('Error: $e');
     }
 
     setState(() {
@@ -845,7 +849,7 @@ class TranslatorsDialog {
                 .difference(DateTime.fromMillisecondsSinceEpoch(timestamp))
                 .inHours <
             24) {
-          print('Using cached translators data');
+          debugPrint('Using cached translators data');
 
           return translatorsData.map((e) => Translator.fromJson(e)).toList();
         }
@@ -885,7 +889,7 @@ class TranslatorsDialog {
 
       return translators;
     } catch (e) {
-      print('Error fetching translators: $e');
+      debugPrint('Error fetching translators: $e');
 
       final prefs = await SharedPreferences.getInstance();
       final savedData = prefs.getString(cacheKey);
@@ -893,7 +897,7 @@ class TranslatorsDialog {
         try {
           final cached = json.decode(savedData);
           final translatorsData = cached['translators'] as List<dynamic>;
-          print('Using cached data fallback');
+          debugPrint('Using cached data fallback');
           return translatorsData.map((e) => Translator.fromJson(e)).toList();
         } catch (_) {}
       }

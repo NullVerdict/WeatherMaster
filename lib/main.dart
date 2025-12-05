@@ -32,7 +32,7 @@ final CorePalette paletteStartScreen = CorePalette.of(
 
 @pragma('vm:entry-point')
 Future<void> workerUpdateWidget() async {
-  print("CALLED");
+  debugPrint("CALLED");
   WidgetsFlutterBinding.ensureInitialized();
   final dir = await getApplicationDocumentsDirectory();
   Hive.init(dir.path);

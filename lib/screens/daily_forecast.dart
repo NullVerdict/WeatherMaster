@@ -555,7 +555,6 @@ class HourlyCardForecast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final offset = Duration(seconds: int.parse(utcOffsetSeconds));
     final colorTheme = Theme.of(context).colorScheme;
 
     // final localSelectedDate = selectedDate.toUtc().add(offset);
@@ -989,15 +988,14 @@ class ConditionsWidgetsForecast extends StatelessWidget {
       margin: EdgeInsets.fromLTRB(12.7, 0, 12.7, 0),
       child: Column(
         children: [
-          Container(
-            child: GridView.count(
-              crossAxisCount: 2,
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              children: [
-                OpenContainer(
+          GridView.count(
+            crossAxisCount: 2,
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            children: [
+              OpenContainer(
                     transitionType: ContainerTransitionType.fadeThrough,
                     closedElevation: 1,
                     closedShape: RoundedRectangleBorder(

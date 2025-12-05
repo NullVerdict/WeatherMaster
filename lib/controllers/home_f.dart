@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../utils/preferences_helper.dart';
 import 'package:http/http.dart' as http;
@@ -18,7 +19,6 @@ int getStartIndex(utcOffsetSeconds, hourlyTime) {
   final nowUtc = DateTime.now().toUtc();
   final nowLocal = nowUtc.add(offset);
 
-  final timeUnit = PreferencesHelper.getString("selectedTimeUnit") ?? '12 hr';
 
   final roundedNow =
       DateTime(nowLocal.year, nowLocal.month, nowLocal.day, nowLocal.hour);
@@ -130,7 +130,7 @@ Future<void> checkForUpdatesOnStart(BuildContext context) async {
 
     await prefs.setInt('lastUpdateCheck', now);
   } catch (e) {
-    print('Update check failed: $e');
+    debugPrint('Update check failed: $e');
   } finally {
     isChecking = false;
   }
