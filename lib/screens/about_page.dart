@@ -7,7 +7,7 @@ import '../utils/open_links.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:hive/hive.dart';
+import 'package:hive_plus_secure/hive.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 

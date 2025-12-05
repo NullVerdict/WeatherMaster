@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
-import 'package:hive/hive.dart';
+import 'package:hive_plus_secure/hive.dart';
 import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzmap;
 import '../utils/preferences_helper.dart';
 import 'package:flutter/material.dart';

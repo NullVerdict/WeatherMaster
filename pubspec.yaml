@@ -41,12 +41,11 @@ dependencies:
   lottie: ^3.3.2
   lat_lng_to_timezone: ^0.2.0
   shared_preferences: ^2.5.3
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
+  hive_plus_secure: ^1.1.25
+  isar_plus_flutter_libs: ^1.0.0
   path_provider: ^2.1.5
   provider: ^6.1.5
   connectivity_plus: ^6.1.5
-  restart_app: ^1.3.2
   intl: ^0.20.2
   material_symbols_icons: ^4.2892.0
   flutter_compass: ^0.8.1

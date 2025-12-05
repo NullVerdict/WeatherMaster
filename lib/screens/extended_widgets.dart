@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
 import '../utils/preferences_helper.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_plus_secure/hive.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../utils/unit_converter.dart';
 import 'package:solar_calculator/solar_calculator.dart';
