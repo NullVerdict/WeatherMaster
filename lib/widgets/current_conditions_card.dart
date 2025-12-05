@@ -1355,7 +1355,6 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                       ListTile(
                         leading: MoonWidget(
                           date: now,
-                          resolution: 128,
                           size: 22,
                           moonColor: Colors.amber,
                           earthshineColor: Colors.blueGrey.shade900,
