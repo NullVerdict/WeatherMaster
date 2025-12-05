@@ -176,7 +176,7 @@ class WeatherService {
         'last_updated': now,
       };
 
-      await box.put(key, json.encode(wrappedData));
+      box.put(key, json.encode(wrappedData));
       log("Hive: Updated cache for $key at $now");
 
       return {
