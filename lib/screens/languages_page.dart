@@ -215,7 +215,7 @@ class TranslationProgressService {
 
       return progressData;
     } else {
-      print('Failed to fetch data: ${response.statusCode}');
+      debugPrint('Failed to fetch data: ${response.statusCode}');
       return {};
     }
   }

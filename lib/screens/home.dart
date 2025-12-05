@@ -763,7 +763,7 @@ class _WeatherHomeState extends State<WeatherHome> {
         context.watch<UnitSettingsNotifier>().useDarkBackgroundCards;
     final isShowFrog = context.watch<UnitSettingsNotifier>().showFrog;
 
-    final colorTheme = Theme.of(context).colorScheme;
+    // final colorTheme = Theme.of(context).colorScheme; // Unused here, used elsewhere
 
     final List<Color> searchBgColors = [
       // cloudy
@@ -979,7 +979,7 @@ class _WeatherHomeState extends State<WeatherHome> {
           if (onLoadForceCall) {
             if (_cachedIsShowFrog != isShowFrog) {
               maybeUpdateWeatherAnimation(current, isForce: true);
-              print('called');
+              debugPrint('called');
 
               _cachedIsShowFrog = isShowFrog;
             }

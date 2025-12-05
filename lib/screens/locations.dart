@@ -76,14 +76,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 'lon': loc.longitude,
               }));
 
-          final box = await Hive.openBox('weatherMasterCache');
-          final rawJson = box.get(cacheKey);
-          String? lastUpdated;
-
-          if (rawJson != null) {
-            final map = json.decode(rawJson);
-            lastUpdated = map['last_updated'];
-          }
+          await Hive.openBox('weatherMasterCache');
 
           final locationData = {
             'city': loc.city,
@@ -100,7 +93,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     }
   }
 
-  Future<Map<String, dynamic>?> getWeatherFromCache(cacheKey) async {
+  Future<Map<String, dynamic>?> getWeatherFromCache(String cacheKey) async {
     final box = await Hive.openBox('weatherMasterCache');
     final cached = box.get(cacheKey);
     if (cached == null) return null;
@@ -111,7 +104,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     return current;
   }
 
-  Future<String?> getWeatherLastUpdatedFromCache(cacheKey) async {
+  Future<String?> getWeatherLastUpdatedFromCache(String cacheKey) async {
     final box = await Hive.openBox('weatherMasterCache');
     final rawJson = box.get(cacheKey);
 
@@ -228,7 +221,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Widget buildDismissibleListView({Key? key}) {
-    final colorTheme = Theme.of(context).colorScheme;
     return savedLocations.isEmpty
         ? const Center(child: Text("No saved locations."))
         : ListView.builder(
@@ -608,7 +600,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 );
               }
 
-              final isLastItem = index == savedLocations.length;
+              // final isLastItem = index == savedLocations.length; // Unused
 
               Future<Map<String, dynamic>> getCurrentHomeInfo() async {
                 final prefs = await SharedPreferences.getInstance();

@@ -186,7 +186,7 @@ class _BackgroundUpdatesPageState extends State<BackgroundUpdatesPage> {
   }
 }
 
-Future<void> triggerBgUpdates(value) async {
+Future<void> triggerBgUpdates(bool value) async {
   if (value == false) {
     stopWeatherService();
     PreferencesHelper.setBool("runningTaskBackground", false);
