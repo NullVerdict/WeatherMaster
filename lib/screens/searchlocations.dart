@@ -319,7 +319,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
           backgroundColor: colorTheme.surfaceContainerHigh,
           shape: Border(
               bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.8),
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.8),
                   width: 2))),
       body: isLoading
           ? Center(

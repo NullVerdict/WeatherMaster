@@ -314,7 +314,6 @@ class _LanguageTileState extends State<LanguageTile> {
                   height: 60,
                   child: CircularProgressIndicator(
                     value: widget.progress / 100,
-                    year2023: false,
                     backgroundColor: Colors.red,
                   ))
             ]),

@@ -87,7 +87,7 @@ class PreferencesHelper {
   // -------------------- Color --------------------
 
 static Future<bool> setColor(String key, Color color) async {
-  return setInt(key, color.value);
+  return setInt(key, color.toARGB32());
 }
 
 static Color? getColor(String key) {

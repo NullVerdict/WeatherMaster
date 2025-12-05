@@ -49,14 +49,14 @@ class ThemeController extends ChangeNotifier {
 
   void setSeedColor(Color newColor) {
     _seedColor = newColor;
-    _corePalette = CorePalette.of(newColor.value);
+    _corePalette = CorePalette.of(newColor.toARGB32());
     _isUsingDynamicColor = false;
     notifyListeners();
   }
 
   void setSeedColorSilently(Color newColor) {
     _seedColor = newColor;
-    _corePalette = CorePalette.of(newColor.value);
+    _corePalette = CorePalette.of(newColor.toARGB32());
     _isUsingDynamicColor = false;
   }
 
