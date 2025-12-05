@@ -5,7 +5,7 @@ import 'package:weather_master_app/utils/unit_converter.dart';
 import 'dart:convert';
 import '../models/saved_location.dart';
 import 'searchlocations.dart';
-import 'package:hive_plus_secure/hive.dart';
+import 'package:hive_plus_secure/hive_plus_secure.dart';
 import '../utils/preferences_helper.dart';
 import '../utils/icon_map.dart';
 import 'package:flutter_svg/flutter_svg.dart';

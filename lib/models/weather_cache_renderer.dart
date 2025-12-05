@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:hive_plus_secure/hive.dart';
+import 'package:hive_plus_secure/hive_plus_secure.dart';
 
 class WeatherCacheRenderer {
   static const String _boxName = 'weatherMasterCache';

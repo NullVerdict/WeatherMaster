@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:hive_plus_secure/hive.dart';
+import 'package:hive_plus_secure/hive_plus_secure.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'screens/home.dart';

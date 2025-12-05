@@ -14,7 +14,7 @@ import 'package:flutter/services.dart';
 // Third-party packages
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:hive_plus_secure/hive.dart';
+import 'package:hive_plus_secure/hive_plus_secure.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -233,7 +233,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     final homePref = PreferencesHelper.getJson('homeLocation');
     if (cached == null) {
       final weatherService = WeatherService();
-      if (!context.mounted) return null;
+      if (!mounted) return null;
       await weatherService.fetchWeather(homePref?['lat'], homePref?['lon'],
           locationName: cacheKey, context: context);
 
@@ -263,8 +263,10 @@ class _WeatherHomeState extends State<WeatherHome> {
       } else {}
 
       if (isFirstAppBuild) {
-        SnackUtil.showSnackBar(
-            context: context, message: "network_unavailable".tr());
+        if (mounted) {
+          SnackUtil.showSnackBar(
+              context: context, message: "network_unavailable".tr());
+        }
         isFirstAppBuild = false;
       }
     } else if (lastUpdated != null) {
@@ -369,7 +371,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     final weatherService = WeatherService();
     Map<String, dynamic>? result;
     try {
-      if (!context.mounted) return;
+      if (!mounted) return;
       result = await weatherService.fetchWeather(lat!, lon!,
           locationName: cacheKey, context: context);
     } catch (e) {
@@ -424,7 +426,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     final storedLocation = storedJson != null ? jsonDecode(storedJson) : null;
 
     if (storedLocation['isGPS'] ?? false) {
-      if (!context.mounted) return;
+      if (!mounted) return;
       bool serviceAvailable =
           await LocationPermissionHelper.checkServicesAndPermission(context);
 

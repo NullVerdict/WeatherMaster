@@ -6,7 +6,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzmap;
-import 'package:hive_plus_secure/hive.dart';
+import 'package:hive_plus_secure/hive_plus_secure.dart';
 
 class MeteoModelsPage extends StatefulWidget {
   const MeteoModelsPage({super.key});
