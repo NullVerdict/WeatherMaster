@@ -208,6 +208,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
             onClosed: (updated) async {
               if (updated == true) {
                 await loadSavedLocations();
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('location_saved'.tr())),
                 );

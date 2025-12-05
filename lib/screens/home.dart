@@ -233,6 +233,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     final homePref = PreferencesHelper.getJson('homeLocation');
     if (cached == null) {
       final weatherService = WeatherService();
+      if (!context.mounted) return null;
       await weatherService.fetchWeather(homePref?['lat'], homePref?['lon'],
           locationName: cacheKey, context: context);
 
@@ -262,6 +263,7 @@ class _WeatherHomeState extends State<WeatherHome> {
       } else {}
 
       if (isFirstAppBuild) {
+        if (!context.mounted) return;
         SnackUtil.showSnackBar(
             context: context, message: "network_unavailable".tr());
         isFirstAppBuild = false;
@@ -368,6 +370,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     final weatherService = WeatherService();
     Map<String, dynamic>? result;
     try {
+      if (!context.mounted) return;
       result = await weatherService.fetchWeather(lat!, lon!,
           locationName: cacheKey, context: context);
     } catch (e) {
@@ -422,6 +425,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     final storedLocation = storedJson != null ? jsonDecode(storedJson) : null;
 
     if (storedLocation['isGPS'] ?? false) {
+      if (!context.mounted) return;
       bool serviceAvailable =
           await LocationPermissionHelper.checkServicesAndPermission(context);
 
@@ -508,6 +512,7 @@ class _WeatherHomeState extends State<WeatherHome> {
 
         final weatherService = WeatherService();
         try {
+          if (!context.mounted) return;
           await weatherService.fetchWeather(
             currentLat,
             currentLon,
@@ -1471,7 +1476,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                             },
                             onClosed: (result) async {
                               await Future.delayed(Duration(milliseconds: 300));
-                              if (!mounted) return;
+                              if (!context.mounted) return;
                               if (result != null) {
                                 if (result['viewLocaton'] == true) {
                                   SnackUtil.showSnackBar(
@@ -1488,12 +1493,12 @@ class _WeatherHomeState extends State<WeatherHome> {
                                         context: context);
                                   } catch (e) {
                                     result = null;
-                                    if (!mounted) return;
+                                    if (!context.mounted) return;
                                     setState(() {
                                       _isAppFullyLoaded = true;
                                     });
 
-                                    if (!mounted) return;
+                                    if (!context.mounted) return;
 
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(

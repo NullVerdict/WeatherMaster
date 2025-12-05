@@ -54,6 +54,7 @@ class LocationPermissionHelper {
   static Future<bool> checkServicesAndPermission(BuildContext context) async {
     final serviceStatus = await Permission.location.serviceStatus;
     if (serviceStatus != ServiceStatus.enabled) {
+      if (!context.mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enable location services')),
       );
@@ -70,6 +71,7 @@ class LocationPermissionHelper {
       return true;
     }
 
+    if (!context.mounted) return false;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Location permission denied')),
     );

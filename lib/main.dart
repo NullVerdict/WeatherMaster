@@ -592,6 +592,7 @@ class LocationPromptScreen extends StatelessWidget {
                   );
 
                   final weatherService = WeatherService();
+                  if (!context.mounted) return;
                   await weatherService.fetchWeather(
                     saved.latitude,
                     saved.longitude,

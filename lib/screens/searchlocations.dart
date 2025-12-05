@@ -417,7 +417,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                             locationName: cacheKey,
                                             context: context);
                                       } catch (e) {
-                                        if (!mounted) return;
+                                        if (!context.mounted) return;
                                         Navigator.pop(context);
 
                                         ScaffoldMessenger.of(context)
@@ -469,7 +469,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                           });
                                         }
 
-                                        if (!mounted) return;
+                                        if (!context.mounted) return;
                                         Navigator.pop(context);
 
                                         Navigator.pop(context, true);
@@ -511,6 +511,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                           final count = await getLocationCount();
 
                           if (count == 0) {
+                            if (!context.mounted) return;
                             showDialog(
                               context: context,
                               barrierDismissible: false,
@@ -528,10 +529,11 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                 .replaceAll(' ', '_');
                             final weatherService = WeatherService();
                             try {
+                              if (!context.mounted) return;
                               await weatherService.fetchWeather(lat, lon,
                                   locationName: cacheKey, context: context);
                             } catch (e) {
-                              if (!mounted) return;
+                              if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('data_fetch_error'.tr()),
@@ -579,7 +581,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                 });
                               }
 
-                              if (!mounted) return;
+                              if (!context.mounted) return;
                               Navigator.pop(context);
 
                               Navigator.pop(context, true);

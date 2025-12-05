@@ -231,6 +231,7 @@ class HomeLocationScreen extends StatelessWidget {
                                               .checkServicesAndPermission(
                                                   context);
                                       if (!ready) return;
+                                      if (!context.mounted) return;
                                       showDialog(
                                         context: context,
                                         barrierDismissible: false,
@@ -279,6 +280,7 @@ class HomeLocationScreen extends StatelessWidget {
                                             }));
 
                                         final weatherService = WeatherService();
+                                        if (!context.mounted) return;
                                         await weatherService.fetchWeather(
                                             saved.latitude, saved.longitude,
                                             locationName: cacheKey,
