@@ -677,8 +677,8 @@ class ChangelogService {
             })
         .toList();
 
-    await _box.put('data', parsed);
-    await _box.put('lastFetch', now);
+    _box.put('data', parsed);
+    _box.put('lastFetch', now);
 
     return parsed;
   }
