@@ -228,7 +228,7 @@ class _WeatherHomeState extends State<WeatherHome> {
   }
 
   Future<Map<String, dynamic>?> getWeatherFromCache() async {
-    final box = await Hive.openBox('weatherMasterCache');
+    final box = Hive.box(name: 'weatherMasterCache');
     var cached = box.get(cacheKey);
     final homePref = PreferencesHelper.getJson('homeLocation');
     if (cached == null) {
@@ -342,7 +342,7 @@ class _WeatherHomeState extends State<WeatherHome> {
       return;
     }
 
-    final box = await Hive.openBox('weatherMasterCache');
+    final box = Hive.box(name: 'weatherMasterCache');
     final raw = box.get(cacheKey);
     if (raw == null) {
       return;
@@ -513,7 +513,7 @@ class _WeatherHomeState extends State<WeatherHome> {
 
         final weatherService = WeatherService();
         try {
-          if (!context.mounted) return;
+          if (!mounted) return;
           await weatherService.fetchWeather(
             currentLat,
             currentLon,

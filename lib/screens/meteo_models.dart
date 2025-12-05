@@ -624,7 +624,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
   }
 
   Future<void> _loadLocationAndFetchWeather() async {
-    final box = await Hive.openBox('weatherModelsCache');
+    final box = Hive.box(name: 'weatherModelsCache');
 
     try {
       final currentLocation = PreferencesHelper.getString('currentLocation');
@@ -737,7 +737,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
       _lastFetchTime = now;
       _cachedLocationKey = currentLocationKey;
 
-      final box = Hive.box('weatherModelsCache');
+      final box = Hive.box(name: 'weatherModelsCache');
       box.put('cachedLocationKey', currentLocationKey);
       box.put('timestamp_$currentLocationKey',
           _lastFetchTime!.millisecondsSinceEpoch);
@@ -764,7 +764,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
 
     _cachedLocationKey = _makeCacheKey(_currentLat!, _currentLon!);
 
-    final box = Hive.box('weatherModelsCache');
+    final box = Hive.box(name: 'weatherModelsCache');
     box.put('cachedLocationKey', _cachedLocationKey);
     box.put('timestamp_$_cachedLocationKey',
         _lastFetchTime!.millisecondsSinceEpoch);
@@ -887,7 +887,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
         _modelLoadingStates[modelKey] = false;
       }
 
-      final box = Hive.box('weatherModelsCache');
+      final box = Hive.box(name: 'weatherModelsCache');
       final cacheKey = _makeCacheKey(_currentLat!, _currentLon!);
 
       final Map<String, dynamic> serializable = {};

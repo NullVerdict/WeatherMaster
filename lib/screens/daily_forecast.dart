@@ -40,7 +40,7 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
     final jsonString = prefs.getString('currentLocation');
     if (jsonString != null) {
       final jsonMap = json.decode(jsonString);
-      final box = await Hive.openBox('weatherMasterCache');
+      final box = Hive.box(name: 'weatherMasterCache');
       final cached = box.get(jsonMap['cacheKey']);
       if (cached == null) return null;
       return json.decode(cached);
