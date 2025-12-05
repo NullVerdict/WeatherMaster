@@ -43,7 +43,7 @@ class NativeLocation {
         'city': result['city'] ?? '',
         'country': result['country'] ?? '',
       };
-    } on PlatformException catch (e) {
+    } on PlatformException {
       // Return empty strings on failure
       return {'city': '', 'country': ''};
     }

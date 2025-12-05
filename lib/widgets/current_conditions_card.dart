@@ -1710,8 +1710,12 @@ class _WindCompassWidgetState extends State<WindCompassWidget> {
           if (rawHeading == null) return const SizedBox();
 
           double normalizeAngle(double angle) {
-            while (angle > pi) angle -= 2 * pi;
-            while (angle < -pi) angle += 2 * pi;
+            while (angle > pi) {
+              angle -= 2 * pi;
+            }
+            while (angle < -pi) {
+              angle += 2 * pi;
+            }
             return angle;
           }
 

@@ -375,15 +375,13 @@ class _WeatherHomeState extends State<WeatherHome> {
         _isAppFullyLoaded = true;
       });
 
-      if (context != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('data_fetch_error'.tr()),
-            duration: Duration(seconds: 5),
-          ),
-        );
-      }
-    }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('data_fetch_error'.tr()),
+          duration: Duration(seconds: 5),
+        ),
+      );
+        }
 
     if (result == null) {
       return;
@@ -518,15 +516,13 @@ class _WeatherHomeState extends State<WeatherHome> {
             _isAppFullyLoaded = true;
           });
 
-          if (context != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('data_fetch_error'.tr()),
-                duration: Duration(seconds: 5),
-              ),
-            );
-          }
-        }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('data_fetch_error'.tr()),
+              duration: Duration(seconds: 5),
+            ),
+          );
+                }
         setState(() {
           weatherFuture = getWeatherFromCache();
         });
@@ -687,10 +683,12 @@ class _WeatherHomeState extends State<WeatherHome> {
     }
 
     if (difference.inMinutes < 1) return 'just_now'.tr();
-    if (difference.inMinutes < 60)
+    if (difference.inMinutes < 60) {
       return formatRelativeTime('min', difference.inMinutes);
-    if (difference.inHours < 24)
+    }
+    if (difference.inHours < 24) {
       return formatRelativeTime('hr', difference.inHours);
+    }
 
     return '${dt.month}/${dt.day} at ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
   }
@@ -1481,17 +1479,15 @@ class _WeatherHomeState extends State<WeatherHome> {
                                       _isAppFullyLoaded = true;
                                     });
 
-                                    if (context != null) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content:
-                                              Text('data_fetch_error'.tr()),
-                                          duration: Duration(seconds: 5),
-                                        ),
-                                      );
-                                    }
-                                  }
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text('data_fetch_error'.tr()),
+                                        duration: Duration(seconds: 5),
+                                      ),
+                                    );
+                                                                    }
 
                                   if (result == null) {
                                   } else {
