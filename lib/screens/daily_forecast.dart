@@ -881,8 +881,8 @@ String formatDateDetailes(BuildContext context, String dateStr) {
     12: "month_Dec",
   };
 
-  final month = customMonths[date.month] ?? '';
-  return "${void month.void tr()}, ${void date.day}";
+  final monthKey = customMonths[date.month] ?? '';
+  return "${monthKey.tr()}, ${date.day}";
 }
 
 // widgets for forecast

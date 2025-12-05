@@ -543,6 +543,7 @@ class LocationPromptScreen extends StatelessWidget {
                   bool ready =
                       await LocationPermissionHelper.checkServicesAndPermission(
                     context,
+                  );
                   if (!ready) return;
                   if (!context.mounted) return;
                   showDialog(
