@@ -70,6 +70,17 @@ class ConditionsWidgets extends StatefulWidget {
   State<ConditionsWidgets> createState() => _ConditionsWidgetsState();
 }
 
+// Helper to categorize AQI values (US or EU scales share breakpoints here).
+String getAQIIndexType(int aqi, bool european) {
+  final value = aqi;
+  if (value <= 50) return 'Good';
+  if (value <= 100) return 'Moderate';
+  if (value <= 150) return 'Unhealthy for Sensitive Groups';
+  if (value <= 200) return 'Unhealthy';
+  if (value <= 300) return 'Very Unhealthy';
+  return 'Hazardous';
+}
+
 class _ConditionsWidgetsState extends State<ConditionsWidgets> {
   List<int> itemOrder = [];
 
@@ -1109,8 +1120,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                           child: Text(
                             aqiFormat == 0.0000001
                                 ? '--'
-                                : getAQIIndexType(aqiFormat,
-                                    aqiUnit == 'European' ? true : false),
+                                : getAQIIndexType(
+                                    aqiFormat, aqiUnit == 'European'),
                             style: TextStyle(
                                 fontSize: 17,
                                 color: Theme.of(context)
