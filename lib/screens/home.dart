@@ -14,7 +14,7 @@ import 'package:flutter/services.dart';
 // Third-party packages
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:hive_plus_secure/hive_plus_secure.dart';
+import 'package:hive/hive.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -228,12 +228,12 @@ class _WeatherHomeState extends State<WeatherHome> {
   }
 
   Future<Map<String, dynamic>?> getWeatherFromCache() async {
-    final box = Hive.box(name: 'weatherMasterCache');
+    final box = await Hive.openBox('weatherMasterCache');
     var cached = box.get(cacheKey);
     final homePref = PreferencesHelper.getJson('homeLocation');
     if (cached == null) {
       final weatherService = WeatherService();
-      if (!mounted) return null;
+      if (!context.mounted) return null;
       await weatherService.fetchWeather(homePref?['lat'], homePref?['lon'],
           locationName: cacheKey, context: context);
 
@@ -263,10 +263,8 @@ class _WeatherHomeState extends State<WeatherHome> {
       } else {}
 
       if (isFirstAppBuild) {
-        if (mounted) {
-          SnackUtil.showSnackBar(
-              context: context, message: "network_unavailable".tr());
-        }
+        SnackUtil.showSnackBar(
+            context: context, message: "network_unavailable".tr());
         isFirstAppBuild = false;
       }
     } else if (lastUpdated != null) {
@@ -342,7 +340,7 @@ class _WeatherHomeState extends State<WeatherHome> {
       return;
     }
 
-    final box = Hive.box(name: 'weatherMasterCache');
+    final box = await Hive.openBox('weatherMasterCache');
     final raw = box.get(cacheKey);
     if (raw == null) {
       return;
@@ -371,7 +369,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     final weatherService = WeatherService();
     Map<String, dynamic>? result;
     try {
-      if (!mounted) return;
+      if (!context.mounted) return;
       result = await weatherService.fetchWeather(lat!, lon!,
           locationName: cacheKey, context: context);
     } catch (e) {
@@ -426,7 +424,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     final storedLocation = storedJson != null ? jsonDecode(storedJson) : null;
 
     if (storedLocation['isGPS'] ?? false) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       bool serviceAvailable =
           await LocationPermissionHelper.checkServicesAndPermission(context);
 
@@ -513,7 +511,7 @@ class _WeatherHomeState extends State<WeatherHome> {
 
         final weatherService = WeatherService();
         try {
-          if (!mounted) return;
+          if (!context.mounted) return;
           await weatherService.fetchWeather(
             currentLat,
             currentLon,

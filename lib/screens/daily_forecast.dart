@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_plus_secure/hive_plus_secure.dart';
+import 'package:hive/hive.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/unit_converter.dart';
@@ -40,7 +40,7 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
     final jsonString = prefs.getString('currentLocation');
     if (jsonString != null) {
       final jsonMap = json.decode(jsonString);
-      final box = Hive.box(name: 'weatherMasterCache');
+      final box = await Hive.openBox('weatherMasterCache');
       final cached = box.get(jsonMap['cacheKey']);
       if (cached == null) return null;
       return json.decode(cached);

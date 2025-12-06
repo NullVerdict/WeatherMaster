@@ -6,6 +6,7 @@ import '../../notifiers/unit_settings_notifier.dart';
 import 'package:provider/provider.dart';
 import '../../utils/theme_controller.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:restart_app/restart_app.dart';
 import '../../utils/snack_util.dart';
 import '../edit_layout_page.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
@@ -304,7 +305,11 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                         SnackUtil.showSnackBar(
                           context: context,
                           message: "restart_for_changes".tr(),
+                          actionLabel: "Restart",
                           duration: Duration(seconds: 30),
+                          onActionPressed: () {
+                            Restart.restartApp();
+                          },
                         );
                       });
                     },
@@ -390,7 +395,11 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
                         SnackUtil.showSnackBar(
                           context: context,
                           message: "restart_for_changes".tr(),
+                          actionLabel: "Restart",
                           duration: Duration(seconds: 30),
+                          onActionPressed: () {
+                            Restart.restartApp();
+                          },
                         );
                       });
                     })

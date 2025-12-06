@@ -7,7 +7,7 @@ import '../utils/open_links.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:hive_plus_secure/hive_plus_secure.dart';
+import 'package:hive/hive.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -641,7 +641,7 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
 
 class ChangelogService {
   final String githubRepo = "PranshulGG/WeatherMaster";
-  final Box _box = Hive.box(name: 'changelogs');
+  final Box _box = Hive.box('changelogs');
 
   Future<List<Map<String, dynamic>>> getChangelogs() async {
     final now = DateTime.now();
@@ -677,8 +677,8 @@ class ChangelogService {
             })
         .toList();
 
-    _box.put('data', parsed);
-    _box.put('lastFetch', now);
+    await _box.put('data', parsed);
+    await _box.put('lastFetch', now);
 
     return parsed;
   }

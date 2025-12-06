@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
-import 'package:hive_plus_secure/hive_plus_secure.dart';
+import 'package:hive/hive.dart';
 import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzmap;
 import '../utils/preferences_helper.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +13,10 @@ class WeatherService {
   static const String _boxName = 'weatherMasterCache';
 
   Future<Box> _openBox() async {
-    return Hive.box(name: _boxName);
+    if (!Hive.isBoxOpen(_boxName)) {
+      return await Hive.openBox(_boxName);
+    }
+    return Hive.box(_boxName);
   }
 
   Future<Map<String, dynamic>?> fetchWeather(double lat, double lon,
@@ -176,7 +179,7 @@ class WeatherService {
         'last_updated': now,
       };
 
-      box.put(key, json.encode(wrappedData));
+      await box.put(key, json.encode(wrappedData));
       log("Hive: Updated cache for $key at $now");
 
       return {

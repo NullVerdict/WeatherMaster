@@ -5,7 +5,8 @@ import 'package:weather_master_app/utils/unit_converter.dart';
 import 'dart:convert';
 import '../models/saved_location.dart';
 import 'searchlocations.dart';
-import 'package:hive_plus_secure/hive_plus_secure.dart';
+import 'package:hive/hive.dart';
+import 'package:restart_app/restart_app.dart';
 import '../utils/preferences_helper.dart';
 import '../utils/icon_map.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -75,7 +76,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 'lon': loc.longitude,
               }));
 
-          Hive.box(name: 'weatherMasterCache');
+          await Hive.openBox('weatherMasterCache');
 
           final locationData = {
             'city': loc.city,
@@ -85,13 +86,15 @@ class _LocationsScreenState extends State<LocationsScreen> {
             'longitude': loc.longitude,
           };
           await prefs.setString('currentLocation', jsonEncode(locationData));
+
+          Restart.restartApp();
         });
       }
     }
   }
 
   Future<Map<String, dynamic>?> getWeatherFromCache(String cacheKey) async {
-    final box = Hive.box(name: 'weatherMasterCache');
+    final box = await Hive.openBox('weatherMasterCache');
     final cached = box.get(cacheKey);
     if (cached == null) return null;
     final raw = json.decode(cached);
@@ -102,7 +105,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Future<String?> getWeatherLastUpdatedFromCache(String cacheKey) async {
-    final box = Hive.box(name: 'weatherMasterCache');
+    final box = await Hive.openBox('weatherMasterCache');
     final rawJson = box.get(cacheKey);
 
     if (rawJson != null) {
@@ -282,7 +285,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                   await SharedPreferences.getInstance();
 
                               final box =
-                                  Hive.box(name: 'weatherMasterCache');
+                                  await Hive.openBox('weatherMasterCache');
                               final rawJson = box.get(cacheKey);
                               String? lastUpdated;
 
@@ -677,8 +680,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
                     final cacheKey = "${removed.city}_${removed.country}"
                         .toLowerCase()
                         .replaceAll(' ', '_');
-                    final box = Hive.box(name: 'weatherMasterCache');
-                    box.delete(cacheKey);
+                    final box = await Hive.openBox('weatherMasterCache');
+                    await box.delete(cacheKey);
                     _scaffoldMessengerKey.currentState?.showSnackBar(
                       SnackBar(
                         content:
@@ -718,7 +721,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                             final prefs = await SharedPreferences.getInstance();
 
                             final box =
-                                Hive.box(name: 'weatherMasterCache');
+                                await Hive.openBox('weatherMasterCache');
                             final rawJson = box.get(cacheKey);
                             String? lastUpdated;
 

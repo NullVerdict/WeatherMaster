@@ -602,7 +602,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                   'lon': lon,
                                   'isGPS': false,
                                 }));
-                            if (!context.mounted) return;
+                            if (!mounted) return;
                             Navigator.pop(context, false);
                           }
                         });
