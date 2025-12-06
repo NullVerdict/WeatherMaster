@@ -100,7 +100,6 @@ class DataBackupService {
       final Map<String, dynamic> data = jsonDecode(jsonString);
 
       if (data['app'] != 'WeatherMaster' ||
-          !data.containsKey('cache') ||
           !data.containsKey('sharedPreferences')) {
         if (!context.mounted) return;
         SnackUtil.showSnackBar(context: context, message: "Invalid backup file format.");

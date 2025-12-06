@@ -26,6 +26,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
   late final Widget child;
   late final String extendedTitle;
   late final IconData? iconData;
+  late final Future<Map<String, dynamic>?> _weatherDataFuture;
 
   Future<Map<String, dynamic>?> getWeatherWidgets() async {
     final cacheKey = PreferencesHelper.getJson('currentLocation')?['cacheKey'];
@@ -42,6 +43,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
   @override
   void initState() {
     super.initState();
+    _weatherDataFuture = getWeatherWidgets();
     if (widget.widgetType == 'humidity_widget') {
       child = buildHumidityExtended();
       extendedTitle = 'humidity'.tr();
@@ -162,7 +164,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
 
   Widget buildHumidityExtended() {
     return FutureBuilder<Map<String, dynamic>?>(
-      future: getWeatherWidgets(),
+      future: _weatherDataFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -409,7 +411,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
 
   Widget buildSunExtended() {
     return FutureBuilder<Map<String, dynamic>?>(
-        future: getWeatherWidgets(),
+        future: _weatherDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -680,7 +682,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
 
   Widget buildPressureExtended() {
     return FutureBuilder<Map<String, dynamic>?>(
-        future: getWeatherWidgets(),
+        future: _weatherDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -995,7 +997,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
 
   Widget buildVisibilityExtended() {
     return FutureBuilder<Map<String, dynamic>?>(
-        future: getWeatherWidgets(),
+        future: _weatherDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -1119,7 +1121,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
 
   Widget buildWindExtended() {
     return FutureBuilder<Map<String, dynamic>?>(
-        future: getWeatherWidgets(),
+        future: _weatherDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -1422,7 +1424,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
 
   Widget buildUVExtended() {
     return FutureBuilder<Map<String, dynamic>?>(
-        future: getWeatherWidgets(),
+        future: _weatherDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -2059,7 +2061,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
 
   Widget buildPrecipExtended() {
     return FutureBuilder<Map<String, dynamic>?>(
-        future: getWeatherWidgets(),
+        future: _weatherDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -2382,7 +2384,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
 
   Widget buildMoonExtended() {
     return FutureBuilder<Map<String, dynamic>?>(
-        future: getWeatherWidgets(),
+        future: _weatherDataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
