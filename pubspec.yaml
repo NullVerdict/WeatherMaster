@@ -55,6 +55,7 @@ dependencies:
   easy_localization: ^3.0.8
   url_launcher: ^6.3.2
   reorderable_grid_view: ^2.2.8
+  flutter_riverpod: ^2.5.1
   custom_refresh_indicator: ^4.0.1
   flutter_markdown: ^0.7.7+1
   solar_calculator: ^1.0.3
