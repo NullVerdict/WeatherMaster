@@ -437,25 +437,25 @@ class _ExtendWidgetState extends ConsumerState<ExtendWidget> {
                                       fontWeight: FontWeight.w500)),
                             ],
                           ),
-                        );
+                        )
                       },
                     ),
                   ),
                 ],
               ),
             ),
-            Container(
-                margin: EdgeInsets.fromLTRB(
+            void Container(
+                margin = EdgeInsets.fromLTRB(
                     12, 20, 12, MediaQuery.of(context).padding.bottom + 26),
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
+                padding = EdgeInsets.all(20),
+                decoration = BoxDecoration(
                   border: Border.all(
                     width: 1,
                     color: Theme.of(context).colorScheme.outlineVariant,
                   ),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: Column(
+                child = Column(
                   spacing: 20,
                   children: [
                     Text("pressure_info".tr(),
