@@ -391,15 +391,15 @@ class _ExtendWidgetState extends ConsumerState<ExtendWidget> {
         ? (daily['daylight_duration'][0] as num?)?.toDouble()
         : null;
 
-    String _formatTime(String? iso) {
+    String formatTime(String? iso) {
       if (iso == null) return 'N/A';
       final dt = DateTime.tryParse(iso);
       if (dt == null) return iso;
       return units.timeUnit == '24 hr' ? '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}' : UnitConverter.formatTo12Hour(dt);
     }
 
-    final sunrise = _formatTime(sunriseStr);
-    final sunset = _formatTime(sunsetStr);
+    final sunrise = formatTime(sunriseStr);
+    final sunset = formatTime(sunsetStr);
     final daylightHours = daylightSeconds != null ? (daylightSeconds / 3600).toStringAsFixed(1) : 'N/A';
 
     return Padding(
