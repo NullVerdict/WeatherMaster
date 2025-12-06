@@ -75,7 +75,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 'lon': loc.longitude,
               }));
 
-          await Hive.openBox('weatherMasterCache');
+          Hive.box(name: 'weatherMasterCache');
 
           final locationData = {
             'city': loc.city,
@@ -282,7 +282,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                   await SharedPreferences.getInstance();
 
                               final box =
-                                  await Hive.openBox('weatherMasterCache');
+                                  Hive.box(name: 'weatherMasterCache');
                               final rawJson = box.get(cacheKey);
                               String? lastUpdated;
 
@@ -718,7 +718,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                             final prefs = await SharedPreferences.getInstance();
 
                             final box =
-                                await Hive.openBox('weatherMasterCache');
+                                Hive.box(name: 'weatherMasterCache');
                             final rawJson = box.get(cacheKey);
                             String? lastUpdated;
 
