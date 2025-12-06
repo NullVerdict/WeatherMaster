@@ -35,7 +35,7 @@ Future<void> workerUpdateWidget() async {
   debugPrint("CALLED");
   WidgetsFlutterBinding.ensureInitialized();
   final dir = await getApplicationDocumentsDirectory();
-  Hive.init(dir.path);
+  Hive.defaultDirectory = dir.path;
   await dotenv.load(fileName: ".env");
   await HomeWidget.setAppGroupId('com.pranshulgg.weather_master_app');
   await updateHomeWidget(null, updatedFromHome: false);
@@ -99,9 +99,9 @@ void main() async {
   await dotenv.load(fileName: ".env");
 
   final dir = await getApplicationDocumentsDirectory();
-  Hive.init(dir.path);
+  Hive.defaultDirectory = dir.path;
 
-  await Hive.openBox('changelogs');
+  Hive.box(name: 'changelogs');
 
   // widget------
 
@@ -145,7 +145,7 @@ void main() async {
     lat = locationData['lat'];
     lon = locationData['lon'];
   }
-  await Hive.openBox('ai_summary_cache');
+  Hive.box(name: 'ai_summary_cache');
   await FlutterDisplayMode.setHighRefreshRate();
   runApp(
     EasyLocalization(
@@ -673,7 +673,7 @@ class LocationPromptScreen extends StatelessWidget {
                 ),
               ),
               onPressed: () async {
-                await Hive.openBox('weatherMasterCache');
+                Hive.box(name: 'weatherMasterCache');
                 if (!context.mounted) return;
                 await DataBackupService.importAndReplaceAllData(context);
               },
