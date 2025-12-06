@@ -36,10 +36,8 @@ class HourlyCard extends StatelessWidget {
     final nowLocal = nowUtc.add(offset);
     final colorTheme = Theme.of(context).colorScheme;
 
-    final timeUnit =
-        context.select<UnitSettingsNotifier, String>((n) => n.timeUnit);
-    final tempUnit =
-        context.select<UnitSettingsNotifier, String>((n) => n.tempUnit);
+    final timeUnit = context.watch<UnitSettingsNotifier>().timeUnit;
+    final tempUnit = context.watch<UnitSettingsNotifier>().tempUnit;
 
     final roundedNow =
         DateTime(nowLocal.year, nowLocal.month, nowLocal.day, nowLocal.hour);
@@ -50,7 +48,6 @@ class HourlyCard extends StatelessWidget {
     });
 
     if (startIndex == -1) startIndex = 0;
-    final clampedItemCount = (48 - startIndex).clamp(0, 48);
     final scale = MediaQuery.of(context).textScaler.scale(1.0);
     final extraHeight = (scale - 1.0) * 30;
 
@@ -93,13 +90,16 @@ class HourlyCard extends StatelessWidget {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   physics: BouncingScrollPhysics(),
-                  itemCount: clampedItemCount,
+                  itemCount:
+                      (48 - startIndex).clamp(0, 48),
                   itemBuilder: (context, index) {
                     // final time = DateTime.parse(hourlyTime[index]);
                     final dataIndex = startIndex + index;
+                    final itemCount =
+                        (48 - startIndex).clamp(0, 48);
 
                     final isFirst = index == 0;
-                    final isLast = index == clampedItemCount - 1;
+                    final isLast = index == itemCount - 1;
 
                     if (dataIndex >= hourlyTime.length) return const SizedBox();
 

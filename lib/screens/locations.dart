@@ -29,7 +29,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
   List<SavedLocation> savedLocations = [];
   bool _isFirstBuild = true;
   bool _showLoader = true;
-  final Map<String, Future<Map<String, dynamic>?>> _weatherCacheFutures = {};
 
   @override
   void initState() {
@@ -100,14 +99,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
     final current = weather['current'];
 
     return current;
-  }
-
-  Future<Map<String, dynamic>?> _getWeatherFromCacheCached(
-      String cacheKey) {
-    return _weatherCacheFutures.putIfAbsent(
-      cacheKey,
-      () => getWeatherFromCache(cacheKey),
-    );
   }
 
   Future<String?> getWeatherLastUpdatedFromCache(String cacheKey) async {
@@ -229,11 +220,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Widget buildDismissibleListView({Key? key}) {
-    final homeLocation = PreferencesHelper.getJson('homeLocation');
-    final defaultWeatherFuture = homeLocation != null && homeLocation['cacheKey'] != null
-        ? _getWeatherFromCacheCached(homeLocation['cacheKey'])
-        : null;
-
     return savedLocations.isEmpty
         ? const Center(child: Text("No saved locations."))
         : ListView.builder(
@@ -241,18 +227,22 @@ class _LocationsScreenState extends State<LocationsScreen> {
             key: key,
             itemCount: savedLocations.length + 1,
             itemBuilder: (context, index) {
+              final onlyhomeLocation =
+                  PreferencesHelper.getJson('homeLocation');
+
               bool isOnlyHomeLocation = false;
 
-              if (homeLocation != null && savedLocations.length == 1) {
+              if (onlyhomeLocation != null && savedLocations.length == 1) {
                 final location = savedLocations[0];
-                if (location.city == homeLocation['city'] &&
-                    location.country == homeLocation['country']) {
+                if (location.city == onlyhomeLocation['city'] &&
+                    location.country == onlyhomeLocation['country']) {
                   isOnlyHomeLocation = true;
                 }
               }
 
               if (index == 0) {
-                final weatherFutureCurrentLocation = defaultWeatherFuture;
+                final weatherFutureCurrentLocation = getWeatherFromCache(
+                    PreferencesHelper.getJson('homeLocation')?['cacheKey']);
 
                 return Column(
                   key: const ValueKey("list-title"),
