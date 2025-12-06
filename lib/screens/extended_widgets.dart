@@ -447,6 +447,69 @@ class _ExtendWidgetState extends ConsumerState<ExtendWidget> {
       unit: unitLabel,
       subtitle: 'current_conditions'.tr(),
     );
+                                                    child: SizedBox(
+                                                      height: 48,
+                                                      child: pressureTrendIcon,
+                                                    ))
+                                              ]),
+                                        ),
+                                      ),
+                                    ),
+                                  ]),
+                              const SizedBox(height: 10),
+                              Text("${pressureHourly[dataIndex].round()}",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontFamily: "FlexFontEn",
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  )),
+                              Text(hour,
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                      fontFamily: "FlexFontEn",
+                                      fontWeight: FontWeight.w500)),
+                            ],
+                          ),
+                        )
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            void Container(
+                margin = EdgeInsets.fromLTRB(
+                    12, 20, 12, MediaQuery.of(context).padding.bottom + 26),
+                padding = EdgeInsets.all(20),
+                decoration = BoxDecoration(
+                  border: Border.all(
+                    width: 1,
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child = Column(
+                  spacing: 20,
+                  children: [
+                    Text("pressure_info".tr(),
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        )),
+                    Text("pressure_info_2".tr(),
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        )),
+                  ],
+                ))
+          ]);
+        });
   }
 
   Widget buildVisibilityExtended(Map<String, dynamic> raw, UnitSettingsNotifier units) {
