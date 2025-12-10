@@ -14,7 +14,6 @@ import '../utils/condition_label_map.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:animations/animations.dart';
 import '../widgets/dialog.dart';
-import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:settings_tiles/settings_tiles.dart';
 
 class LocationsScreen extends StatefulWidget {
@@ -642,7 +641,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
               return FadeInListItem(
                 child: Dismissible(
                   key: ValueKey(
-                      '${loc.city}-${loc.country}-${loc.latitude}-${loc.longitude}-${index}'),
+                      '${loc.city}-${loc.country}-${loc.latitude}-${loc.longitude}-$index'),
                   direction: DismissDirection.endToStart,
                   confirmDismiss: (direction) async {
                     final actualIndex = index - 1;

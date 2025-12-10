@@ -241,7 +241,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                         onTap: () => setState(() => tempProvider = provider),
                       ),
                     );
-                  }).toList(),
+                  }),
                   SizedBox(height: 13),
                   // Divider(),
                   // SizedBox(height: 4),

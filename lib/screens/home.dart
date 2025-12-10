@@ -780,10 +780,12 @@ class _WeatherHomeState extends State<WeatherHome> {
     }
 
     if (difference.inMinutes < 1) return 'just_now'.tr();
-    if (difference.inMinutes < 60)
+    if (difference.inMinutes < 60) {
       return formatRelativeTime('min', difference.inMinutes);
-    if (difference.inHours < 24)
+    }
+    if (difference.inHours < 24) {
       return formatRelativeTime('hr', difference.inHours);
+    }
 
     return '${dt.month}/${dt.day} at ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
   }

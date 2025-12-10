@@ -52,7 +52,7 @@ Future<void> updateHomeWidget(dynamic weather, {bool updatedFromHome = false}) a
       final transFuture = _loadTranslations(localeString);
       
       final results = await Future.wait([fetchFuture, transFuture]);
-      final fetchResultMap = results[0] as Map<String, dynamic>?;
+      final fetchResultMap = results[0];
       translations = results[1] as Map<String, dynamic>;
 
       if (fetchResultMap == null) return;

@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import '../utils/preferences_helper.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -13,8 +12,8 @@ List<Map<String, dynamic>> convertToListOfMaps(Map<String, dynamic> data) {
   });
 }
 
-int getStartIndex(utc_offset_seconds, hourlyTime) {
-  final offset = Duration(seconds: int.parse(utc_offset_seconds));
+int getStartIndex(utcOffsetSeconds, hourlyTime) {
+  final offset = Duration(seconds: int.parse(utcOffsetSeconds));
   final nowUtc = DateTime.now().toUtc();
   final nowLocal = nowUtc.add(offset);
 

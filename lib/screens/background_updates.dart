@@ -221,6 +221,8 @@ class BatteryOptimization {
 }
 
 class BatteryOptWidget extends StatefulWidget {
+  const BatteryOptWidget({super.key});
+
   @override
   State<BatteryOptWidget> createState() => _BatteryOptWidgetState();
 }

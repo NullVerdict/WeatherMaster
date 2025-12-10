@@ -161,7 +161,7 @@ class _EditLayoutPageState extends State<EditLayoutPage> {
                     ),
                   ),
                 );
-              }).toList(),
+              }),
               SizedBox(
                   key: ValueKey('bottom_spacing'),
                   height: MediaQuery.of(context).padding.bottom + 100),
