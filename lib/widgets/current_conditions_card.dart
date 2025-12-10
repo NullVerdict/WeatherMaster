@@ -154,7 +154,6 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
     );
 
     final timeUnit = context.watch<UnitSettingsNotifier>().timeUnit;
-    final isShowFrog = context.read<UnitSettingsNotifier>().showFrog;
 
     final sunriseFormat = timeUnit == '24 hr'
         ? DateFormat.Hm().format(sunrise)
@@ -605,12 +604,12 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                             Theme.of(context).colorScheme.primary,
                             Theme.of(context)
                                 .colorScheme
-                                .surfaceContainerHighest,
+                                .surfaceContainerHigh,
                             Color(widget.selectedContainerBgIndex),
                             widget.currentPressure.round()),
                         fit: BoxFit.contain),
                   ),
-                  headerWidgetConditions(
+                  HeaderWidgetConditions(
                     headerText: "pressure".tr(),
                     headerIcon: Symbols.compress,
                   ),
@@ -721,7 +720,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "visibility".tr(),
                               headerIcon: Symbols.visibility,
                             ),
@@ -833,7 +832,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                               currentWindDirc: widget.currentWindDirc,
                               backgroundColor:
                                   Color(widget.selectedContainerBgIndex)),
-                          headerWidgetConditions(
+                          HeaderWidgetConditions(
                             headerText: "wind".tr(),
                             headerIcon: Symbols.explore,
                           ),
@@ -953,7 +952,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "uv_index".tr(),
                               headerIcon: Symbols.light_mode,
                             ),
@@ -1525,7 +1524,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "cloudiness".tr(),
                               headerIcon: Symbols.cloud,
                             ),
@@ -1577,10 +1576,9 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
       margin: EdgeInsets.fromLTRB(12.7, 0, 12.7, 0),
       child: Column(
         children: [
-          Container(
-              child: ReorderableGridView.builder(
+          ReorderableGridView.builder(
             itemCount: gridItems.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
@@ -1608,12 +1606,14 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
 
               final prefs = await SharedPreferences.getInstance();
               prefs.setStringList(
-                  orderPrefsKey, itemOrder.map((e) => e.toString()).toList());
+                orderPrefsKey,
+                itemOrder.map((e) => e.toString()).toList(),
+              );
             },
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.only(top: 0),
-          )),
+          ),
         ],
       ),
     );
@@ -1622,11 +1622,11 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
 
 // svgs
 
-class headerWidgetConditions extends StatelessWidget {
+class HeaderWidgetConditions extends StatelessWidget {
   final String headerText;
   final IconData headerIcon;
 
-  const headerWidgetConditions(
+  const HeaderWidgetConditions(
       {super.key, required this.headerText, required this.headerIcon});
 
   @override

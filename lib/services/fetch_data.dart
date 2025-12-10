@@ -121,7 +121,7 @@ class WeatherService {
 
       if (processingResult['status'] == 'error') {
         final reason = processingResult['reason'] ?? 'Unknown error';
-        if (context != null) {
+        if (context != null && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               duration: const Duration(seconds: 10),
