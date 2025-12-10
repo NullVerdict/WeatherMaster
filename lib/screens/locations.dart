@@ -14,7 +14,6 @@ import '../utils/condition_label_map.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:animations/animations.dart';
 import '../widgets/dialog.dart';
-import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:settings_tiles/settings_tiles.dart';
 
 class LocationsScreen extends StatefulWidget {
@@ -31,12 +30,14 @@ class _LocationsScreenState extends State<LocationsScreen> {
   List<SavedLocation> savedLocations = [];
   bool _isFirstBuild = true;
   bool _showLoader = true;
+  Box? _cacheBox; // Cache box instance to avoid repeated opens
 
   @override
   void initState() {
     super.initState();
 
     loadSavedLocations();
+    _initCacheBox();
 
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
@@ -45,6 +46,16 @@ class _LocationsScreenState extends State<LocationsScreen> {
         });
       }
     });
+  }
+
+  Future<void> _initCacheBox() async {
+    _cacheBox = await Hive.openBox('weatherMasterCache');
+  }
+
+  @override
+  void dispose() {
+    _cacheBox?.close();
+    super.dispose();
   }
 
   Future<void> loadSavedLocations() async {
@@ -79,11 +90,9 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
           final box = await Hive.openBox('weatherMasterCache');
           final rawJson = box.get(cacheKey);
-          String? lastUpdated;
-
           if (rawJson != null) {
-            final map = json.decode(rawJson);
-            lastUpdated = map['last_updated'];
+            // final map = json.decode(rawJson);
+            // lastUpdated = map['last_updated'];
           }
 
           final locationData = {
@@ -102,7 +111,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Future<Map<String, dynamic>?> getWeatherFromCache(cacheKey) async {
-    final box = await Hive.openBox('weatherMasterCache');
+    final box = _cacheBox ?? await Hive.openBox('weatherMasterCache');
     final cached = box.get(cacheKey);
     if (cached == null) return null;
     final raw = json.decode(cached);
@@ -113,7 +122,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Future<String?> getWeatherLastUpdatedFromCache(cacheKey) async {
-    final box = await Hive.openBox('weatherMasterCache');
+    final box = _cacheBox ?? await Hive.openBox('weatherMasterCache');
     final rawJson = box.get(cacheKey);
 
     if (rawJson != null) {
@@ -216,6 +225,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
             onClosed: (updated) async {
               if (updated == true) {
                 await loadSavedLocations();
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('location_saved'.tr())),
                 );
@@ -229,7 +239,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Widget buildDismissibleListView({Key? key}) {
-    final colorTheme = Theme.of(context).colorScheme;
     return savedLocations.isEmpty
         ? const Center(child: Text("No saved locations."))
         : ListView.builder(
@@ -316,6 +325,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                               await prefs.setString(
                                   'currentLocation', jsonEncode(locationData));
 
+                              if (!context.mounted) return;
                               Navigator.pop(context, {
                                 'cacheKey': cacheKey,
                                 'city': PreferencesHelper.getJson(
@@ -609,23 +619,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 );
               }
 
-              final isLastItem = index == savedLocations.length;
-
-              Future<Map<String, dynamic>> _getCurrentHomeInfo() async {
-                final prefs = await SharedPreferences.getInstance();
-                final homeLocationJson = prefs.getString('homeLocation');
-                if (homeLocationJson != null) {
-                  final data = jsonDecode(homeLocationJson);
-                  return {
-                    'cacheKey': data['cacheKey'] ?? '',
-                    'isGPS': data['isGPS'] ?? false,
-                    'city': data['city'] ?? '',
-                    'country': data['country'] ?? '',
-                  };
-                }
-                return {'cacheKey': '', 'isGPS': false};
-              }
-
               Future<void> setHomeLocation(
                   BuildContext context, SavedLocation loc) async {
                 final prefs = await SharedPreferences.getInstance();
@@ -648,7 +641,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
               return FadeInListItem(
                 child: Dismissible(
                   key: ValueKey(
-                      '${loc.city}-${loc.country}-${loc.latitude}-${loc.longitude}-${index}'),
+                      '${loc.city}-${loc.country}-${loc.latitude}-${loc.longitude}-$index'),
                   direction: DismissDirection.endToStart,
                   confirmDismiss: (direction) async {
                     final actualIndex = index - 1;
@@ -761,6 +754,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                 'currentLocation', jsonEncode(locationData));
 
                             // Return data to previous screen
+                            if (!context.mounted) return;
                             Navigator.pop(context, {
                               'cacheKey': cacheKey,
                               'city': loc.city,

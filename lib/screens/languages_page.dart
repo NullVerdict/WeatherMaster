@@ -57,6 +57,7 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
                       delegate: LanguageSearchDelegate(locales: locales),
                     );
 
+                    if (!context.mounted) return;
                     if (selectedLocale != null) {
                       await context.setLocale(selectedLocale);
                       setState(() {
@@ -215,7 +216,7 @@ class TranslationProgressService {
 
       return progressData;
     } else {
-      print('Failed to fetch data: ${response.statusCode}');
+      debugPrint('Failed to fetch data: ${response.statusCode}');
       return {};
     }
   }
@@ -314,7 +315,6 @@ class _LanguageTileState extends State<LanguageTile> {
                   height: 60,
                   child: CircularProgressIndicator(
                     value: widget.progress / 100,
-                    year2023: false,
                     backgroundColor: Colors.red,
                   ))
             ]),

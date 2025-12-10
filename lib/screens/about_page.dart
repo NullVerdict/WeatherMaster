@@ -11,9 +11,6 @@ import 'package:hive/hive.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AboutPage extends StatefulWidget {
@@ -427,6 +424,8 @@ class _AboutPageState extends State<AboutPage> {
 }
 
 class TermsPage extends StatelessWidget {
+  const TermsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     final markdownData = '''
@@ -487,6 +486,8 @@ If you have any questions about these Terms & Conditions, please contact:
 }
 
 class PolicyPage extends StatelessWidget {
+  const PolicyPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     final markdownData = '''
@@ -537,8 +538,10 @@ If you have any questions about privacy while using WeatherMaster, please contac
 }
 
 class CheckUpdateButton extends StatefulWidget {
+  const CheckUpdateButton({super.key});
+
   @override
-  _CheckUpdateButtonState createState() => _CheckUpdateButtonState();
+  State<CheckUpdateButton> createState() => _CheckUpdateButtonState();
 }
 
 class _CheckUpdateButtonState extends State<CheckUpdateButton> {
@@ -568,6 +571,7 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
 
       await Future.delayed(Duration(seconds: 2));
 
+      if (!mounted) return;
       if (latestStable != null && latestStable['tag_name'] != currentVersion) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -578,9 +582,11 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
 
         await Future.delayed(Duration(seconds: 1));
 
+        if (!mounted) return;
         final url = 'https://github.com/$githubRepo/releases';
         openLink(url);
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('you_are_using_the_latest_version!'.tr()),
@@ -593,7 +599,7 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
             content: Text('error_checking_for_updates'.tr()),
             behavior: SnackBarBehavior.floating),
       );
-      print('Error: $e');
+      debugPrint('Error: $e');
     }
 
     setState(() {
@@ -842,7 +848,7 @@ class TranslatorsDialog {
                 .difference(DateTime.fromMillisecondsSinceEpoch(timestamp))
                 .inHours <
             24) {
-          print('Using cached translators data');
+          debugPrint('Using cached translators data');
 
           return translatorsData.map((e) => Translator.fromJson(e)).toList();
         }
@@ -882,7 +888,7 @@ class TranslatorsDialog {
 
       return translators;
     } catch (e) {
-      print('Error fetching translators: $e');
+      debugPrint('Error fetching translators: $e');
 
       final prefs = await SharedPreferences.getInstance();
       final savedData = prefs.getString(cacheKey);
@@ -890,7 +896,7 @@ class TranslatorsDialog {
         try {
           final cached = json.decode(savedData);
           final translatorsData = cached['translators'] as List<dynamic>;
-          print('Using cached data fallback');
+          debugPrint('Using cached data fallback');
           return translatorsData.map((e) => Translator.fromJson(e)).toList();
         } catch (_) {}
       }
