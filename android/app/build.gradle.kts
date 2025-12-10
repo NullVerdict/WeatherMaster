@@ -1,19 +1,10 @@
 import com.android.build.api.dsl.Packaging
-import java.util.Properties
-import java.io.FileInputStream
-
-
-val keyProperties = Properties().apply {
-    val keyPropertiesFile = rootProject.file("key.properties")
-    load(FileInputStream(keyPropertiesFile))
-}
 
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }
-
 
 android {
     namespace = "com.pranshulgg.weather_master_app"
@@ -43,18 +34,10 @@ android {
         versionName = flutter.versionName
     }
 
-    signingConfigs {
-        create("release") {
-            keyAlias = keyProperties["keyAlias"] as String
-            keyPassword = keyProperties["keyPassword"] as String
-            storeFile = File(rootProject.projectDir, "${keyProperties["storeFile"]}")
-            storePassword = keyProperties["storePassword"] as String
-        }
-    }
-
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            // Signs the release build with the debug key for testing.
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
         }

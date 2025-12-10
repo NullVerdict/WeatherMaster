@@ -5,7 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 
 class WorkInfoWidget extends StatefulWidget {
   @override
-  _WorkInfoWidgetState createState() => _WorkInfoWidgetState();
+  State<WorkInfoWidget> createState() => _WorkInfoWidgetState();
 }
 
 class _WorkInfoWidgetState extends State<WorkInfoWidget> {

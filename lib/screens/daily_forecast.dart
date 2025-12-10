@@ -190,6 +190,8 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
                                 utcOffsetSeconds:
                                     weather['utc_offset_seconds'].toString(),
                                 hourlyPrecpProb: hourlyPrecpProb,
+                                tempUnit: PreferencesHelper.getString("selectedTempUnit") ?? "Celsius",
+                                timeUnit: PreferencesHelper.getString("selectedTimeUnit") ?? '12 hr',
                               )
                             : HourlyCardForecast(
                                 selectedDate: selectedDate!,
@@ -555,7 +557,6 @@ class HourlyCardForecast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final offset = Duration(seconds: int.parse(utcOffsetSeconds));
     final colorTheme = Theme.of(context).colorScheme;
 
     // final localSelectedDate = selectedDate.toUtc().add(offset);
@@ -862,7 +863,7 @@ String formatDateDetailes(BuildContext context, String dateStr) {
 
   final locale = context.locale;
 
-  final lang = (locale.languageCode ?? '').toLowerCase();
+  final lang = locale.languageCode.toLowerCase();
   final country = (locale.countryCode ?? '').toUpperCase();
 
   if (lang == 'zh' && (country == 'CN' || country == 'TW')) {
@@ -990,12 +991,11 @@ class ConditionsWidgetsForecast extends StatelessWidget {
       margin: EdgeInsets.fromLTRB(12.7, 0, 12.7, 0),
       child: Column(
         children: [
-          Container(
-            child: GridView.count(
-              crossAxisCount: 2,
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              crossAxisSpacing: 12,
+          GridView.count(
+            crossAxisCount: 2,
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               children: [
                 OpenContainer(
@@ -1557,7 +1557,6 @@ class ConditionsWidgetsForecast extends StatelessWidget {
                     }),
               ],
             ),
-          ),
         ],
       ),
     );

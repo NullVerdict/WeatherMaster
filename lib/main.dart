@@ -32,7 +32,7 @@ final CorePalette paletteStartScreen = CorePalette.of(
 
 @pragma('vm:entry-point')
 Future<void> workerUpdateWidget() async {
-  print("CALLED");
+  debugPrint("CALLED");
   WidgetsFlutterBinding.ensureInitialized();
   final dir = await getApplicationDocumentsDirectory();
   Hive.init(dir.path);
@@ -218,12 +218,12 @@ class MyApp extends StatelessWidget {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     final colorThemeDark = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor ?? Colors.blue,
+      seedColor: themeController.seedColor,
       brightness: Brightness.dark,
     );
 
     final colorThemeLight = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor ?? Colors.blue,
+      seedColor: themeController.seedColor,
       brightness: Brightness.light,
     );
 
@@ -254,12 +254,12 @@ class MyApp extends StatelessWidget {
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.light,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.light,
                   ),
         useMaterial3: true,
@@ -302,18 +302,18 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData.from(
         colorScheme: isMonochrome(themeController.seedColor)
             ? ColorScheme.fromSeed(
-                seedColor: themeController.seedColor ?? Colors.blue,
+                seedColor: themeController.seedColor,
                 brightness: Brightness.dark,
                 dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.dark,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.dark,
                   ),
         useMaterial3: true,
@@ -538,6 +538,9 @@ class LocationPromptScreen extends StatelessWidget {
               ),
               onPressed: () async {
                 final dialogKey = GlobalKey<LoadingDialogState>();
+                final navigator = Navigator.of(context, rootNavigator: true);
+                final navigatorForPush = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
 
                 try {
                   bool ready =
@@ -545,11 +548,12 @@ class LocationPromptScreen extends StatelessWidget {
                     context,
                   );
                   if (!ready) return;
+                  if (!context.mounted) return;
                   showDialog(
                     context: context,
                     barrierDismissible: false,
                     builder: (_) => LoadingDialog(
-                      key: dialogKey,
+                      dialogKey: dialogKey,
                       initialMessage: "Getting your location...",
                     ),
                   );
@@ -595,12 +599,11 @@ class LocationPromptScreen extends StatelessWidget {
                     saved.latitude,
                     saved.longitude,
                     locationName: cacheKey,
-                    context: context,
                   );
 
-                  Navigator.of(context, rootNavigator: true).pop();
+                  navigator.pop();
 
-                  Navigator.of(context).pushReplacement(
+                  navigatorForPush.pushReplacement(
                     MaterialPageRoute(
                       builder: (_) => WeatherHome(
                         cacheKey: cacheKey,
@@ -613,8 +616,8 @@ class LocationPromptScreen extends StatelessWidget {
                     ),
                   );
                 } catch (e) {
-                  Navigator.of(context, rootNavigator: true).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop();
+                  messenger.showSnackBar(
                     SnackBar(content: Text('Error: ${e.toString()}')),
                   );
                 }
@@ -668,9 +671,12 @@ class LocationPromptScreen extends StatelessWidget {
                   BorderSide(color: customDarkScheme.outline, width: 2),
                 ),
               ),
-              onPressed: () async {
-                await Hive.openBox('weatherMasterCache');
-                await DataBackupService.importAndReplaceAllData(context);
+              onPressed: () {
+                Hive.openBox('weatherMasterCache').then((_) {
+                  if (context.mounted) {
+                    DataBackupService.importAndReplaceAllData(context);
+                  }
+                });
               },
               icon: Icon(
                 Icons.download_outlined,
@@ -696,10 +702,10 @@ class LocationPromptScreen extends StatelessWidget {
 
 class LoadingDialog extends StatefulWidget {
   final String initialMessage;
-  final GlobalKey<LoadingDialogState> key;
+  final GlobalKey<LoadingDialogState> dialogKey;
 
-  const LoadingDialog({required this.key, required this.initialMessage})
-      : super(key: key);
+  const LoadingDialog({required this.dialogKey, required this.initialMessage})
+      : super(key: dialogKey);
 
   @override
   LoadingDialogState createState() => LoadingDialogState();
@@ -733,7 +739,6 @@ class LoadingDialogState extends State<LoadingDialog> {
           const SizedBox(height: 6),
           CircularProgressIndicator(
             color: customDarkScheme.primary,
-            year2023: false,
           ),
           Text(
             message,

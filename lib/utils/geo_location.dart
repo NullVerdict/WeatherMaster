@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -23,7 +24,7 @@ class NativeLocation {
       final latitude = double.parse(result['latitude'] ?? '0');
       final longitude = double.parse(result['longitude'] ?? '0');
 
-      print(latitude + longitude);
+      debugPrint('Location: $latitude, $longitude');
 
       return Position(latitude: latitude, longitude: longitude);
     } on PlatformException catch (e) {
@@ -54,6 +55,7 @@ class LocationPermissionHelper {
   static Future<bool> checkServicesAndPermission(BuildContext context) async {
     final serviceStatus = await Permission.location.serviceStatus;
     if (serviceStatus != ServiceStatus.enabled) {
+      if (!context.mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enable location services')),
       );
@@ -70,6 +72,7 @@ class LocationPermissionHelper {
       return true;
     }
 
+    if (!context.mounted) return false;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Location permission denied')),
     );
