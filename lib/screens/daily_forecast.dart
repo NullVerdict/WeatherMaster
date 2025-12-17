@@ -555,7 +555,6 @@ class HourlyCardForecast extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final offset = Duration(seconds: int.parse(utcOffsetSeconds));
     final colorTheme = Theme.of(context).colorScheme;
 
     // final localSelectedDate = selectedDate.toUtc().add(offset);
@@ -861,7 +860,7 @@ String formatDateDetailes(BuildContext context, String dateStr) {
 
   final locale = context.locale;
 
-  final lang = (locale.languageCode ?? '').toLowerCase();
+  final lang = locale.languageCode.toLowerCase();
   final country = (locale.countryCode ?? '').toUpperCase();
 
   if (lang == 'zh' && (country == 'CN' || country == 'TW')) {

@@ -218,9 +218,11 @@ class _LocationsScreenState extends State<LocationsScreen> {
             onClosed: (updated) async {
               if (updated == true) {
                 await loadSavedLocations();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('location_saved'.tr())),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('location_saved'.tr())),
+                  );
+                }
               } else if (updated == false &&
                   PreferencesHelper.getString(PrefKeys.selectedViewLocation) !=
                       null) {
@@ -319,18 +321,20 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                   PrefKeys.currentLocation,
                                   jsonEncode(locationData));
 
-                              Navigator.pop(context, {
-                                'cacheKey': cacheKey,
-                                'city': PreferencesHelper.getJson(
-                                    PrefKeys.homeLocation)?['city'],
-                                'country': PreferencesHelper.getJson(
-                                    PrefKeys.homeLocation)?['country'],
-                                'last_updated': lastUpdated,
-                                'latitude': PreferencesHelper.getJson(
-                                    PrefKeys.homeLocation)?['lat'],
-                                'longitude': PreferencesHelper.getJson(
-                                    PrefKeys.homeLocation)?['lon'],
-                              });
+                              if (mounted) {
+                                Navigator.pop(context, {
+                                  'cacheKey': cacheKey,
+                                  'city': PreferencesHelper.getJson(
+                                      PrefKeys.homeLocation)?['city'],
+                                  'country': PreferencesHelper.getJson(
+                                      PrefKeys.homeLocation)?['country'],
+                                  'last_updated': lastUpdated,
+                                  'latitude': PreferencesHelper.getJson(
+                                      PrefKeys.homeLocation)?['latitude'],
+                                  'longitude': PreferencesHelper.getJson(
+                                      PrefKeys.homeLocation)?['longitude'],
+                                });
+                              }
                             },
                             child: FutureBuilder<Map<String, dynamic>?>(
                                 future: weatherFutureCurrentLocation,
@@ -766,14 +770,16 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                 jsonEncode(locationData));
 
                             // Return data to previous screen
-                            Navigator.pop(context, {
-                              'cacheKey': cacheKey,
-                              'city': loc.city,
-                              'country': loc.country,
-                              'last_updated': lastUpdated,
-                              'lat': loc.latitude,
-                              'lon': loc.longitude,
-                            });
+                            if (mounted) {
+                              Navigator.pop(context, {
+                                'cacheKey': cacheKey,
+                                'city': loc.city,
+                                'country': loc.country,
+                                'last_updated': lastUpdated,
+                                'lat': loc.latitude,
+                                'lon': loc.longitude,
+                              });
+                            }
                           },
                           child: FutureBuilder<Map<String, dynamic>?>(
                             future: weatherFuture,

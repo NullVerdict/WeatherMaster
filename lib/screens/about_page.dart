@@ -855,7 +855,7 @@ class TranslatorsDialog {
                 .difference(DateTime.fromMillisecondsSinceEpoch(timestamp))
                 .inHours <
             24) {
-          print('Using cached translators data');
+          debugPrint('Using cached translators data');
 
           return translatorsData.map((e) => Translator.fromJson(e)).toList();
         }
@@ -895,7 +895,7 @@ class TranslatorsDialog {
 
       return translators;
     } catch (e) {
-      print('Error fetching translators: $e');
+      debugPrint('Error fetching translators: $e');
 
       final prefs = await SharedPreferences.getInstance();
       final savedData = prefs.getString(cacheKey);
@@ -903,7 +903,7 @@ class TranslatorsDialog {
         try {
           final cached = json.decode(savedData);
           final translatorsData = cached['translators'] as List<dynamic>;
-          print('Using cached data fallback');
+          debugPrint('Using cached data fallback');
           return translatorsData.map((e) => Translator.fromJson(e)).toList();
         } catch (_) {}
       }

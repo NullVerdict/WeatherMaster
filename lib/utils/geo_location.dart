@@ -23,7 +23,7 @@ class NativeLocation {
       final latitude = double.parse(result['latitude'] ?? '0');
       final longitude = double.parse(result['longitude'] ?? '0');
 
-      print(latitude + longitude);
+      debugPrint(latitude + longitude);
 
       return Position(latitude: latitude, longitude: longitude);
     } on PlatformException catch (e) {
@@ -39,6 +39,7 @@ class NativeLocation {
         'latitude': lat,
         'longitude': lon,
       });
+      debugPrint('Coordinates: $latitude, $longitude');
       return {
         'city': result['city'] ?? '',
         'country': result['country'] ?? '',

@@ -228,7 +228,9 @@ class _WeatherHomeState extends State<WeatherHome> {
       await weatherService.fetchWeather(homePref?['lat'], homePref?['lon'],
           locationName: cacheKey, context: context);
 
-      cached = box.get(cacheKey); // read again after fetch
+      if (mounted) {
+        cached = box.get(cacheKey); // read again after fetch
+      }
     }
 
     if (cached == null) return null; // still null, give up
@@ -254,8 +256,10 @@ class _WeatherHomeState extends State<WeatherHome> {
       } else {}
 
       if (isFirstAppBuild) {
-        SnackUtil.showSnackBar(
-            context: context, message: "network_unavailable".tr());
+        if (mounted) {
+          SnackUtil.showSnackBar(
+              context: context, message: "network_unavailable".tr());
+        }
         isFirstAppBuild = false;
       }
     } else if (lastUpdated != null) {
@@ -367,12 +371,14 @@ class _WeatherHomeState extends State<WeatherHome> {
         _isAppFullyLoaded = true;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('data_fetch_error'.tr()),
-          duration: Duration(seconds: 5),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('data_fetch_error'.tr()),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
         }
 
     if (result == null) {
@@ -508,12 +514,14 @@ class _WeatherHomeState extends State<WeatherHome> {
             _isAppFullyLoaded = true;
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('data_fetch_error'.tr()),
-              duration: Duration(seconds: 5),
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('data_fetch_error'.tr()),
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
                 }
         setState(() {
           weatherFuture = getWeatherFromCache();
@@ -964,7 +972,7 @@ class _WeatherHomeState extends State<WeatherHome> {
           if (onLoadForceCall) {
             if (_cachedIsShowFrog != isShowFrog) {
               maybeUpdateWeatherAnimation(current, isForce: true);
-              print('called');
+              debugPrint('called');
 
               _cachedIsShowFrog = isShowFrog;
             }
@@ -1471,14 +1479,16 @@ class _WeatherHomeState extends State<WeatherHome> {
                                       _isAppFullyLoaded = true;
                                     });
 
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      SnackBar(
-                                        content:
-                                            Text('data_fetch_error'.tr()),
-                                        duration: Duration(seconds: 5),
-                                      ),
-                                    );
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content:
+                                              Text('data_fetch_error'.tr()),
+                                          duration: Duration(seconds: 5),
+                                        ),
+                                      );
+                                    }
                                                                     }
 
                                   if (result == null) {

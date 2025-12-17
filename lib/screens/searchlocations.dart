@@ -165,9 +165,11 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
       setState(() => results = unique);
     } catch (e) {
       setState(() => results = []);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("data_fetch_error".tr())),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("data_fetch_error".tr())),
+        );
+      }
     }
 
     setState(() => isLoading = false);
@@ -320,7 +322,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
           backgroundColor: colorTheme.surfaceContainerHigh,
           shape: Border(
               bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.8),
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.8),
                   width: 2))),
       body: isLoading
           ? Center(
@@ -417,16 +419,18 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                             locationName: cacheKey,
                                             context: context);
                                       } catch (e) {
-                                        Navigator.pop(context);
+                                        if (mounted) {
+                                          Navigator.pop(context);
 
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content:
-                                                Text('data_fetch_error'.tr()),
-                                            duration: Duration(seconds: 5),
-                                          ),
-                                        );
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content:
+                                                  Text('data_fetch_error'.tr()),
+                                              duration: Duration(seconds: 5),
+                                            ),
+                                          );
+                                        }
                                                                               return;
                                       }
 
@@ -514,7 +518,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                               barrierDismissible: false,
                               barrierColor:
                                   Theme.of(context).colorScheme.surface,
-                              builder: (context) => Center(
+                              builder: (dialogContext) => Center(
                                   child: ExpressiveLoadingIndicator(
                                 activeSize: 48,
                                 color: colorTheme.primary,
@@ -576,9 +580,11 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                 });
                               }
 
-                              Navigator.pop(context);
+                              if (mounted) {
+                                Navigator.pop(dialogContext);
 
-                              Navigator.pop(context, true);
+                                Navigator.pop(context, true);
+                              }
                             }
                           } else {
                             final cacheKey = "${saved.city}_${saved.country}"

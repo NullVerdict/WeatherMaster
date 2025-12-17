@@ -491,9 +491,6 @@ class _ExtendWidgetState extends State<ExtendWidget> {
           final calc = SolarCalculator(
               instant, weather['latitude'], weather['longitude']);
 
-          final timeFormatDUSKDAWN =
-              timeUnit == '24 hr' ? DateFormat.Hm() : DateFormat.jm();
-
           final dawn = calc.morningCivilTwilight.begining;
           final dusk = calc.eveningCivilTwilight.ending;
 

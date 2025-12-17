@@ -59,9 +59,11 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
 
                     if (selectedLocale != null) {
                       await context.setLocale(selectedLocale);
-                      setState(() {
-                        _selectedLocale = selectedLocale;
-                      });
+                      if (mounted) {
+                        setState(() {
+                          _selectedLocale = selectedLocale;
+                        });
+                      }
                     }
                   }),
               SizedBox(
@@ -215,7 +217,7 @@ class TranslationProgressService {
 
       return progressData;
     } else {
-      print('Failed to fetch data: ${response.statusCode}');
+      debugPrint('Failed to fetch data: ${response.statusCode}');
       return {};
     }
   }
@@ -314,7 +316,6 @@ class _LanguageTileState extends State<LanguageTile> {
                   height: 60,
                   child: CircularProgressIndicator(
                     value: widget.progress / 100,
-                    year2023: false,
                     backgroundColor: Colors.red,
                   ))
             ]),
