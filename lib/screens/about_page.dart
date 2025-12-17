@@ -541,7 +541,7 @@ class CheckUpdateButton extends StatefulWidget {
   const CheckUpdateButton({super.key});
 
   @override
-  _CheckUpdateButtonState createState() => _CheckUpdateButtonState();
+  State<CheckUpdateButton> createState() => _CheckUpdateButtonState();
 }
 
 class _CheckUpdateButtonState extends State<CheckUpdateButton> {
@@ -571,6 +571,8 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
 
       await Future.delayed(Duration(seconds: 2));
 
+      if (!mounted) return;
+
       if (latestStable != null && latestStable['tag_name'] != currentVersion) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -580,6 +582,8 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
         );
 
         await Future.delayed(Duration(seconds: 1));
+
+        if (!mounted) return;
 
         final url = 'https://github.com/$githubRepo/releases';
         openLink(url);
@@ -591,17 +595,21 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('error_checking_for_updates'.tr()),
-            behavior: SnackBarBehavior.floating),
-      );
-      print('Error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('error_checking_for_updates'.tr()),
+              behavior: SnackBarBehavior.floating),
+        );
+      }
+      debugPrint('Error checking updates: $e');
     }
 
-    setState(() {
-      isChecking = false;
-    });
+    if (mounted) {
+      setState(() {
+        isChecking = false;
+      });
+    }
   }
 
   @override

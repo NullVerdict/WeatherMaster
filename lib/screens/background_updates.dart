@@ -34,9 +34,13 @@ class _BackgroundUpdatesPageState extends State<BackgroundUpdatesPage> {
     });
   }
 
-  Future<void> _RequestloadPermission() async {
+  Future<void> _requestLoadPermission() async {
     final bool granted = await NotificationService.requestPermission();
-    _loadPermission();
+    if (!mounted) return;
+    setState(() {
+      _permissionGranted = granted;
+    });
+    await _loadPermission();
   }
 
   final optionsInterval = {
@@ -79,7 +83,7 @@ class _BackgroundUpdatesPageState extends State<BackgroundUpdatesPage> {
                   description: Text("allow_notification_permission_sub".tr()),
                   visible: !_permissionGranted,
                   onTap: () async {
-                    _RequestloadPermission();
+                    await _requestLoadPermission();
                   },
                 )
               ],
@@ -215,7 +219,7 @@ class BatteryOptimization {
     try {
       await _channel.invokeMethod('requestIgnoreBatteryOptimizations');
     } catch (e) {
-      print("Error requesting battery optimization: $e");
+      debugPrint("Error requesting battery optimization: $e");
     }
   }
 }

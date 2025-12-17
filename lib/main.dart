@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:animations/animations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:hive/hive.dart';
@@ -33,7 +34,7 @@ final CorePalette paletteStartScreen = CorePalette.of(
 
 @pragma('vm:entry-point')
 Future<void> workerUpdateWidget() async {
-  print("CALLED");
+  debugPrint('workerUpdateWidget invoked');
   WidgetsFlutterBinding.ensureInitialized();
   final dir = await getApplicationDocumentsDirectory();
   Hive.init(dir.path);
@@ -219,12 +220,12 @@ class MyApp extends StatelessWidget {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     final colorThemeDark = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor ?? Colors.blue,
+      seedColor: themeController.seedColor,
       brightness: Brightness.dark,
     );
 
     final colorThemeLight = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor ?? Colors.blue,
+      seedColor: themeController.seedColor,
       brightness: Brightness.light,
     );
 
@@ -255,12 +256,12 @@ class MyApp extends StatelessWidget {
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.light,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.light,
                   ),
         useMaterial3: true,
@@ -303,18 +304,18 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData.from(
         colorScheme: isMonochrome(themeController.seedColor)
             ? ColorScheme.fromSeed(
-                seedColor: themeController.seedColor ?? Colors.blue,
+                seedColor: themeController.seedColor,
                 brightness: Brightness.dark,
                 dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.dark,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor ?? Colors.blue,
+                    seedColor: themeController.seedColor,
                     brightness: Brightness.dark,
                   ),
         useMaterial3: true,
@@ -735,7 +736,6 @@ class LoadingDialogState extends State<LoadingDialog> {
           const SizedBox(height: 6),
           CircularProgressIndicator(
             color: customDarkScheme.primary,
-            year2023: false,
           ),
           Text(
             message,

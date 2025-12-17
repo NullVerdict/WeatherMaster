@@ -18,8 +18,6 @@ int getStartIndex(utcOffsetSeconds, hourlyTime) {
   final nowUtc = DateTime.now().toUtc();
   final nowLocal = nowUtc.add(offset);
 
-  final timeUnit = PreferencesHelper.getString("selectedTimeUnit") ?? '12 hr';
-
   final roundedNow =
       DateTime(nowLocal.year, nowLocal.month, nowLocal.day, nowLocal.hour);
 
@@ -96,6 +94,10 @@ Future<void> checkForUpdatesOnStart(BuildContext context) async {
 
     await Future.delayed(Duration(seconds: 2));
 
+    if (!context.mounted) {
+      return;
+    }
+
     if (latestStable != null && latestStable['tag_name'] != currentVersion) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -130,7 +132,7 @@ Future<void> checkForUpdatesOnStart(BuildContext context) async {
 
     await prefs.setInt('lastUpdateCheck', now);
   } catch (e) {
-    print('Update check failed: $e');
+    debugPrint('Update check failed: $e');
   } finally {
     isChecking = false;
   }
