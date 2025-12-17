@@ -7,13 +7,14 @@ import '../utils/geo_location.dart';
 import '../services/fetch_data.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
+import '../utils/app_storage.dart';
 
 class HomeLocationScreen extends StatelessWidget {
   const HomeLocationScreen({super.key});
 
   Future<List<SavedLocation>> loadSavedLocations() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString('saved_locations');
+    final saved = prefs.getString(PrefKeys.savedLocations);
     if (saved != null) {
       final decoded = jsonDecode(saved) as List;
       return decoded.map((e) => SavedLocation.fromJson(e)).toList();
@@ -23,7 +24,7 @@ class HomeLocationScreen extends StatelessWidget {
 
   Future<Map<String, dynamic>> _getCurrentHomeInfo() async {
     final prefs = await SharedPreferences.getInstance();
-    final homeLocationJson = prefs.getString('homeLocation');
+    final homeLocationJson = prefs.getString(PrefKeys.homeLocation);
     if (homeLocationJson != null) {
       final data = jsonDecode(homeLocationJson);
       return {
@@ -42,7 +43,7 @@ class HomeLocationScreen extends StatelessWidget {
         "${loc.city}_${loc.country}".toLowerCase().replaceAll(' ', '_');
 
     await prefs.setString(
-        'homeLocation',
+        PrefKeys.homeLocation,
         jsonEncode({
           'city': loc.city,
           'country': loc.country,
@@ -60,7 +61,7 @@ class HomeLocationScreen extends StatelessWidget {
     final colorTheme = Theme.of(context).colorScheme;
     Future<void> saveLocation(SavedLocation newLocation) async {
       final prefs = await SharedPreferences.getInstance();
-      final existing = prefs.getString('saved_locations');
+      final existing = prefs.getString(PrefKeys.savedLocations);
       List<SavedLocation> current = [];
 
       if (existing != null) {
@@ -73,7 +74,7 @@ class HomeLocationScreen extends StatelessWidget {
 
       if (!alreadyExists) {
         current.add(newLocation);
-        await prefs.setString('saved_locations',
+        await prefs.setString(PrefKeys.savedLocations,
             jsonEncode(current.map((e) => e.toJson()).toList()));
       }
     }
@@ -267,7 +268,7 @@ class HomeLocationScreen extends StatelessWidget {
                                         final prefs = await SharedPreferences
                                             .getInstance();
                                         prefs.setString(
-                                            'homeLocation',
+                                            PrefKeys.homeLocation,
                                             jsonEncode({
                                               'city': saved.city,
                                               'country': saved.country,

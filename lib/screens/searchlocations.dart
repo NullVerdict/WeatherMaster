@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/saved_location.dart';
 import '../services/fetch_data.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
+import '../utils/app_storage.dart';
 
 enum GeoProvider { nominatim, geonames, openMeteo }
 
@@ -21,7 +22,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
 
   Future<void> saveLocation(SavedLocation newLocation) async {
     final prefs = await SharedPreferences.getInstance();
-    final existing = prefs.getString('saved_locations');
+    final existing = prefs.getString(PrefKeys.savedLocations);
     List<SavedLocation> current = [];
 
     if (existing != null) {
@@ -35,14 +36,14 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
 
     if (!alreadyExists) {
       current.add(newLocation);
-      await prefs.setString('saved_locations',
+      await prefs.setString(PrefKeys.savedLocations,
           jsonEncode(current.map((e) => e.toJson()).toList()));
     }
   }
 
   Future<void> loadSavedLocations() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('saved_locations');
+    final jsonString = prefs.getString(PrefKeys.savedLocations);
     if (jsonString != null) {
       final List<dynamic> jsonList = jsonDecode(jsonString);
       setState(() {
@@ -282,7 +283,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
 
   Future<int> getLocationCount() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('saved_locations');
+    final jsonString = prefs.getString(PrefKeys.savedLocations);
     if (jsonString != null) {
       final List<dynamic> jsonList = jsonDecode(jsonString);
       final locations =
@@ -436,7 +437,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                       final prefs =
                                           await SharedPreferences.getInstance();
                                       final jsonString =
-                                          prefs.getString('saved_locations');
+                                          prefs.getString(PrefKeys.savedLocations);
                                       if (jsonString != null) {
                                         final List<dynamic> jsonList =
                                             jsonDecode(jsonString);
@@ -458,7 +459,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                                     .replaceAll(' ', '_');
 
                                             await prefs.setString(
-                                                'homeLocation',
+                                                PrefKeys.homeLocation,
                                                 jsonEncode({
                                                   'city': loc.city,
                                                   'country': loc.country,
@@ -549,7 +550,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
 
                             final prefs = await SharedPreferences.getInstance();
                             final jsonString =
-                                prefs.getString('saved_locations');
+                                prefs.getString(PrefKeys.savedLocations);
                             if (jsonString != null) {
                               final List<dynamic> jsonList =
                                   jsonDecode(jsonString);
@@ -568,7 +569,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                       .replaceAll(' ', '_');
 
                                   await prefs.setString(
-                                      'homeLocation',
+                                      PrefKeys.homeLocation,
                                       jsonEncode({
                                         'city': loc.city,
                                         'country': loc.country,
@@ -590,7 +591,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
 
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.setString(
-                                'selectedViewLocation',
+                                PrefKeys.selectedViewLocation,
                                 jsonEncode({
                                   'city': saved.city,
                                   'country': saved.country,

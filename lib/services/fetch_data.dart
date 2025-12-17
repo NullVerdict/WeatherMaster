@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:hive/hive.dart';
 import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzmap;
+import '../utils/app_storage.dart';
 import '../utils/preferences_helper.dart';
 import 'package:flutter/material.dart';
 import '../screens/meteo_models.dart';
@@ -10,14 +11,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:async';
 
 class WeatherService {
-  static const String _boxName = 'weatherMasterCache';
-
-  Future<Box> _openBox() async {
-    if (!Hive.isBoxOpen(_boxName)) {
-      return await Hive.openBox(_boxName);
-    }
-    return Hive.box(_boxName);
-  }
+  Future<Box> _openBox() => HiveBoxes.openWeatherCache();
 
   Future<Map<String, dynamic>?> fetchWeather(double lat, double lon,
       {String? locationName,

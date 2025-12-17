@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:hive/hive.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/app_storage.dart';
 
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -634,15 +635,17 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
 
 class ChangelogService {
   final String githubRepo = "PranshulGG/WeatherMaster";
-  final Box _box = Hive.box('changelogs');
+
+  Future<Box> _openBox() => HiveBoxes.openChangelogs();
 
   Future<List<Map<String, dynamic>>> getChangelogs() async {
+    final box = await _openBox();
     final now = DateTime.now();
-    final lastFetch = _box.get('lastFetch') as DateTime?;
+    final lastFetch = box.get('lastFetch') as DateTime?;
 
     if (lastFetch != null &&
         now.difference(lastFetch) < const Duration(hours: 48)) {
-      final cachedData = (_box.get('data', defaultValue: []) as List)
+      final cachedData = (box.get('data', defaultValue: []) as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
 
@@ -670,8 +673,8 @@ class ChangelogService {
             })
         .toList();
 
-    await _box.put('data', parsed);
-    await _box.put('lastFetch', now);
+    await box.put('data', parsed);
+    await box.put('lastFetch', now);
 
     return parsed;
   }

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:hive/hive.dart';
+import 'dart:convert';
+import 'dart:developer';
 import '../utils/preferences_helper.dart';
+import '../utils/app_storage.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import '../utils/geo_location.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzmap;
-import 'package:hive/hive.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 class MeteoModelsPage extends StatefulWidget {
   const MeteoModelsPage({super.key});
@@ -625,11 +627,11 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
   }
 
   Future<void> _loadLocationAndFetchWeather() async {
-    final box = await Hive.openBox('weatherModelsCache');
+    final box = await HiveBoxes.openWeatherModelsCache();
 
     try {
-      final currentLocation = PreferencesHelper.getString('currentLocation');
-      final homeLocation = PreferencesHelper.getJson('homeLocation');
+      final currentLocation = PreferencesHelper.getString(PrefKeys.currentLocation);
+      final homeLocation = PreferencesHelper.getJson(PrefKeys.homeLocation);
 
       if (currentLocation != null && currentLocation.isNotEmpty) {
         try {
@@ -734,7 +736,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
       _lastFetchTime = now;
       _cachedLocationKey = currentLocationKey;
 
-      final box = Hive.box('weatherModelsCache');
+      final box = await HiveBoxes.openWeatherModelsCache();
       box.put('cachedLocationKey', currentLocationKey);
       box.put('timestamp_$currentLocationKey',
           _lastFetchTime!.millisecondsSinceEpoch);
@@ -759,7 +761,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
 
     _cachedLocationKey = _makeCacheKey(_currentLat!, _currentLon!);
 
-    final box = Hive.box('weatherModelsCache');
+    final box = await HiveBoxes.openWeatherModelsCache();
     box.put('cachedLocationKey', _cachedLocationKey);
     box.put('timestamp_$_cachedLocationKey',
         _lastFetchTime!.millisecondsSinceEpoch);
@@ -882,7 +884,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
         _modelLoadingStates[modelKey] = false;
       }
 
-      final box = Hive.box('weatherModelsCache');
+      final box = await HiveBoxes.openWeatherModelsCache();
       final cacheKey = _makeCacheKey(_currentLat!, _currentLon!);
 
       final Map<String, dynamic> serializable = {};

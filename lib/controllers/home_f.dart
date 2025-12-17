@@ -4,7 +4,7 @@ import '../utils/preferences_helper.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:weather_master_app/utils/open_links.dart';
+import '../utils/open_links.dart';
 
 List<Map<String, dynamic>> convertToListOfMaps(Map<String, dynamic> data) {
   final length = (data.values.first as List).length;

@@ -4,22 +4,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/saved_location.dart';
 import '../services/fetch_data.dart';
 import '../utils/preferences_helper.dart';
+import '../utils/app_storage.dart';
 
 Future<void> handleSaveLocationView({
   required BuildContext context,
   required VoidCallback updateUIState,
 }) async {
     final saved = SavedLocation(
-      latitude: PreferencesHelper.getJson('selectedViewLocation')?['lat'],
-      longitude: PreferencesHelper.getJson('selectedViewLocation')?['lon'],
-      city: PreferencesHelper.getJson('selectedViewLocation')?['city'] ?? '',
-      country: PreferencesHelper.getJson('selectedViewLocation')?['country'] ?? '',
+      latitude: PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['lat'],
+      longitude: PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['lon'],
+      city: PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['city'] ?? '',
+      country: PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['country'] ?? '',
     );
   
   final cacheKeyViewing = "${saved.city}_${saved.country}".toLowerCase().replaceAll(' ', '_');
     final weatherService = WeatherService();
-  weatherService.fetchWeather(PreferencesHelper.getJson('selectedViewLocation')?['lat'],
-  PreferencesHelper.getJson('selectedViewLocation')?['lon'], locationName: cacheKeyViewing, context: context);
+  weatherService.fetchWeather(
+      PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['lat'],
+      PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['lon'],
+      locationName: cacheKeyViewing,
+      context: context);
 
   await _saveLocationView(saved);
 
@@ -29,7 +33,7 @@ Future<void> handleSaveLocationView({
 
 Future<void> _saveLocationView(SavedLocation newLocation) async {
       final prefs = await SharedPreferences.getInstance();
-      final existing = prefs.getString('saved_locations');
+      final existing = prefs.getString(PrefKeys.savedLocations);
       List<SavedLocation> current = [];
 
       if (existing != null) {
@@ -43,7 +47,7 @@ Future<void> _saveLocationView(SavedLocation newLocation) async {
       if (!alreadyExists) {
         current.add(newLocation);
         await prefs.setString(
-            'saved_locations',
+            PrefKeys.savedLocations,
             jsonEncode(current.map((e) => e.toJson()).toList()));
       }
 }

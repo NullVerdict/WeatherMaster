@@ -8,23 +8,24 @@ import 'screens/home.dart';
 import 'screens/locations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../utils/theme_controller.dart';
+import 'utils/theme_controller.dart';
 import 'utils/geo_location.dart';
-import '../services/fetch_data.dart';
-import '../models/saved_location.dart';
-import '../utils/preferences_helper.dart';
+import 'services/fetch_data.dart';
+import 'models/saved_location.dart';
+import 'utils/preferences_helper.dart';
 import 'notifiers/unit_settings_notifier.dart';
 import 'notifiers/layout_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../services/data_backup_service.dart';
+import 'services/data_backup_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:ui' as ui;
 import 'services/widget_service.dart';
 import 'widget_background.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:home_widget/home_widget.dart';
+import 'utils/app_storage.dart';
 
 final CorePalette paletteStartScreen = CorePalette.of(
   const Color.fromARGB(255, 255, 196, 0).toARGB32(),
@@ -94,14 +95,14 @@ void main() async {
 
   await PreferencesHelper.init();
 
-  PreferencesHelper.setBool('triggerfromWorker', false);
+  PreferencesHelper.setBool(PrefKeys.triggerFromWorker, false);
 
   await dotenv.load(fileName: ".env");
 
   final dir = await getApplicationDocumentsDirectory();
   Hive.init(dir.path);
 
-  await Hive.openBox('changelogs');
+  await HiveBoxes.openChangelogs();
 
   // widget------
 
@@ -121,8 +122,8 @@ void main() async {
   PaintingBinding.instance.imageCache.maximumSize = 1000;
   PaintingBinding.instance.imageCache.maximumSizeBytes = 200 << 20;
 
-  final homeLocationJson = prefs.getString('homeLocation');
-  final currentLocationJson = prefs.getString('currentLocation');
+  final homeLocationJson = prefs.getString(PrefKeys.homeLocation);
+  final currentLocationJson = prefs.getString(PrefKeys.currentLocation);
 
   String? cityName;
   String? countryName;
@@ -145,7 +146,7 @@ void main() async {
     lat = locationData['lat'];
     lon = locationData['lon'];
   }
-  await Hive.openBox('ai_summary_cache');
+  await HiveBoxes.openAiSummaryCache();
   await FlutterDisplayMode.setHighRefreshRate();
   runApp(
     EasyLocalization(
@@ -415,7 +416,7 @@ class LocationPromptScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     Future<void> saveLocation(SavedLocation newLocation) async {
       final prefs = await SharedPreferences.getInstance();
-      final existing = prefs.getString('saved_locations');
+      final existing = prefs.getString(PrefKeys.savedLocations);
       List<SavedLocation> current = [];
 
       if (existing != null) {
@@ -431,7 +432,7 @@ class LocationPromptScreen extends StatelessWidget {
       if (!alreadyExists) {
         current.add(newLocation);
         await prefs.setString(
-          'saved_locations',
+          PrefKeys.savedLocations,
           jsonEncode(current.map((e) => e.toJson()).toList()),
         );
       }
@@ -579,7 +580,7 @@ class LocationPromptScreen extends StatelessWidget {
 
                   final prefs = await SharedPreferences.getInstance();
                   prefs.setString(
-                    'homeLocation',
+                    PrefKeys.homeLocation,
                     jsonEncode({
                       'city': saved.city,
                       'country': saved.country,
@@ -669,7 +670,7 @@ class LocationPromptScreen extends StatelessWidget {
                 ),
               ),
               onPressed: () async {
-                await Hive.openBox('weatherMasterCache');
+                await HiveBoxes.openWeatherCache();
                 await DataBackupService.importAndReplaceAllData(context);
               },
               icon: Icon(

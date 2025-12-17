@@ -26,6 +26,7 @@ import '../utils/animation_map.dart';
 import '../utils/froggy_map.dart';
 import '../utils/geo_location.dart';
 import '../utils/preferences_helper.dart';
+import '../utils/app_storage.dart';
 import '../utils/snack_util.dart';
 import '../utils/theme.dart';
 import '../utils/theme_controller.dart';
@@ -183,22 +184,14 @@ class _WeatherHomeState extends State<WeatherHome> {
 
   Future<void> loadLayoutConfig() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonStringList = prefs.getStringList('layout_config');
+    final jsonStringList = prefs.getStringList(PrefKeys.layoutConfig);
 
     if (jsonStringList != null) {
       layoutConfig = jsonStringList
           .map((json) => LayoutBlockConfig.fromJson(jsonDecode(json)))
           .toList();
     } else {
-      layoutConfig = [
-        LayoutBlockConfig(type: LayoutBlockType.rain),
-        LayoutBlockConfig(type: LayoutBlockType.insights),
-        LayoutBlockConfig(type: LayoutBlockType.summary),
-        LayoutBlockConfig(type: LayoutBlockType.hourly),
-        LayoutBlockConfig(type: LayoutBlockType.daily),
-        LayoutBlockConfig(type: LayoutBlockType.conditions),
-        LayoutBlockConfig(type: LayoutBlockType.pollen),
-      ];
+      layoutConfig = LayoutBlockConfig.defaults();
     }
 
     if (layoutCreated) {
@@ -210,7 +203,7 @@ class _WeatherHomeState extends State<WeatherHome> {
   Future<void> saveLayoutConfig() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
-      'layout_config',
+      PrefKeys.layoutConfig,
       layoutConfig.map((e) => jsonEncode(e.toJson())).toList(),
     );
   }
@@ -218,19 +211,19 @@ class _WeatherHomeState extends State<WeatherHome> {
   Future<void> setHomeasCurrent() async {
     final prefs = await SharedPreferences.getInstance();
     final locationData = {
-      'city': PreferencesHelper.getJson('homeLocation')?['city'],
-      'country': PreferencesHelper.getJson('homeLocation')?['country'],
-      'cacheKey': PreferencesHelper.getJson('homeLocation')?['cacheKey'],
-      'latitude': PreferencesHelper.getJson('homeLocation')?['lat'],
-      'longitude': PreferencesHelper.getJson('homeLocation')?['lon'],
+      'city': PreferencesHelper.getJson(PrefKeys.homeLocation)?['city'],
+      'country': PreferencesHelper.getJson(PrefKeys.homeLocation)?['country'],
+      'cacheKey': PreferencesHelper.getJson(PrefKeys.homeLocation)?['cacheKey'],
+      'latitude': PreferencesHelper.getJson(PrefKeys.homeLocation)?['lat'],
+      'longitude': PreferencesHelper.getJson(PrefKeys.homeLocation)?['lon'],
     };
-    await prefs.setString('currentLocation', jsonEncode(locationData));
+    await prefs.setString(PrefKeys.currentLocation, jsonEncode(locationData));
   }
 
   Future<Map<String, dynamic>?> getWeatherFromCache() async {
-    final box = await Hive.openBox('weatherMasterCache');
+    final box = await HiveBoxes.openWeatherCache();
     var cached = box.get(cacheKey);
-    final homePref = PreferencesHelper.getJson('homeLocation');
+    final homePref = PreferencesHelper.getJson(PrefKeys.homeLocation);
     if (cached == null) {
       final weatherService = WeatherService();
       await weatherService.fetchWeather(homePref?['lat'], homePref?['lon'],
@@ -339,7 +332,7 @@ class _WeatherHomeState extends State<WeatherHome> {
       return;
     }
 
-    final box = await Hive.openBox('weatherMasterCache');
+    final box = await HiveBoxes.openWeatherCache();
     final raw = box.get(cacheKey);
     if (raw == null) {
       return;
@@ -408,7 +401,7 @@ class _WeatherHomeState extends State<WeatherHome> {
 
   Future<void> _setLatLon() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('currentLocation');
+    final jsonString = prefs.getString(PrefKeys.currentLocation);
     if (jsonString != null) {
       final jsonMap = json.decode(jsonString);
       lat = jsonMap['latitude'];
@@ -418,7 +411,7 @@ class _WeatherHomeState extends State<WeatherHome> {
 
   Future<void> checkAndUpdateHomeLocation() async {
     final prefs = await SharedPreferences.getInstance();
-    final storedJson = prefs.getString('homeLocation');
+    final storedJson = prefs.getString(PrefKeys.homeLocation);
     final storedLocation = storedJson != null ? jsonDecode(storedJson) : null;
 
     if (storedLocation['isGPS'] ?? false) {
@@ -455,7 +448,7 @@ class _WeatherHomeState extends State<WeatherHome> {
 
       Future<void> saveLocation(SavedLocation newLocation) async {
         final prefs = await SharedPreferences.getInstance();
-        final existing = prefs.getString('saved_locations');
+        final existing = prefs.getString(PrefKeys.savedLocations);
         List<SavedLocation> current = [];
 
         if (existing != null) {
@@ -468,16 +461,16 @@ class _WeatherHomeState extends State<WeatherHome> {
 
         if (!alreadyExists) {
           current.add(newLocation);
-          await prefs.setString('saved_locations',
+          await prefs.setString(PrefKeys.savedLocations,
               jsonEncode(current.map((e) => e.toJson()).toList()));
         }
       }
 
       if (locationChanged) {
-        prefs.remove('homeLocation');
+        prefs.remove(PrefKeys.homeLocation);
 
         prefs.setString(
-            'homeLocation',
+            PrefKeys.homeLocation,
             jsonEncode({
               'city': currentGeo['city']!,
               'country': currentGeo['country']!,
@@ -1157,9 +1150,9 @@ class _WeatherHomeState extends State<WeatherHome> {
           if (!widgetsUpdated) {
             updateHomeWidget(weather,
                 updatedFromHome: true); // update once on start
-            PreferencesHelper.setBool('triggerfromWorker', false);
+            PreferencesHelper.setBool(PrefKeys.triggerFromWorker, false);
             PreferencesHelper.setString(
-                'lastUpdatedFromHome', DateTime.now().toIso8601String());
+                PrefKeys.lastUpdatedFromHome, DateTime.now().toIso8601String());
             widgetsUpdated = true;
           }
 
@@ -1497,15 +1490,15 @@ class _WeatherHomeState extends State<WeatherHome> {
                                   } else {
                                     setState(() {
                                       cityName = PreferencesHelper.getJson(
-                                          'selectedViewLocation')?['city'];
+                                          PrefKeys.selectedViewLocation)?['city'];
                                       countryName = PreferencesHelper.getJson(
-                                          'selectedViewLocation')?['country'];
+                                          PrefKeys.selectedViewLocation)?['country'];
                                       cacheKey = PreferencesHelper.getJson(
-                                          'selectedViewLocation')?['cacheKey'];
+                                          PrefKeys.selectedViewLocation)?['cacheKey'];
                                       lat = PreferencesHelper.getJson(
-                                          'selectedViewLocation')?['lat'];
+                                          PrefKeys.selectedViewLocation)?['lat'];
                                       lon = PreferencesHelper.getJson(
-                                          'selectedViewLocation')?['lon'];
+                                          PrefKeys.selectedViewLocation)?['lon'];
                                       isViewLocation = true;
                                       _isAppFullyLoaded = false;
                                       _istriggeredFromLocations = true;

@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:weather_master_app/utils/preferences_helper.dart';
+import '../utils/preferences_helper.dart';
 import '../notifiers/unit_settings_notifier.dart';
 import '../utils/unit_converter.dart';
 import 'package:provider/provider.dart';

@@ -1,8 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/app_storage.dart';
 import '../utils/unit_converter.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../utils/icon_map.dart';
@@ -37,10 +37,10 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
 
   Future<Map<String, dynamic>?> getWeatherFromCache() async {
     final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('currentLocation');
+    final jsonString = prefs.getString(PrefKeys.currentLocation);
     if (jsonString != null) {
       final jsonMap = json.decode(jsonString);
-      final box = await Hive.openBox('weatherMasterCache');
+      final box = await HiveBoxes.openWeatherCache();
       final cached = box.get(jsonMap['cacheKey']);
       if (cached == null) return null;
       return json.decode(cached);
@@ -758,7 +758,7 @@ class HourlyCardForecast extends StatelessWidget {
 // header
 
 String getCityFromPreferences() {
-  final locationStr = PreferencesHelper.getString("currentLocation");
+  final locationStr = PreferencesHelper.getString(PrefKeys.currentLocation);
   final locationJson = jsonDecode(locationStr.toString());
   return locationJson['city'].toString();
 }

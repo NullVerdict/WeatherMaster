@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:weather_master_app/utils/preferences_helper.dart';
+import '../utils/preferences_helper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:settings_tiles/settings_tiles.dart';

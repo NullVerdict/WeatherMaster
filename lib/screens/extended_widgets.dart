@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:convert';
 import '../utils/preferences_helper.dart';
-import 'package:hive/hive.dart';
+import '../utils/app_storage.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../utils/unit_converter.dart';
 import 'package:solar_calculator/solar_calculator.dart';
@@ -28,9 +28,10 @@ class _ExtendWidgetState extends State<ExtendWidget> {
   late final IconData? iconData;
 
   Future<Map<String, dynamic>?> getWeatherWidgets() async {
-    final cacheKey = PreferencesHelper.getJson('currentLocation')?['cacheKey'];
+    final cacheKey =
+        PreferencesHelper.getJson(PrefKeys.currentLocation)?['cacheKey'];
 
-    final box = await Hive.openBox('weatherMasterCache');
+    final box = await HiveBoxes.openWeatherCache();
     final cached = box.get(cacheKey);
     if (cached == null) return null;
 

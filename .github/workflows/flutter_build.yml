@@ -6,38 +6,57 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.32.4"
+          channel: stable
+          cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
-      - name: Setup environment file
+      - name: Upgrade dependencies
+        run: flutter pub upgrade
+
+      - name: Apply Dart fixes
+        run: dart fix --apply
+
+      - name: Auto-commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: upgrade dependencies and apply dart fixes [skip ci]"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"
+
+      - name: Analyze project
+        run: flutter analyze
+        continue-on-error: true 
+
+      - name: Create .env file
         run: |
-          echo "API_TOKEN=${{ secrets.API_TOKEN }}" >> .env
-          echo "API_KEY_WEATHERAPI=${{ secrets.API_KEY_WEATHERAPI }}" >> .env
-          echo "API_KEY_OPENROUTER=${{ secrets.API_KEY_OPENROUTER }}" >> .env
-
-      - name: Setup keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/weathermaster.jks
-
-      - name: Setup key.properties
-        run: |
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "storeFile=app/weathermaster.jks" >> android/key.properties
+          cat <<EOF > .env
+          API_TOKEN=${{ secrets.API_TOKEN }}
+          API_KEY_WEATHERAPI=${{ secrets.API_KEY_WEATHERAPI }}
+          API_KEY_OPENROUTER=${{ secrets.API_KEY_OPENROUTER }}
+          EOF
 
       - name: Build Split APKs
         run: flutter build apk --release --split-per-abi
@@ -46,9 +65,11 @@ jobs:
         run: |
           VERSION_NAME=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
           mkdir release_apks
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.arm64-v8a.apk
-          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release_apks/WeatherMaster.${VERSION_NAME}.armeabi-v7a.apk
-          cp build/app/outputs/flutter-apk/app-x86_64-release.apk release_apks/WeatherMaster.${VERSION_NAME}.x86_64.apk
+
+          for apk in build/app/outputs/flutter-apk/*-release.apk; do
+            abi=$(basename "$apk" | sed -E 's/app-(.*)-release\.apk/\1/')
+            cp "$apk" "release_apks/WeatherMaster.${VERSION_NAME}.${abi}.apk"
+          done
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
