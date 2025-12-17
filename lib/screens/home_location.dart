@@ -232,6 +232,7 @@ class HomeLocationScreen extends StatelessWidget {
                                               .checkServicesAndPermission(
                                                   context);
                                       if (!ready) return;
+                                      if (!context.mounted) return;
                                       showDialog(
                                         context: context,
                                         barrierDismissible: false,
@@ -284,9 +285,11 @@ class HomeLocationScreen extends StatelessWidget {
                                             saved.latitude, saved.longitude,
                                             locationName: cacheKey);
 
-                                        Navigator.pop(context);
-                                        if (context.mounted && Navigator.canPop(context)) {
-                                          Navigator.pop(context, true);
+                                        if (context.mounted) {
+                                          Navigator.pop(context);
+                                          if (Navigator.canPop(context)) {
+                                            Navigator.pop(context, true);
+                                          }
                                         }
                                       } catch (e) {
                                         if (context.mounted && Navigator.canPop(context)) {

@@ -80,10 +80,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
           final box = await HiveBoxes.openWeatherCache();
           final rawJson = box.get(cacheKey);
 
-          if (rawJson != null) {
-            final map = json.decode(rawJson);
-          }
-
           final locationData = {
             'city': loc.city,
             'country': loc.country,

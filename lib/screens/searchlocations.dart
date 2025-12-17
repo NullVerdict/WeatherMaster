@@ -165,7 +165,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
       setState(() => results = unique);
     } catch (e) {
       setState(() => results = []);
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("data_fetch_error".tr())),
         );
@@ -517,6 +517,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                           final count = await getLocationCount();
 
                           if (count == 0) {
+                            if (!context.mounted) return;
                             showDialog(
                               context: context,
                               barrierDismissible: false,
@@ -541,10 +542,11 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text('data_fetch_error'.tr()),
-                                  duration: Duration(seconds: 5),
-                                ),
-                              );
-                                                          return;
+                                    duration: Duration(seconds: 5),
+                                  ),
+                                );
+                              }
+                              return;
                             }
 
                             saveLocation(saved);
@@ -585,7 +587,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                 });
                               }
 
-                              if (context.mounted) {
+                              if (mounted && context.mounted) {
                                 Navigator.pop(context);
                                 Navigator.pop(context, true);
                               }
@@ -607,8 +609,8 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                   'isGPS': false,
                                 }));
                             if (context.mounted) {
-                            Navigator.pop(context, false);
-                          }
+                              Navigator.pop(context, false);
+                            }
                           }
                         });
                   },

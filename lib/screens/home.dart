@@ -224,13 +224,12 @@ class _WeatherHomeState extends State<WeatherHome> {
     var cached = box.get(cacheKey);
     final homePref = PreferencesHelper.getJson(PrefKeys.homeLocation);
     if (cached == null) {
+      if (!mounted) return null;
       final weatherService = WeatherService();
       await weatherService.fetchWeather(homePref?['lat'], homePref?['lon'],
           locationName: cacheKey, context: context);
 
-      if (context.mounted) {
-        cached = box.get(cacheKey); // read again after fetch
-      }
+      cached = box.get(cacheKey); // read again after fetch
     }
 
     if (cached == null) return null; // still null, give up
@@ -256,7 +255,7 @@ class _WeatherHomeState extends State<WeatherHome> {
       } else {}
 
       if (isFirstAppBuild) {
-        if (context.mounted) {
+        if (mounted) {
           SnackUtil.showSnackBar(
               context: context, message: "network_unavailable".tr());
         }
@@ -361,17 +360,17 @@ class _WeatherHomeState extends State<WeatherHome> {
       }
     }
 
+    if (!mounted) return;
     final weatherService = WeatherService();
     Map<String, dynamic>? result;
     try {
       result = await weatherService.fetchWeather(lat!, lon!,
           locationName: cacheKey, context: context);
     } catch (e) {
-      setState(() {
-        _isAppFullyLoaded = true;
-      });
-
-      if (context.mounted) {
+      if (mounted) {
+        setState(() {
+          _isAppFullyLoaded = true;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('data_fetch_error'.tr()),
@@ -379,7 +378,8 @@ class _WeatherHomeState extends State<WeatherHome> {
           ),
         );
       }
-        }
+      return;
+    }
 
     if (result == null) {
       return;
@@ -418,6 +418,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     final storedLocation = storedJson != null ? jsonDecode(storedJson) : null;
 
     if (storedLocation['isGPS'] ?? false) {
+      if (!mounted) return;
       bool serviceAvailable =
           await LocationPermissionHelper.checkServicesAndPermission(context);
 
@@ -501,6 +502,7 @@ class _WeatherHomeState extends State<WeatherHome> {
         themeCalled = false;
         await saveLocation(saved);
 
+        if (!mounted) return;
         final weatherService = WeatherService();
         try {
           await weatherService.fetchWeather(
@@ -510,11 +512,10 @@ class _WeatherHomeState extends State<WeatherHome> {
             context: context,
           );
         } catch (e) {
-          setState(() {
-            _isAppFullyLoaded = true;
-          });
-
-          if (context.mounted) {
+          if (mounted) {
+            setState(() {
+              _isAppFullyLoaded = true;
+            });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('data_fetch_error'.tr()),
@@ -522,7 +523,8 @@ class _WeatherHomeState extends State<WeatherHome> {
               ),
             );
           }
-                }
+          return;
+        }
         setState(() {
           weatherFuture = getWeatherFromCache();
         });
@@ -1467,6 +1469,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                                   }
                                   Map<String, dynamic>? result;
 
+                                  if (!mounted) return;
                                   final weatherService = WeatherService();
                                   try {
                                     result = await weatherService.fetchWeather(
@@ -1475,11 +1478,10 @@ class _WeatherHomeState extends State<WeatherHome> {
                                         context: context);
                                   } catch (e) {
                                     result = null;
-                                    setState(() {
-                                      _isAppFullyLoaded = true;
-                                    });
-
-                                    if (context.mounted) {
+                                    if (mounted) {
+                                      setState(() {
+                                        _isAppFullyLoaded = true;
+                                      });
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
