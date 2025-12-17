@@ -424,6 +424,8 @@ class _AboutPageState extends State<AboutPage> {
 }
 
 class TermsPage extends StatelessWidget {
+  const TermsPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     final markdownData = '''
@@ -484,6 +486,8 @@ If you have any questions about these Terms & Conditions, please contact:
 }
 
 class PolicyPage extends StatelessWidget {
+  const PolicyPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     final markdownData = '''
@@ -534,6 +538,8 @@ If you have any questions about privacy while using WeatherMaster, please contac
 }
 
 class CheckUpdateButton extends StatefulWidget {
+  const CheckUpdateButton({super.key});
+
   @override
   _CheckUpdateButtonState createState() => _CheckUpdateButtonState();
 }
