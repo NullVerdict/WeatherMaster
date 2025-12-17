@@ -609,7 +609,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                             widget.currentPressure.round()),
                         fit: BoxFit.contain),
                   ),
-                  headerWidgetConditions(
+                  HeaderWidgetConditions(
                     headerText: "pressure".tr(),
                     headerIcon: Symbols.compress,
                   ),
@@ -720,9 +720,9 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
-                              headerText: "visibility".tr(),
-                              headerIcon: Symbols.visibility,
+                            HeaderWidgetConditions(
+                              headerText: "humidity".tr(),
+                              headerIcon: Symbols.water_drop,
                             ),
                             Align(
                               alignment: Alignment.center,
@@ -832,9 +832,9 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                               currentWindDirc: widget.currentWindDirc,
                               backgroundColor:
                                   Color(widget.selectedContainerBgIndex)),
-                          headerWidgetConditions(
+                          HeaderWidgetConditions(
                             headerText: "wind".tr(),
-                            headerIcon: Symbols.explore,
+                            headerIcon: Symbols.air,
                           ),
                           Align(
                             alignment: Alignment.center,
@@ -952,7 +952,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "uv_index".tr(),
                               headerIcon: Symbols.light_mode,
                             ),
@@ -1525,7 +1525,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                 fit: BoxFit.contain,
                               ),
                             ),
-                            headerWidgetConditions(
+                            HeaderWidgetConditions(
                               headerText: "cloudiness".tr(),
                               headerIcon: Symbols.cloud,
                             ),
@@ -1612,7 +1612,6 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.only(top: 0),
-          ),
           ),
         ],
       ),

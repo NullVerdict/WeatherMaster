@@ -284,7 +284,7 @@ class HomeLocationScreen extends StatelessWidget {
                                             saved.latitude, saved.longitude,
                                             locationName: cacheKey);
 
-                                        Navigator.pop(dialogContext);
+                                        Navigator.pop(context);
                                         if (context.mounted && Navigator.canPop(context)) {
                                           Navigator.pop(context, true);
                                         }

@@ -587,7 +587,6 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
 
                               if (context.mounted) {
                                 Navigator.pop(context);
-
                                 Navigator.pop(context, true);
                               }
                             }
