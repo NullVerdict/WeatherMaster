@@ -38,7 +38,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
     loadSavedLocations();
 
     Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _showLoader = false;
         });
@@ -218,7 +218,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
             onClosed: (updated) async {
               if (updated == true) {
                 await loadSavedLocations();
-                if (mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('location_saved'.tr())),
                   );
@@ -234,7 +234,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   Widget buildDismissibleListView({Key? key}) {
-    final colorTheme = Theme.of(context).colorScheme;
     return savedLocations.isEmpty
         ? const Center(child: Text("No saved locations."))
         : ListView.builder(
@@ -321,7 +320,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                   PrefKeys.currentLocation,
                                   jsonEncode(locationData));
 
-                              if (mounted) {
+                              if (context.mounted) {
                                 Navigator.pop(context, {
                                   'cacheKey': cacheKey,
                                   'city': PreferencesHelper.getJson(
@@ -617,8 +616,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 );
               }
 
-              final isLastItem = index == savedLocations.length;
-
               Future<Map<String, dynamic>> getCurrentHomeInfo() async {
                 final prefs = await SharedPreferences.getInstance();
                 final homeLocationJson =
@@ -770,7 +767,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                                 jsonEncode(locationData));
 
                             // Return data to previous screen
-                            if (mounted) {
+                            if (context.mounted) {
                               Navigator.pop(context, {
                                 'cacheKey': cacheKey,
                                 'city': loc.city,

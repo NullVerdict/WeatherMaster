@@ -102,7 +102,7 @@ class DataBackupService {
     if (data['app'] != 'WeatherMaster' ||
         !data.containsKey('hive') ||
         !data.containsKey('sharedPreferences')) {
-      if (mounted) {
+      if (Navigator.of(context).mounted) {
         SnackUtil.showSnackBar(context: context, message: "Invalid backup file format.");
       }
       return;
@@ -134,14 +134,14 @@ class DataBackupService {
       await hiveBox.put(entry.key, entry.value);
     }
 
-    if (mounted) {
+    if (Navigator.of(context).mounted) {
       SnackUtil.showSnackBar(context: context, message: "Import complete. Restarting app");
     }
 
     await Future.delayed(Duration(seconds: 2));
     Restart.restartApp();
   } catch (e) {
-    if (mounted) {
+    if (Navigator.of(context).mounted) {
       SnackUtil.showSnackBar(context: context, message: "Error during import");
     }
   }

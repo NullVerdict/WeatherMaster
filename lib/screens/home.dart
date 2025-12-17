@@ -228,7 +228,7 @@ class _WeatherHomeState extends State<WeatherHome> {
       await weatherService.fetchWeather(homePref?['lat'], homePref?['lon'],
           locationName: cacheKey, context: context);
 
-      if (mounted) {
+      if (context.mounted) {
         cached = box.get(cacheKey); // read again after fetch
       }
     }
@@ -256,7 +256,7 @@ class _WeatherHomeState extends State<WeatherHome> {
       } else {}
 
       if (isFirstAppBuild) {
-        if (mounted) {
+        if (context.mounted) {
           SnackUtil.showSnackBar(
               context: context, message: "network_unavailable".tr());
         }
@@ -371,7 +371,7 @@ class _WeatherHomeState extends State<WeatherHome> {
         _isAppFullyLoaded = true;
       });
 
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('data_fetch_error'.tr()),
@@ -514,7 +514,7 @@ class _WeatherHomeState extends State<WeatherHome> {
             _isAppFullyLoaded = true;
           });
 
-          if (mounted) {
+          if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('data_fetch_error'.tr()),
@@ -755,8 +755,6 @@ class _WeatherHomeState extends State<WeatherHome> {
     final bool useDarkerBackground =
         context.watch<UnitSettingsNotifier>().useDarkBackgroundCards;
     final isShowFrog = context.watch<UnitSettingsNotifier>().showFrog;
-
-    final colorTheme = Theme.of(context).colorScheme;
 
     final List<Color> searchBgColors = [
       // cloudy
@@ -1020,7 +1018,7 @@ class _WeatherHomeState extends State<WeatherHome> {
             lastIsDay = isDay;
 
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
+              if (context.mounted) {
                 setState(() {
                   iscurrentDay = isDay;
                   !useFullMaterialScheme
@@ -1479,7 +1477,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                                       _isAppFullyLoaded = true;
                                     });
 
-                                    if (mounted) {
+                                    if (context.mounted) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(

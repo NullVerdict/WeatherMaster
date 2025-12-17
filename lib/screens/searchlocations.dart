@@ -165,7 +165,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
       setState(() => results = unique);
     } catch (e) {
       setState(() => results = []);
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("data_fetch_error".tr())),
         );
@@ -419,7 +419,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                             locationName: cacheKey,
                                             context: context);
                                       } catch (e) {
-                                        if (mounted) {
+                                        if (context.mounted) {
                                           Navigator.pop(context);
 
                                           ScaffoldMessenger.of(context)
@@ -580,8 +580,8 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                 });
                               }
 
-                              if (mounted) {
-                                Navigator.pop(dialogContext);
+                              if (context.mounted) {
+                                Navigator.pop(context);
 
                                 Navigator.pop(context, true);
                               }

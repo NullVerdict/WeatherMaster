@@ -103,7 +103,7 @@ class WeatherService {
             airQualityData['reason'] ??
             astronomyData['reason'] ??
             'Unknown error';
-        if (context != null) {
+        if (context != null && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               duration: Duration(seconds: 10),

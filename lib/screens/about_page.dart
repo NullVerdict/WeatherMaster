@@ -905,7 +905,9 @@ class TranslatorsDialog {
           final translatorsData = cached['translators'] as List<dynamic>;
           debugPrint('Using cached data fallback');
           return translatorsData.map((e) => Translator.fromJson(e)).toList();
-        } catch (_) {}
+        } catch (_) {
+          // Silently ignore cached data parsing errors
+        }
       }
 
       return [];

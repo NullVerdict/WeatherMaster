@@ -23,7 +23,7 @@ class NativeLocation {
       final latitude = double.parse(result['latitude'] ?? '0');
       final longitude = double.parse(result['longitude'] ?? '0');
 
-      debugPrint(latitude + longitude);
+      debugPrint('Location: ${latitude.toString()}, ${longitude.toString()}');
 
       return Position(latitude: latitude, longitude: longitude);
     } on PlatformException catch (e) {
@@ -39,7 +39,7 @@ class NativeLocation {
         'latitude': lat,
         'longitude': lon,
       });
-      debugPrint('Coordinates: $latitude, $longitude');
+      debugPrint('Coordinates: $lat, $lon');
       return {
         'city': result['city'] ?? '',
         'country': result['country'] ?? '',
@@ -57,23 +57,26 @@ class LocationPermissionHelper {
     if (serviceStatus != ServiceStatus.enabled) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enable location services')),
-      );
       return false;
     }
 
     var status = await Permission.locationWhenInUse.status;
 
     if (!status.isGranted && !status.isLimited) {
-      status = await Permission.locationWhenInUse.request();
+      if (context.mounted) {
+        status = await Permission.locationWhenInUse.request();
+      }
     }
 
-    if (status.isGranted || status.isLimited) {
+    if ((status.isGranted || status.isLimited) && context.mounted) {
       return true;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Location permission denied')),
-    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location permission denied')),
+      );
+    }
     return false;
   }
 }

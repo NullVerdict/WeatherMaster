@@ -88,7 +88,6 @@ class HomeLocationScreen extends StatelessWidget {
             builder: (context, homeSnapshot) {
               final homeData =
                   homeSnapshot.data ?? {'cacheKey': '', 'isGPS': false};
-              final currentCacheKey = homeData['cacheKey'] ?? '';
               final isGPS = homeData['isGPS'] ?? false;
 
               return CustomScrollView(
@@ -110,7 +109,7 @@ class HomeLocationScreen extends StatelessWidget {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
+                                Padding(
                                   padding: EdgeInsets.only(top: 2),
                                   child: Icon(
                                     Icons.info_outline,
@@ -281,15 +280,14 @@ class HomeLocationScreen extends StatelessWidget {
                                         final weatherService = WeatherService();
                                         await weatherService.fetchWeather(
                                             saved.latitude, saved.longitude,
-                                            locationName: cacheKey,
-                                            context: context);
+                                            locationName: cacheKey);
 
                                         Navigator.pop(dialogContext);
-                                        if (mounted) {
+                                        if (Navigator.canPop(context)) {
                                           Navigator.pop(context, true);
                                         }
                                       } catch (e) {
-                                        if (mounted) {
+                                        if (Navigator.canPop(context)) {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(

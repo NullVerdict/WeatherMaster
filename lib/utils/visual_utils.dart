@@ -250,9 +250,9 @@ String buildSunPathWithIcon({
   bool showSun = true,
 }) {
   final hexColor =
-      '#${pathColor.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+      '#${pathColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
   final hexColoroutLine =
-      '#${outLineColor.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+      '#${outLineColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
 
   const svgWidth = 176.0;
 
@@ -332,13 +332,9 @@ String buildMoonPathWithIcon({
   final moonY = 70 - 70 * sin(pi * t);
   final moonYEndStart = 60 - 70 * sin(pi * t);
 
-  final moonFill = showMoon
-      ? 'radialGradient(circle at center, white $moonIllumination%, transparent 100%)'
-      : 'transparent';
-
   return '''
 
-<svg width="176" height="110" viewBox="0 0 176 110" style="overflow: visible;" xmlns="http://www.w3.org/2000/svg">
+<svg width="176" height="112" viewBox="0 0 176 112" xmlns="http://www.w3.org/2000/svg">
   <path fill="$hexColor" d="M176.5,54.44V89.86C176.5,100.91 167.52,109.86 156.44,109.86H20.06C8.98,109.86 0,100.91 0,89.86V52.57C7.79,51.81 15.41,48.77 21.78,43.46L62.06,9.91C76.95,-2.49 98.6,-2.49 113.49,9.91L156.22,45.51C162.18,50.47 169.23,53.45 176.49,54.44H176.5Z"/>
   
   <circle cx="$moonX" cy="${percent == 0 || percent == 1 ? '$moonYEndStart' : '$moonY'}" 

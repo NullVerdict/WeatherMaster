@@ -642,7 +642,9 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
             _currentLat = (locationData['lat'] as num).toDouble();
             _currentLon = (locationData['lon'] as num).toDouble();
           }
-        } catch (e) {}
+        } catch (e) {
+          // Silently ignore location parsing errors
+        }
       }
 
       if (_currentLat == null || _currentLon == null) {
@@ -694,7 +696,9 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
 
         await _checkCacheAndFetchWeather();
       }
-    } catch (e) {}
+    } catch (e) {
+      // Silently ignore initialization errors
+    }
   }
 
   Future<void> _checkCacheAndFetchWeather() async {
@@ -1096,7 +1100,6 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
                           final model = entry.value;
                           final isSelected = model['key'] == selectedModelKey;
 
-                          final isFirst = i == 0;
                           final isLast = i == models.length - 1;
 
                           return ListTile(
