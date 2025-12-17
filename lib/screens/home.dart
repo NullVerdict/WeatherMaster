@@ -1463,6 +1463,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                                 return;
                               }
 
+                              if (!mounted) return;
                               SnackUtil.showSnackBar(
                                 context: context,
                                 message: 'Loading data',
@@ -1484,13 +1485,13 @@ class _WeatherHomeState extends State<WeatherHome> {
                                   lat!,
                                   lon!,
                                   locationName: cacheKey,
-                                  context: context,
                                 );
                               } catch (e) {
                                 if (!mounted) return;
                                 setState(() {
                                   _isAppFullyLoaded = true;
                                 });
+                                if (!mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text('data_fetch_error'.tr()),

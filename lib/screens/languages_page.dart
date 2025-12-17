@@ -59,7 +59,8 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
 
                     if (!mounted || selectedLocale == null) return;
 
-                    await context.setLocale(selectedLocale);
+                    final scaffoldContext = context;
+                    await scaffoldContext.setLocale(selectedLocale);
                     if (!mounted) return;
                     setState(() {
                       _selectedLocale = selectedLocale;

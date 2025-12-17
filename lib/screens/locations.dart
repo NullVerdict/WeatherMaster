@@ -78,7 +78,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
               }));
 
           final box = await HiveBoxes.openWeatherCache();
-          final rawJson = box.get(cacheKey);
 
           final locationData = {
             'city': loc.city,
