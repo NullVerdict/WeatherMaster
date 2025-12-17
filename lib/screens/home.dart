@@ -1457,13 +1457,13 @@ class _WeatherHomeState extends State<WeatherHome> {
                               );
                             },
                             onClosed: (result) async {
+                              final messenger = ScaffoldMessenger.of(context);
                               await Future.delayed(Duration(milliseconds: 300));
-                              if (!mounted) return;
+                              if (!context.mounted) return;
                               if (result == null || result['viewLocaton'] != true) {
                                 return;
                               }
 
-                              if (!mounted) return;
                               SnackUtil.showSnackBar(
                                 context: context,
                                 message: 'Loading data',
@@ -1477,7 +1477,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                               final newLat = selectedViewLocation?['lat'];
                               final newLon = selectedViewLocation?['lon'];
 
-                              if (!mounted) return;
+                              if (!context.mounted) return;
                               Map<String, dynamic>? fetchedResult;
                               final weatherService = WeatherService();
                               try {
@@ -1485,14 +1485,14 @@ class _WeatherHomeState extends State<WeatherHome> {
                                   lat!,
                                   lon!,
                                   locationName: cacheKey,
+                                  context: context,
                                 );
                               } catch (e) {
-                                if (!mounted) return;
+                                if (!context.mounted) return;
                                 setState(() {
                                   _isAppFullyLoaded = true;
                                 });
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                messenger.showSnackBar(
                                   SnackBar(
                                     content: Text('data_fetch_error'.tr()),
                                     duration: Duration(seconds: 5),
@@ -1501,7 +1501,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                                 return;
                               }
 
-                              if (!mounted || fetchedResult == null) {
+                              if (!context.mounted || fetchedResult == null) {
                                 return;
                               }
 
