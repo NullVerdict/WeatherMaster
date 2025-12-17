@@ -412,32 +412,135 @@ ColorScheme customDarkScheme = ColorScheme(
 class LocationPromptScreen extends StatelessWidget {
   const LocationPromptScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    Future<void> saveLocation(SavedLocation newLocation) async {
-      final prefs = await SharedPreferences.getInstance();
-      final existing = prefs.getString(PrefKeys.savedLocations);
-      List<SavedLocation> current = [];
+  Future<void> _saveLocation(SavedLocation newLocation) async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getString(PrefKeys.savedLocations);
+    List<SavedLocation> current = [];
 
-      if (existing != null) {
-        final decoded = jsonDecode(existing) as List;
-        current = decoded.map((e) => SavedLocation.fromJson(e)).toList();
-      }
+    if (existing != null) {
+      final decoded = jsonDecode(existing) as List;
+      current = decoded.map((e) => SavedLocation.fromJson(e)).toList();
+    }
 
-      bool alreadyExists = current.any(
-        (loc) =>
-            loc.city == newLocation.city && loc.country == newLocation.country,
+    bool alreadyExists = current.any(
+      (loc) =>
+          loc.city == newLocation.city && loc.country == newLocation.country,
+    );
+
+    if (!alreadyExists) {
+      current.add(newLocation);
+      await prefs.setString(
+        PrefKeys.savedLocations,
+        jsonEncode(current.map((e) => e.toJson()).toList()),
+      );
+    }
+  }
+
+  Future<void> _handleUseCurrentLocation(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    final rootNavigator = Navigator.of(context, rootNavigator: true);
+    final messenger = ScaffoldMessenger.of(context);
+    final dialogKey = GlobalKey<LoadingDialogState>();
+    var dialogVisible = false;
+
+    try {
+      final ready =
+          await LocationPermissionHelper.checkServicesAndPermission(context);
+      if (!context.mounted || !ready) return;
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => LoadingDialog(
+          key: dialogKey,
+          initialMessage: "Getting your location...",
+        ),
+      );
+      dialogVisible = true;
+
+      final position = await NativeLocation.getCurrentPosition();
+      final geoData = await getGeoData(
+        position.latitude,
+        position.longitude,
+      );
+      final saved = SavedLocation(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        city: geoData['city']!,
+        country: geoData['country']!,
       );
 
-      if (!alreadyExists) {
-        current.add(newLocation);
-        await prefs.setString(
-          PrefKeys.savedLocations,
-          jsonEncode(current.map((e) => e.toJson()).toList()),
+      dialogKey.currentState?.updateMessage(
+        "Found\n ${geoData['city']}, ${geoData['country']}\n Loading weather...",
+      );
+
+      await _saveLocation(saved);
+
+      final cacheKey = "${saved.city}_${saved.country}"
+          .toLowerCase()
+          .replaceAll(' ', '_');
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        PrefKeys.homeLocation,
+        jsonEncode({
+          'city': saved.city,
+          'country': saved.country,
+          'cacheKey': cacheKey,
+          'lat': saved.latitude,
+          'lon': saved.longitude,
+          'isGPS': true,
+        }),
+      );
+
+      final weatherService = WeatherService();
+      if (!context.mounted) return;
+      await weatherService.fetchWeather(
+        saved.latitude,
+        saved.longitude,
+        locationName: cacheKey,
+        context: context,
+      );
+
+      if (!context.mounted) return;
+
+      if (dialogVisible) {
+        rootNavigator.pop();
+        dialogVisible = false;
+      }
+
+      navigator.pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => WeatherHome(
+            cacheKey: cacheKey,
+            cityName: saved.city,
+            countryName: saved.country,
+            isHomeLocation: true,
+            lat: saved.latitude,
+            lon: saved.longitude,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (dialogVisible) {
+        rootNavigator.pop();
+      }
+      if (context.mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       }
     }
+  }
 
+  Future<void> _handleImportBackup(BuildContext context) async {
+    await HiveBoxes.openWeatherCache();
+    if (!context.mounted) return;
+    await DataBackupService.importAndReplaceAllData(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: customDarkScheme.surfaceContainerLow,
       appBar: AppBar(
@@ -537,89 +640,7 @@ class LocationPromptScreen extends StatelessWidget {
                 ),
                 minimumSize: WidgetStateProperty.all(const Size(300, 55)),
               ),
-              onPressed: () async {
-                final dialogKey = GlobalKey<LoadingDialogState>();
-
-                try {
-                  bool ready =
-                      await LocationPermissionHelper.checkServicesAndPermission(
-                    context,
-                  );
-                  if (!ready) return;
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (_) => LoadingDialog(
-                      key: dialogKey,
-                      initialMessage: "Getting your location...",
-                    ),
-                  );
-
-                  final position = await NativeLocation.getCurrentPosition();
-
-                  final geoData = await getGeoData(
-                    position.latitude,
-                    position.longitude,
-                  );
-                  final saved = SavedLocation(
-                    latitude: position.latitude,
-                    longitude: position.longitude,
-                    city: geoData['city']!,
-                    country: geoData['country']!,
-                  );
-
-                  dialogKey.currentState?.updateMessage(
-                    "Found\n ${geoData['city']}, ${geoData['country']}\n Loading weather...",
-                  );
-
-                  saveLocation(saved);
-
-                  final cacheKey = "${saved.city}_${saved.country}"
-                      .toLowerCase()
-                      .replaceAll(' ', '_');
-
-                  final prefs = await SharedPreferences.getInstance();
-                  prefs.setString(
-                    PrefKeys.homeLocation,
-                    jsonEncode({
-                      'city': saved.city,
-                      'country': saved.country,
-                      'cacheKey': cacheKey,
-                      'lat': saved.latitude,
-                      'lon': saved.longitude,
-                      'isGPS': true,
-                    }),
-                  );
-
-                  final weatherService = WeatherService();
-                  await weatherService.fetchWeather(
-                    saved.latitude,
-                    saved.longitude,
-                    locationName: cacheKey,
-                    context: context,
-                  );
-
-                  Navigator.of(context, rootNavigator: true).pop();
-
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => WeatherHome(
-                        cacheKey: cacheKey,
-                        cityName: saved.city,
-                        countryName: saved.country,
-                        isHomeLocation: true,
-                        lat: saved.latitude,
-                        lon: saved.longitude,
-                      ),
-                    ),
-                  );
-                } catch (e) {
-                  Navigator.of(context, rootNavigator: true).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: ${e.toString()}')),
-                  );
-                }
-              },
+              onPressed: () => _handleUseCurrentLocation(context),
               icon: Icon(
                 Icons.my_location,
                 color: customDarkScheme.onPrimary,
@@ -669,10 +690,7 @@ class LocationPromptScreen extends StatelessWidget {
                   BorderSide(color: customDarkScheme.outline, width: 2),
                 ),
               ),
-              onPressed: () async {
-                await HiveBoxes.openWeatherCache();
-                await DataBackupService.importAndReplaceAllData(context);
-              },
+              onPressed: () => _handleImportBackup(context),
               icon: Icon(
                 Icons.download_outlined,
                 color: customDarkScheme.primary,
@@ -697,11 +715,10 @@ class LocationPromptScreen extends StatelessWidget {
 
 class LoadingDialog extends StatefulWidget {
   final String initialMessage;
-  @override
-  final GlobalKey<LoadingDialogState> key;
+  final GlobalKey<LoadingDialogState> dialogKey;
 
-  const LoadingDialog({required this.key, required this.initialMessage})
-      : super(key: key);
+  const LoadingDialog({required this.dialogKey, required this.initialMessage})
+      : super(key: dialogKey);
 
   @override
   LoadingDialogState createState() => LoadingDialogState();
