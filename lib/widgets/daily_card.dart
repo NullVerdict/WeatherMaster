@@ -235,7 +235,6 @@ class DailyCard extends StatelessWidget {
 
 String getLocalizedDateFormat(DateTime time, Locale locale) {
   final lang = locale.languageCode;
-  final country = locale.countryCode;
 
   if (lang == 'en') {
     return DateFormat('MM/dd').format(time);

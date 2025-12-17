@@ -1459,10 +1459,12 @@ class _WeatherHomeState extends State<WeatherHome> {
                               if (!mounted) return;
                               if (result != null) {
                                 if (result['viewLocaton'] == true) {
-                                  SnackUtil.showSnackBar(
-                                    context: context,
-                                    message: 'Loading data',
-                                  );
+                                  if (context.mounted) {
+                                    SnackUtil.showSnackBar(
+                                      context: context,
+                                      message: 'Loading data',
+                                    );
+                                  }
                                   Map<String, dynamic>? result;
 
                                   final weatherService = WeatherService();

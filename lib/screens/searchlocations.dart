@@ -472,9 +472,13 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                           });
                                         }
 
-                                        Navigator.pop(context);
+                                        if (context.mounted) {
+                                          Navigator.pop(context);
+                                        }
 
-                                        Navigator.pop(context, true);
+                                        if (context.mounted) {
+                                          Navigator.pop(context, true);
+                                        }
                                       }
                                     },
                                     icon: Icon(
@@ -533,9 +537,10 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                               await weatherService.fetchWeather(lat, lon,
                                   locationName: cacheKey, context: context);
                             } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('data_fetch_error'.tr()),
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('data_fetch_error'.tr()),
                                   duration: Duration(seconds: 5),
                                 ),
                               );
@@ -602,7 +607,9 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                   'lon': lon,
                                   'isGPS': false,
                                 }));
+                            if (context.mounted) {
                             Navigator.pop(context, false);
+                          }
                           }
                         });
                   },

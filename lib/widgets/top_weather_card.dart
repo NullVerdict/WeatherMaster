@@ -336,7 +336,6 @@ class WeatherTopCardVertical extends StatefulWidget {
 
 class _WeatherTopCardStateVertical extends State<WeatherTopCardVertical> {
   final GlobalKey _labelKey = GlobalKey();
-  double _labelHeight = 0;
 
   @override
   void initState() {

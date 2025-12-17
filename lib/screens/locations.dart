@@ -79,11 +79,9 @@ class _LocationsScreenState extends State<LocationsScreen> {
 
           final box = await HiveBoxes.openWeatherCache();
           final rawJson = box.get(cacheKey);
-          String? lastUpdated;
 
           if (rawJson != null) {
             final map = json.decode(rawJson);
-            lastUpdated = map['last_updated'];
           }
 
           final locationData = {
@@ -614,22 +612,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
                       '${loc.city}-${loc.country}-${loc.latitude}-${loc.longitude}'),
                   child: const SizedBox.shrink(),
                 );
-              }
-
-              Future<Map<String, dynamic>> getCurrentHomeInfo() async {
-                final prefs = await SharedPreferences.getInstance();
-                final homeLocationJson =
-                    prefs.getString(PrefKeys.homeLocation);
-                if (homeLocationJson != null) {
-                  final data = jsonDecode(homeLocationJson);
-                  return {
-                    'cacheKey': data['cacheKey'] ?? '',
-                    'isGPS': data['isGPS'] ?? false,
-                    'city': data['city'] ?? '',
-                    'country': data['country'] ?? '',
-                  };
-                }
-                return {'cacheKey': '', 'isGPS': false};
               }
 
               Future<void> setHomeLocation(

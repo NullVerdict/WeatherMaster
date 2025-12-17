@@ -30,7 +30,7 @@ Future<void> updateHomeWidget(weather, {bool updatedFromHome = false}) async {
     final dynamic isDay;
     final List<dynamic> hourlyTime;
     final List<dynamic> hourlyTemps;
-    late final dailyDataMain;
+    late final Map<String, dynamic> dailyDataMain;
 
     final List<dynamic> hourlyWeatherCodes;
     final String utcOffsetSeconds;

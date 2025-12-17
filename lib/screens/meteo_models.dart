@@ -753,23 +753,6 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
     }
   }
 
-  Future<void> _forceRefresh() async {
-    if (_currentLat == null || _currentLon == null) return;
-
-    _lastFetchTime = DateTime.now();
-    PreferencesHelper.setInt(
-        "lastFetchTimestamp", _lastFetchTime!.millisecondsSinceEpoch);
-
-    _cachedLocationKey = _makeCacheKey(_currentLat!, _currentLon!);
-
-    final box = await HiveBoxes.openWeatherModelsCache();
-    box.put('cachedLocationKey', _cachedLocationKey);
-    box.put('timestamp_$_cachedLocationKey',
-        _lastFetchTime!.millisecondsSinceEpoch);
-
-    await _fetchWeatherForAllModels();
-  }
-
   Future<void> _fetchWeatherForAllModels() async {
     if (_currentLat == null || _currentLon == null) return;
 
@@ -1101,6 +1084,7 @@ class _MeteoModelsPageState extends State<MeteoModelsPage> {
                           final isSelected = model['key'] == selectedModelKey;
 
                           final isLast = i == models.length - 1;
+                          final isFirst = i == 0;
 
                           return ListTile(
                             contentPadding:

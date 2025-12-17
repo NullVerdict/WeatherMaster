@@ -53,7 +53,9 @@ class HomeLocationScreen extends StatelessWidget {
           'isGPS': false,
         }));
 
-    Navigator.pop(context, true);
+    if (context.mounted) {
+      Navigator.pop(context, true);
+    }
   }
 
   @override
@@ -236,7 +238,7 @@ class HomeLocationScreen extends StatelessWidget {
                                         barrierColor: Theme.of(context)
                                             .colorScheme
                                             .surface,
-                                        builder: (dialogContext) => Center(
+                                        builder: (BuildContext dialogContext) => Center(
                                             child: ExpressiveLoadingIndicator(
                                           color: colorTheme.primary,
                                         )),
@@ -283,11 +285,11 @@ class HomeLocationScreen extends StatelessWidget {
                                             locationName: cacheKey);
 
                                         Navigator.pop(dialogContext);
-                                        if (Navigator.canPop(context)) {
+                                        if (context.mounted && Navigator.canPop(context)) {
                                           Navigator.pop(context, true);
                                         }
                                       } catch (e) {
-                                        if (Navigator.canPop(context)) {
+                                        if (context.mounted && Navigator.canPop(context)) {
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(
                                             SnackBar(
