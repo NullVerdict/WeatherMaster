@@ -1459,95 +1459,64 @@ class _WeatherHomeState extends State<WeatherHome> {
                             onClosed: (result) async {
                               await Future.delayed(Duration(milliseconds: 300));
                               if (!mounted) return;
-                              if (result != null) {
-                                if (result['viewLocaton'] == true) {
-                                  if (context.mounted) {
-                                    SnackUtil.showSnackBar(
-                                      context: context,
-                                      message: 'Loading data',
-                                    );
-                                  }
-                                  Map<String, dynamic>? result;
-
-                                  if (!mounted) return;
-                                  final weatherService = WeatherService();
-                                  try {
-                                    result = await weatherService.fetchWeather(
-                                        lat!, lon!,
-                                        locationName: cacheKey,
-                                        context: context);
-                                  } catch (e) {
-                                    result = null;
-                                    if (mounted) {
-                                      setState(() {
-                                        _isAppFullyLoaded = true;
-                                      });
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content:
-                                              Text('data_fetch_error'.tr()),
-                                          duration: Duration(seconds: 5),
-                                        ),
-                                      );
-                                    }
-                                                                    }
-
-                                  if (result == null) {
-                                  } else {
-                                    setState(() {
-                                      cityName = PreferencesHelper.getJson(
-                                          PrefKeys.selectedViewLocation)?['city'];
-                                      countryName = PreferencesHelper.getJson(
-                                          PrefKeys.selectedViewLocation)?['country'];
-                                      cacheKey = PreferencesHelper.getJson(
-                                          PrefKeys.selectedViewLocation)?['cacheKey'];
-                                      lat = PreferencesHelper.getJson(
-                                          PrefKeys.selectedViewLocation)?['lat'];
-                                      lon = PreferencesHelper.getJson(
-                                          PrefKeys.selectedViewLocation)?['lon'];
-                                      isViewLocation = true;
-                                      _isAppFullyLoaded = false;
-                                      _istriggeredFromLocations = true;
-                                      themeCalled = false;
-                                      _isLoadingFroggy = true;
-                                      weatherFuture = Future.value(result);
-                                    });
-                                  }
-                                  return;
-                                }
-
-                                final newCity = result['city'];
-                                final newCountry = result['country'];
-                                final newCacheKey = result['cacheKey'];
-                                final newLat =
-                                    result['latitude'] ?? result['lat'];
-                                final newLon =
-                                    result['longitude'] ?? result['lon'];
-
-                                final isDifferent = cityName != newCity ||
-                                    countryName != newCountry ||
-                                    cacheKey != newCacheKey ||
-                                    lat != newLat ||
-                                    lon != newLon;
-
-                                if (isDifferent) {
-                                  setState(() {
-                                    cityName = newCity;
-                                    countryName = newCountry;
-                                    cacheKey = newCacheKey;
-                                    lat = newLat;
-                                    lon = newLon;
-                                    _isAppFullyLoaded = false;
-                                    _istriggeredFromLocations = true;
-                                    themeCalled = false;
-                                    isViewLocation = false;
-                                    _isLoadingFroggy = true;
-                                  });
-
-                                  weatherFuture = getWeatherFromCache();
-                                }
+                              if (result == null || result['viewLocaton'] != true) {
+                                return;
                               }
+
+                              SnackUtil.showSnackBar(
+                                context: context,
+                                message: 'Loading data',
+                              );
+
+                              final selectedViewLocation =
+                                  PreferencesHelper.getJson(PrefKeys.selectedViewLocation);
+                              final newCity = selectedViewLocation?['city'];
+                              final newCountry = selectedViewLocation?['country'];
+                              final newCacheKey = selectedViewLocation?['cacheKey'];
+                              final newLat = selectedViewLocation?['lat'];
+                              final newLon = selectedViewLocation?['lon'];
+
+                              if (!mounted) return;
+                              Map<String, dynamic>? fetchedResult;
+                              final weatherService = WeatherService();
+                              try {
+                                fetchedResult = await weatherService.fetchWeather(
+                                  lat!,
+                                  lon!,
+                                  locationName: cacheKey,
+                                  context: context,
+                                );
+                              } catch (e) {
+                                if (!mounted) return;
+                                setState(() {
+                                  _isAppFullyLoaded = true;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('data_fetch_error'.tr()),
+                                    duration: Duration(seconds: 5),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              if (!mounted || fetchedResult == null) {
+                                return;
+                              }
+
+                              setState(() {
+                                cityName = newCity ?? cityName;
+                                countryName = newCountry ?? countryName;
+                                cacheKey = newCacheKey ?? cacheKey;
+                                lat = newLat ?? lat;
+                                lon = newLon ?? lon;
+                                isViewLocation = true;
+                                _isAppFullyLoaded = false;
+                                _istriggeredFromLocations = true;
+                                themeCalled = false;
+                                _isLoadingFroggy = true;
+                                weatherFuture = Future.value(fetchedResult);
+                              });
                             },
                           ))
                     ],

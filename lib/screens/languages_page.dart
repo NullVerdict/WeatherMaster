@@ -57,14 +57,13 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
                       delegate: LanguageSearchDelegate(locales: locales),
                     );
 
-                    if (selectedLocale != null) {
-                      await context.setLocale(selectedLocale);
-                      if (mounted) {
-                        setState(() {
-                          _selectedLocale = selectedLocale;
-                        });
-                      }
-                    }
+                    if (!mounted || selectedLocale == null) return;
+
+                    await context.setLocale(selectedLocale);
+                    if (!mounted) return;
+                    setState(() {
+                      _selectedLocale = selectedLocale;
+                    });
                   }),
               SizedBox(
                 width: 5,
