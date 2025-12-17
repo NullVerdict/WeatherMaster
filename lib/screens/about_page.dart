@@ -11,10 +11,6 @@ import 'package:hive/hive.dart';
 import 'package:expressive_loading_indicator/expressive_loading_indicator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/app_storage.dart';
-
-import 'dart:convert';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AboutPage extends StatefulWidget {

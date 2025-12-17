@@ -3,11 +3,6 @@ import java.util.Properties
 import java.io.FileInputStream
 
 
-val keyProperties = Properties().apply {
-    val keyPropertiesFile = rootProject.file("key.properties")
-    load(FileInputStream(keyPropertiesFile))
-}
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -44,12 +39,7 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            keyAlias = keyProperties["keyAlias"] as String
-            keyPassword = keyProperties["keyPassword"] as String
-            storeFile = File(rootProject.projectDir, "${keyProperties["storeFile"]}")
-            storePassword = keyProperties["storePassword"] as String
-        }
+        create("release")
     }
 
     buildTypes {
