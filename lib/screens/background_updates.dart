@@ -228,10 +228,10 @@ class BatteryOptWidget extends StatefulWidget {
   const BatteryOptWidget({super.key});
 
   @override
-  _BatteryOptWidgetState createState() => _BatteryOptWidgetState();
+  State<BatteryOptWidget> createState() => BatteryOptWidgetState();
 }
 
-class _BatteryOptWidgetState extends State<BatteryOptWidget>
+class BatteryOptWidgetState extends State<BatteryOptWidget>
     with WidgetsBindingObserver {
   bool? _isWhitelisted;
 

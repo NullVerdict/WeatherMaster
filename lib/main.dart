@@ -452,7 +452,7 @@ class LocationPromptScreen extends StatelessWidget {
         context: context,
         barrierDismissible: false,
         builder: (_) => LoadingDialog(
-          key: dialogKey,
+          dialogKey: dialogKey,
           initialMessage: "Getting your location...",
         ),
       );

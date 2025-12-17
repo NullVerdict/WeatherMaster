@@ -7,7 +7,7 @@ class WorkInfoWidget extends StatefulWidget {
   const WorkInfoWidget({super.key});
 
   @override
-  _WorkInfoWidgetState createState() => _WorkInfoWidgetState();
+  State<WorkInfoWidget> createState() => _WorkInfoWidgetState();
 }
 
 class _WorkInfoWidgetState extends State<WorkInfoWidget> {
