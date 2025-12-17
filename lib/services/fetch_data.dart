@@ -19,7 +19,7 @@ class WeatherService {
       bool isOnlyView = false,
       bool isBackground = false}) async {
     final timezone = tzmap.latLngToTimezoneString(lat, lon);
-    final key = locationName ?? 'loc_${lat}_${lon}';
+    final key = locationName ?? 'loc_${lat}_$lon';
     final box = await _openBox();
 
     final selectedModel =

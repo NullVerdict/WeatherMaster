@@ -636,14 +636,13 @@ class HourlyCardForecast extends StatelessWidget {
                         itemBuilder: (context, index) {
                           // final time = DateTime.parse(hourlyTime[index]);
                           final dataIndex = startIndex + index;
-                          final itemCount = startIndex != null
-                              ? (48 - startIndex).clamp(0, 48)
-                              : 0;
+                          final itemCount = (48 - startIndex).clamp(0, 48);
                           final isFirst = index == 0;
 
                           final isLast = index == itemCount - 1;
-                          if (dataIndex >= hourlyTime.length)
+                          if (dataIndex >= hourlyTime.length) {
                             return const SizedBox();
+                          }
 
                           final forecastLocal =
                               DateTime.parse(hourlyTime[dataIndex]);
@@ -701,7 +700,7 @@ class HourlyCardForecast extends StatelessWidget {
                                       transform: Matrix4.translationValues(
                                           0, isFirst ? 2 : 0, 0),
                                       child: Text(
-                                        "${temp}°",
+                                        "$temp°",
                                         style: TextStyle(
                                           fontFamily: "FlexFontEn",
                                           fontSize: 16,
@@ -767,9 +766,9 @@ class ForecastDetailsHeader extends StatelessWidget {
   final Map<String, dynamic>? selectedDayData;
 
   const ForecastDetailsHeader({
-    Key? key,
+    super.key,
     required this.selectedDayData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

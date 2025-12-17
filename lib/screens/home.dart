@@ -14,7 +14,6 @@ import 'package:flutter/services.dart';
 // Third-party packages
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:hive/hive.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -368,15 +367,13 @@ class _WeatherHomeState extends State<WeatherHome> {
         _isAppFullyLoaded = true;
       });
 
-      if (context != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('data_fetch_error'.tr()),
-            duration: Duration(seconds: 5),
-          ),
-        );
-      }
-    }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('data_fetch_error'.tr()),
+          duration: Duration(seconds: 5),
+        ),
+      );
+        }
 
     if (result == null) {
       return;
@@ -511,15 +508,13 @@ class _WeatherHomeState extends State<WeatherHome> {
             _isAppFullyLoaded = true;
           });
 
-          if (context != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('data_fetch_error'.tr()),
-                duration: Duration(seconds: 5),
-              ),
-            );
-          }
-        }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('data_fetch_error'.tr()),
+              duration: Duration(seconds: 5),
+            ),
+          );
+                }
         setState(() {
           weatherFuture = getWeatherFromCache();
         });
@@ -680,10 +675,12 @@ class _WeatherHomeState extends State<WeatherHome> {
     }
 
     if (difference.inMinutes < 1) return 'just_now'.tr();
-    if (difference.inMinutes < 60)
+    if (difference.inMinutes < 60) {
       return formatRelativeTime('min', difference.inMinutes);
-    if (difference.inHours < 24)
+    }
+    if (difference.inHours < 24) {
       return formatRelativeTime('hr', difference.inHours);
+    }
 
     return '${dt.month}/${dt.day} at ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
   }
@@ -1474,17 +1471,15 @@ class _WeatherHomeState extends State<WeatherHome> {
                                       _isAppFullyLoaded = true;
                                     });
 
-                                    if (context != null) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content:
-                                              Text('data_fetch_error'.tr()),
-                                          duration: Duration(seconds: 5),
-                                        ),
-                                      );
-                                    }
-                                  }
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text('data_fetch_error'.tr()),
+                                        duration: Duration(seconds: 5),
+                                      ),
+                                    );
+                                                                    }
 
                                   if (result == null) {
                                   } else {

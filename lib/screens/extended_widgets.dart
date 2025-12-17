@@ -254,8 +254,9 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                     itemBuilder: (context, index) {
                       final dataIndex = startIndex + index;
 
-                      if (dataIndex >= hourlyTime.length)
+                      if (dataIndex >= hourlyTime.length) {
                         return const SizedBox();
+                      }
                       final forecastLocal =
                           DateTime.parse(hourlyTime[dataIndex]);
 
@@ -269,7 +270,6 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                           ? "${roundedDisplayTime.hour.toString().padLeft(2, '0')}:00"
                           : UnitConverter.formatTo12Hour(roundedDisplayTime);
                       final humidityPercentage = hourlyhumidity[dataIndex];
-                      ;
 
                       EdgeInsetsDirectional itemMargin =
                           EdgeInsetsDirectional.only(
@@ -799,8 +799,9 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                       itemBuilder: (context, index) {
                         final dataIndex = startIndex + index;
 
-                        if (dataIndex >= hourlyTime.length)
+                        if (dataIndex >= hourlyTime.length) {
                           return const SizedBox();
+                        }
                         final forecastLocal =
                             DateTime.parse(hourlyTime[dataIndex]);
 
@@ -1167,10 +1168,8 @@ class _ExtendWidgetState extends State<ExtendWidget> {
 
           for (int i = 8; i <= 23 && i < windSpeeds.length; i++) {
             final speed = windSpeeds[i];
-            if (speed is num) {
-              todayWindSpeeds.add(speed.toDouble());
-            }
-          }
+            todayWindSpeeds.add(speed.toDouble());
+                    }
 
           final double avgWind = todayWindSpeeds.isNotEmpty
               ? todayWindSpeeds.reduce((a, b) => a + b) / todayWindSpeeds.length
@@ -1246,8 +1245,9 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                       itemBuilder: (context, index) {
                         final dataIndex = startIndex + index;
 
-                        if (dataIndex >= hourlyTime.length)
+                        if (dataIndex >= hourlyTime.length) {
                           return const SizedBox();
+                        }
                         final forecastLocal =
                             DateTime.parse(hourlyTime[dataIndex]);
 
@@ -1506,7 +1506,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              avgUv != null ? "${avgUv.round()}" : "--",
+                              "${avgUv.round()}",
                               style: TextStyle(
                                 fontFamily: "FlexFontEn",
                                 fontSize: 50,
@@ -1516,9 +1516,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                             Padding(
                                 padding: EdgeInsets.only(bottom: 11, left: 8),
                                 child: Text(
-                                  avgUv != null
-                                      ? getUvIndexType(avgUv.round())
-                                      : "Not available",
+                                  getUvIndexType(avgUv.round()),
                                   style: TextStyle(
                                       fontSize: 20,
                                       color: Theme.of(context)
@@ -1540,8 +1538,9 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                       itemBuilder: (context, index) {
                         final dataIndex = startIndex + index;
 
-                        if (dataIndex >= hourlyTime.length)
+                        if (dataIndex >= hourlyTime.length) {
                           return const SizedBox();
+                        }
                         final forecastLocal =
                             DateTime.parse(hourlyTime[dataIndex]);
 
@@ -2178,8 +2177,9 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                       itemBuilder: (context, index) {
                         final dataIndex = startIndex + index;
 
-                        if (dataIndex >= hourlyTime.length)
+                        if (dataIndex >= hourlyTime.length) {
                           return const SizedBox();
+                        }
                         final forecastLocal =
                             DateTime.parse(hourlyTime[dataIndex]);
 
@@ -2449,7 +2449,7 @@ class _ExtendWidgetState extends State<ExtendWidget> {
             now.microsecond,
           );
 
-          Widget _mooninfoContainer(content) {
+          Widget mooninfoContainer(content) {
             return Container(
               padding:
                   const EdgeInsets.only(top: 5, bottom: 5, left: 8, right: 8),
@@ -2495,17 +2495,17 @@ class _ExtendWidgetState extends State<ExtendWidget> {
                         SizedBox(
                           height: 14,
                         ),
-                        _mooninfoContainer(
+                        mooninfoContainer(
                             "${"illumination_moon_text".tr()}: ${moonDATA["moon_illumination"]}%"),
                         SizedBox(
                           height: 6,
                         ),
-                        _mooninfoContainer(
+                        mooninfoContainer(
                             "${"moonrise".tr()}: $moonriseFormat"),
                         SizedBox(
                           height: 6,
                         ),
-                        _mooninfoContainer("${"moonset".tr()}: $moonsetFormat"),
+                        mooninfoContainer("${"moonset".tr()}: $moonsetFormat"),
                       ],
                     ),
                     Transform(
@@ -2776,8 +2776,8 @@ class AQISliderBar extends StatelessWidget {
   }
 }
 
-int getStartIndex(utc_offset_seconds, hourlyTime) {
-  final offset = Duration(seconds: int.parse(utc_offset_seconds));
+int getStartIndex(utcOffsetSeconds, hourlyTime) {
+  final offset = Duration(seconds: int.parse(utcOffsetSeconds));
   final nowUtc = DateTime.now().toUtc();
   final nowLocal = nowUtc.add(offset);
 
