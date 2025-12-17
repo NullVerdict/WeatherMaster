@@ -697,6 +697,7 @@ class LocationPromptScreen extends StatelessWidget {
 
 class LoadingDialog extends StatefulWidget {
   final String initialMessage;
+  @override
   final GlobalKey<LoadingDialogState> key;
 
   const LoadingDialog({required this.key, required this.initialMessage})

@@ -18,7 +18,7 @@ class DailyCard extends StatelessWidget {
   final int selectedContainerBgIndex;
   final String utcOffsetSeconds;
 
-  DailyCard(
+  const DailyCard(
       {super.key,
       required this.dailyTime,
       required this.dailyTempsMin,

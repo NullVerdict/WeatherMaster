@@ -17,7 +17,7 @@ Future<void> updateHomeWidget(weather, {bool updatedFromHome = false}) async {
     await PreferencesHelper.init();
     await dotenv.load(fileName: ".env");
 
-    double _safeToDouble(dynamic value, [double fallback = 0.0]) {
+    double safeToDouble(dynamic value, [double fallback = 0.0]) {
       if (value == null) return fallback;
       if (value is num) return value.toDouble();
       return double.tryParse(value.toString()) ?? fallback;
@@ -68,26 +68,26 @@ Future<void> updateHomeWidget(weather, {bool updatedFromHome = false}) async {
       }
 
       final result = await weatherService.fetchWeather(
-          homeLocation?['lat']!, homeLocation?['lon']!,
-          locationName: homeLocation?['cacheKey'],
+          homeLocation['lat']!, homeLocation['lon']!,
+          locationName: homeLocation['cacheKey'],
           context: null,
           isBackground: true);
 
       final current = result!['data']['current'];
-      temp = _safeToDouble(current['temperature_2m'].toDouble());
+      temp = safeToDouble(current['temperature_2m'].toDouble());
       code = current['weather_code'];
-      final hourly = result!['data']['hourly'] ?? {};
-      final dailyData = result!['data']['daily'];
+      final hourly = result['data']['hourly'] ?? {};
+      final dailyData = result['data']['daily'];
       dailyDataMain = dailyData;
       hourlyTime = hourly['time'];
       hourlyTemps = hourly['temperature_2m'];
       hourlyWeatherCodes = hourly['weather_code'];
 
-      maxTemp = _safeToDouble(dailyData['temperature_2m_max'][0]);
-      minTemp = _safeToDouble(dailyData['temperature_2m_min'][0]);
+      maxTemp = safeToDouble(dailyData['temperature_2m_max'][0]);
+      minTemp = safeToDouble(dailyData['temperature_2m_min'][0]);
       isDay = current['is_day'];
 
-      utcOffsetSeconds = result!['data']['utc_offset_seconds'].toString();
+      utcOffsetSeconds = result['data']['utc_offset_seconds'].toString();
     } else {
       final currentData = weather['current'];
 
@@ -126,7 +126,9 @@ Future<void> updateHomeWidget(weather, {bool updatedFromHome = false}) async {
 
       if (currentIndex >= hourlyTemps.length ||
           currentIndex >= hourlyTime.length ||
-          currentIndex >= hourlyWeatherCodes.length) break;
+          currentIndex >= hourlyWeatherCodes.length) {
+        break;
+      }
 
       // Temp conversion
       final tempValue = hourlyTemps[currentIndex].toDouble();
@@ -151,8 +153,8 @@ Future<void> updateHomeWidget(weather, {bool updatedFromHome = false}) async {
     for (int i = 0; i < 4; i++) {
       if (i >= dailyDataMain['time'].length) break;
 
-      final dayMaxTemp = _safeToDouble(dailyDataMain['temperature_2m_max'][i]);
-      final dayMinTemp = _safeToDouble(dailyDataMain['temperature_2m_min'][i]);
+      final dayMaxTemp = safeToDouble(dailyDataMain['temperature_2m_max'][i]);
+      final dayMinTemp = safeToDouble(dailyDataMain['temperature_2m_min'][i]);
       final dayCode = dailyDataMain['weather_code'][i];
 
       final localeString =

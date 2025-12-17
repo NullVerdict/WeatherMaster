@@ -5,7 +5,6 @@ import '../notifiers/unit_settings_notifier.dart';
 import '../utils/unit_converter.dart';
 import 'package:provider/provider.dart';
 import '../helper/locale_helper.dart';
-import '../utils/condition_label_map.dart';
 
 class RainBlock extends StatelessWidget {
   final List<String> hourlyTime;
@@ -293,8 +292,9 @@ class RainBlock extends StatelessWidget {
                           reservedSize: 16,
                           getTitlesWidget: (value, _) {
                             final idx = value.toInt();
-                            if (idx % 3 != 0 || idx >= next12Time.length)
+                            if (idx % 3 != 0 || idx >= next12Time.length) {
                               return const SizedBox.shrink();
+                            }
                             final dt = DateTime.parse(next12Time[idx]);
                             return Padding(
                                 padding: EdgeInsets.only(left: 8),

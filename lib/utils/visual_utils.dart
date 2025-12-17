@@ -333,7 +333,7 @@ String buildMoonPathWithIcon({
   final moonYEndStart = 60 - 70 * sin(pi * t);
 
   final moonFill = showMoon
-      ? 'radialGradient(circle at center, white ${moonIllumination}%, transparent 100%)'
+      ? 'radialGradient(circle at center, white $moonIllumination%, transparent 100%)'
       : 'transparent';
 
   return '''

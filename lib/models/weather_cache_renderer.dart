@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:hive/hive.dart';
 import '../utils/app_storage.dart';
 
 class WeatherCacheRenderer {

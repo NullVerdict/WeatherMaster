@@ -241,7 +241,7 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                         onTap: () => setState(() => tempProvider = provider),
                       ),
                     );
-                  }).toList(),
+                  }),
                   SizedBox(height: 13),
                   // Divider(),
                   // SizedBox(height: 4),
@@ -419,17 +419,15 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                                       } catch (e) {
                                         Navigator.pop(context);
 
-                                        if (context != null) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content:
-                                                  Text('data_fetch_error'.tr()),
-                                              duration: Duration(seconds: 5),
-                                            ),
-                                          );
-                                        }
-                                        return;
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content:
+                                                Text('data_fetch_error'.tr()),
+                                            duration: Duration(seconds: 5),
+                                          ),
+                                        );
+                                                                              return;
                                       }
 
                                       saveLocation(saved);
@@ -531,15 +529,13 @@ class _SearchLocationsScreenState extends State<SearchLocationsScreen> {
                               await weatherService.fetchWeather(lat, lon,
                                   locationName: cacheKey, context: context);
                             } catch (e) {
-                              if (context != null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('data_fetch_error'.tr()),
-                                    duration: Duration(seconds: 5),
-                                  ),
-                                );
-                              }
-                              return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('data_fetch_error'.tr()),
+                                  duration: Duration(seconds: 5),
+                                ),
+                              );
+                                                          return;
                             }
 
                             saveLocation(saved);
