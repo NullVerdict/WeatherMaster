@@ -1,7 +1,7 @@
 import com.android.build.api.dsl.Packaging
 import java.util.Properties
 import java.io.FileInputStream
-
+import java.io.File
 
 plugins {
     id("com.android.application")
@@ -9,18 +9,57 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+val hasReleaseKeystoreProps = keystorePropertiesFile.exists()
+if (hasReleaseKeystoreProps) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
+val devKeystoreFile: File = rootProject.file("dev-release-keystore.jks")
+val devKeystoreStorePassword = "android"
+val devKeystoreKeyAlias = "androiddebugkey"
+val devKeystoreKeyPassword = "android"
+
+tasks.register<Exec>("generateDevReleaseKeystore") {
+    onlyIf { !hasReleaseKeystoreProps && !devKeystoreFile.exists() }
+
+    commandLine(
+        "keytool",
+        "-genkeypair",
+        "-v",
+        "-keystore",
+        devKeystoreFile.absolutePath,
+        "-storepass",
+        devKeystoreStorePassword,
+        "-alias",
+        devKeystoreKeyAlias,
+        "-keypass",
+        devKeystoreKeyPassword,
+        "-keyalg",
+        "RSA",
+        "-keysize",
+        "2048",
+        "-validity",
+        "10000",
+        "-dname",
+        "CN=Dev,O=Dev,C=US"
+    )
+}
+
+tasks.matching { it.name == "preBuild" }.configureEach {
+    dependsOn("generateDevReleaseKeystore")
+}
 
 android {
     namespace = "com.pranshulgg.weather_master_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
-    
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
         isCoreLibraryDesugaringEnabled = true
-        
     }
 
     kotlinOptions {
@@ -38,8 +77,31 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            if (hasReleaseKeystoreProps) {
+                val storeFilePath = keystoreProperties["storeFile"]?.toString()
+                    ?: throw GradleException("key.properties is missing 'storeFile'")
+
+                storeFile = file(storeFilePath)
+                storePassword = keystoreProperties["storePassword"]?.toString()
+                    ?: throw GradleException("key.properties is missing 'storePassword'")
+                keyAlias = keystoreProperties["keyAlias"]?.toString()
+                    ?: throw GradleException("key.properties is missing 'keyAlias'")
+                keyPassword = keystoreProperties["keyPassword"]?.toString()
+                    ?: throw GradleException("key.properties is missing 'keyPassword'")
+            } else {
+                storeFile = devKeystoreFile
+                storePassword = devKeystoreStorePassword
+                keyAlias = devKeystoreKeyAlias
+                keyPassword = devKeystoreKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
         }
