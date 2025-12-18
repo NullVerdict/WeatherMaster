@@ -38,13 +38,8 @@ android {
         versionName = flutter.versionName
     }
 
-    signingConfigs {
-        create("release")
-    }
-
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
         }
