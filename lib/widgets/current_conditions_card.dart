@@ -115,8 +115,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
     DateTime? moonrise;
     DateTime? moonset;
 
-    final moonriseRaw = widget.moonset;
-    final moonsetRaw = widget.moonrise;
+    final moonriseRaw = widget.moonrise;
+    final moonsetRaw = widget.moonset;
 
     DateTime? parseTime(String? timeString) {
       if (timeString == null ||
