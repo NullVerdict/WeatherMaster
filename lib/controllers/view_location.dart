@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/saved_location.dart';
-import '../services/fetch_data.dart';
 import '../utils/preferences_helper.dart';
 import '../utils/app_storage.dart';
 
@@ -10,20 +9,23 @@ Future<void> handleSaveLocationView({
   required BuildContext context,
   required VoidCallback updateUIState,
 }) async {
-    final saved = SavedLocation(
-      latitude: PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['lat'],
-      longitude: PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['lon'],
-      city: PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['city'] ?? '',
-      country: PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['country'] ?? '',
-    );
-  
-  final cacheKeyViewing = "${saved.city}_${saved.country}".toLowerCase().replaceAll(' ', '_');
-    final weatherService = WeatherService();
-  weatherService.fetchWeather(
-      PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['lat'],
-      PreferencesHelper.getJson(PrefKeys.selectedViewLocation)?['lon'],
-      locationName: cacheKeyViewing,
-      context: context);
+  final selected = PreferencesHelper.getJson(PrefKeys.selectedViewLocation);
+  if (selected == null) {
+    return;
+  }
+
+  final lat = (selected['lat'] as num?)?.toDouble();
+  final lon = (selected['lon'] as num?)?.toDouble();
+  if (lat == null || lon == null) {
+    return;
+  }
+
+  final saved = SavedLocation(
+    latitude: lat,
+    longitude: lon,
+    city: selected['city']?.toString() ?? '',
+    country: selected['country']?.toString() ?? '',
+  );
 
   await _saveLocationView(saved);
 

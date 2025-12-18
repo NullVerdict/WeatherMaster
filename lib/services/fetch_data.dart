@@ -13,6 +13,38 @@ import 'dart:async';
 class WeatherService {
   Future<Box> _openBox() => HiveBoxes.openWeatherCache();
 
+  Map<String, dynamic> _normalizeAstronomyData(Map<String, dynamic> astronomy) {
+    Map<String, dynamic>? astro;
+
+    final a = astronomy['astronomy'];
+    if (a is Map<String, dynamic>) {
+      final a2 = a['astronomy'];
+      if (a2 is Map<String, dynamic>) {
+        final a3 = a2['astro'];
+        if (a3 is Map<String, dynamic>) {
+          astro = a3;
+        }
+      }
+
+      final aAstro = a['astro'];
+      if (astro == null && aAstro is Map<String, dynamic>) {
+        astro = aAstro;
+      }
+    }
+
+    if (astro == null) return astronomy;
+
+    final moonrise = astro['moonrise'];
+    final moonset = astro['moonset'];
+
+    if (moonrise != null || moonset != null) {
+      astro['moonrise'] = moonset;
+      astro['moonset'] = moonrise;
+    }
+
+    return astronomy;
+  }
+
   Future<Map<String, dynamic>?> fetchWeather(double lat, double lon,
       {String? locationName,
       BuildContext? context,
@@ -84,6 +116,8 @@ class WeatherService {
       final astronomyData = astronomyUri != null
           ? json.decode(responses[2].body) as Map<String, dynamic>
           : {};
+
+      final normalizedAstronomyData = _normalizeAstronomyData(astronomyData);
       // Check if we need fallback data for missing fields
       Map<String, dynamic> finalWeatherData = weatherData;
       if (selectedModel != "best_match" && _hasIncompleteData(weatherData)) {
@@ -126,7 +160,7 @@ class WeatherService {
       final combinedDataForView = {
         ...finalWeatherData,
         'air_quality': airQualityData,
-        'astronomy': astronomyData,
+        'astronomy': normalizedAstronomyData,
       };
 
       final nowForView = DateTime.now().toIso8601String();
@@ -165,7 +199,7 @@ class WeatherService {
       final combinedData = {
         ...finalWeatherData,
         'air_quality': airQualityData,
-        'astronomy': astronomyData,
+        'astronomy': normalizedAstronomyData,
       };
 
       final wrappedData = {

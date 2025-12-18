@@ -1490,17 +1490,25 @@ class _WeatherHomeState extends State<WeatherHome> {
                               final newCity = selectedViewLocation?['city'];
                               final newCountry = selectedViewLocation?['country'];
                               final newCacheKey = selectedViewLocation?['cacheKey'];
-                              final newLat = selectedViewLocation?['lat'];
-                              final newLon = selectedViewLocation?['lon'];
+                              final newLat =
+                                  (selectedViewLocation?['lat'] as num?)?.toDouble();
+                              final newLon =
+                                  (selectedViewLocation?['lon'] as num?)?.toDouble();
+                              final CacheKeyStr = newCacheKey?.toString();
 
                               if (!context.mounted) return;
+                              if (newLat == null ||
+                                  newLon == null ||
+                                  CacheKeyStr == null) {
+                                return;
+                              }
                               Map<String, dynamic>? fetchedResult;
                               final weatherService = WeatherService();
                               try {
                                 fetchedResult = await weatherService.fetchWeather(
-                                  lat!,
-                                  lon!,
-                                  locationName: cacheKey,
+                                  newLat,
+                                  newLon,
+                                  locationName: CacheKeyStr,
                                   context: context,
                                 );
                               } catch (e) {
@@ -1524,9 +1532,9 @@ class _WeatherHomeState extends State<WeatherHome> {
                               setState(() {
                                 cityName = newCity ?? cityName;
                                 countryName = newCountry ?? countryName;
-                                cacheKey = newCacheKey ?? cacheKey;
-                                lat = newLat ?? lat;
-                                lon = newLon ?? lon;
+                                cacheKey = CacheKeyStr;
+                                lat = newLat;
+                                lon = newLon;
                                 isViewLocation = true;
                                 _isAppFullyLoaded = false;
                                 _istriggeredFromLocations = true;
