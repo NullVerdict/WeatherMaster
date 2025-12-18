@@ -1,33 +1,7 @@
-import com.android.build.api.dsl.ApplicationExtension
-import com.android.build.api.dsl.LibraryExtension
-
 allprojects {
     repositories {
         google()
         mavenCentral()
-    }
-}
-
-subprojects {
-    val flutterCompileSdkVersion = (findProperty("flutter.compileSdkVersion") as String?)?.toIntOrNull()
-    val flutterTargetSdkVersion = (findProperty("flutter.targetSdkVersion") as String?)?.toIntOrNull()
-
-    plugins.withId("com.android.application") {
-        extensions.configure<ApplicationExtension> {
-            flutterCompileSdkVersion?.let { compileSdk = it }
-            defaultConfig {
-                flutterTargetSdkVersion?.let { targetSdk = it }
-            }
-        }
-    }
-
-    plugins.withId("com.android.library") {
-        extensions.configure<LibraryExtension> {
-            flutterCompileSdkVersion?.let { compileSdk = it }
-            defaultConfig {
-                flutterTargetSdkVersion?.let { targetSdk = it }
-            }
-        }
     }
 }
 
