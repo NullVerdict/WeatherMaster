@@ -115,6 +115,9 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
     DateTime? moonrise;
     DateTime? moonset;
 
+    final moonriseRaw = widget.moonset;
+    final moonsetRaw = widget.moonrise;
+
     DateTime? parseTime(String? timeString) {
       if (timeString == null ||
           timeString.isEmpty ||
@@ -131,16 +134,16 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
       }
     }
 
-    if (widget.moonrise != null &&
-        widget.moonrise!.isNotEmpty &&
-        widget.moonrise!.toLowerCase() != 'no moonrise') {
-      moonrise = parseTime(widget.moonrise);
+    if (moonriseRaw != null &&
+        moonriseRaw.isNotEmpty &&
+        moonriseRaw.toLowerCase() != 'no moonrise') {
+      moonrise = parseTime(moonriseRaw);
     }
 
-    if (widget.moonset != null &&
-        widget.moonset!.isNotEmpty &&
-        widget.moonset!.toLowerCase() != 'no moonset') {
-      moonset = parseTime(widget.moonset);
+    if (moonsetRaw != null &&
+        moonsetRaw.isNotEmpty &&
+        moonsetRaw.toLowerCase() != 'no moonset') {
+      moonset = parseTime(moonsetRaw);
     }
 
     now = DateTime(
