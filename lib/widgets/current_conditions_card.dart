@@ -97,7 +97,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
 
   @override
   Widget build(BuildContext context) {
-    final tempUnit = context.watch<UnitSettingsNotifier>().tempUnit;
+    final tempUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.tempUnit);
 
     final useAnimation =
         PreferencesHelper.getBool("UseopenContainerAnimation") ?? true;
@@ -153,7 +154,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
       now.microsecond,
     );
 
-    final timeUnit = context.watch<UnitSettingsNotifier>().timeUnit;
+    final timeUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.timeUnit);
 
     final sunriseFormat = timeUnit == '24 hr'
         ? DateFormat.Hm().format(sunrise)
@@ -174,11 +176,13 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             : DateFormat.jm().format(moonset))
         : 'N/A';
 
-    final pressureUnit = context.watch<UnitSettingsNotifier>().pressureUnit;
-    final precipitationUnit =
-        context.watch<UnitSettingsNotifier>().precipitationUnit;
-    final visibilityUnit = context.watch<UnitSettingsNotifier>().visibilityUnit;
-    final aqiUnit = context.watch<UnitSettingsNotifier>().aqiUnit;
+    final pressureUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.pressureUnit);
+    final precipitationUnit = context
+        .select<UnitSettingsNotifier, String>((n) => n.precipitationUnit);
+    final visibilityUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.visibilityUnit);
+    final aqiUnit = context.select<UnitSettingsNotifier, String>((n) => n.aqiUnit);
 
     final convertedPressure = pressureUnit == 'inHg'
         ? UnitConverter.hPaToInHg(widget.currentPressure)
@@ -196,7 +200,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
         ? UnitConverter.mToMiles(widget.currentVisibility.toDouble())
         : UnitConverter.mToKm(widget.currentVisibility.toDouble());
 
-    final windUnit = context.watch<UnitSettingsNotifier>().windUnit;
+    final windUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.windUnit);
 
     final formattedWindSpeed = windUnit == 'Mph'
         ? UnitConverter.kmhToMph(widget.currentWindSpeed)
@@ -1698,7 +1703,7 @@ class _WindCompassWidgetState extends State<WindCompassWidget> {
   @override
   Widget build(BuildContext context) {
     final useDeviceCompass =
-        context.watch<UnitSettingsNotifier>().useDeviceCompass;
+        context.select<UnitSettingsNotifier, bool>((n) => n.useDeviceCompass);
 
     if (useDeviceCompass && !kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       return StreamBuilder<CompassEvent>(

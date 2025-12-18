@@ -752,11 +752,12 @@ class _WeatherHomeState extends State<WeatherHome> {
   }
 
   Widget _buildWeatherContent() {
-    final bool usAnimations =
-        context.watch<UnitSettingsNotifier>().useCardBackgroundAnimations;
+    final bool usAnimations = context.select<UnitSettingsNotifier, bool>(
+        (n) => n.useCardBackgroundAnimations);
     final bool useDarkerBackground =
-        context.watch<UnitSettingsNotifier>().useDarkBackgroundCards;
-    final isShowFrog = context.watch<UnitSettingsNotifier>().showFrog;
+        context.select<UnitSettingsNotifier, bool>((n) => n.useDarkBackgroundCards);
+    final isShowFrog =
+        context.select<UnitSettingsNotifier, bool>((n) => n.showFrog);
 
     final List<Color> searchBgColors = [
       // cloudy

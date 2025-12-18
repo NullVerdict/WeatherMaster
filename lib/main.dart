@@ -197,10 +197,11 @@ class MyApp extends StatelessWidget {
 
     final isLight = Theme.of(context).brightness == Brightness.light;
 
-    final useExpressiveVariant =
-        context.watch<UnitSettingsNotifier>().useExpressiveVariant;
+    final useExpressiveVariant = context
+        .select<UnitSettingsNotifier, bool>((n) => n.useExpressiveVariant);
 
-    final forceLTRlayout = context.watch<UnitSettingsNotifier>().forceltrLayout;
+    final forceLTRlayout =
+        context.select<UnitSettingsNotifier, bool>((n) => n.forceltrLayout);
 
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(

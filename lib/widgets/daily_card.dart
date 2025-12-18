@@ -30,7 +30,8 @@ class DailyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tempUnit = context.watch<UnitSettingsNotifier>().tempUnit;
+    final tempUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.tempUnit);
     final colorTheme = Theme.of(context).colorScheme;
 
     final isDarkCards =

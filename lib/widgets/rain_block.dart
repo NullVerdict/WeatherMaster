@@ -143,7 +143,10 @@ class RainBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeUnit = context.watch<UnitSettingsNotifier>().timeUnit;
+    final timeUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.timeUnit);
+    final precipitationUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.precipitationUnit);
 
     String? generateSummary(int? start, int? end) {
       if (start == null || end == null) return null;
@@ -171,9 +174,6 @@ class RainBlock extends StatelessWidget {
     final title = _generateTitle(start);
     final subtitle = generateSummary(start, end);
     final rain = next12Precp;
-    final unitSettings =
-        Provider.of<UnitSettingsNotifier>(context, listen: false);
-    final precipitationUnit = unitSettings.precipitationUnit;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.7),

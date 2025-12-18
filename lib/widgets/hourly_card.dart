@@ -36,8 +36,10 @@ class HourlyCard extends StatelessWidget {
     final nowLocal = nowUtc.add(offset);
     final colorTheme = Theme.of(context).colorScheme;
 
-    final timeUnit = context.watch<UnitSettingsNotifier>().timeUnit;
-    final tempUnit = context.watch<UnitSettingsNotifier>().tempUnit;
+    final timeUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.timeUnit);
+    final tempUnit =
+        context.select<UnitSettingsNotifier, String>((n) => n.tempUnit);
 
     final roundedNow =
         DateTime(nowLocal.year, nowLocal.month, nowLocal.day, nowLocal.hour);
