@@ -104,6 +104,8 @@ class _WeatherHomeState extends State<WeatherHome> {
   bool isViewLocation = false;
   final ValueNotifier<bool> _showHeaderNotifier = ValueNotifier(false);
   late bool isHomeLocation;
+  LayoutProvider? _layoutProvider;
+  VoidCallback? _layoutProviderListener;
   final ScrollController _scrollController = ScrollController();
 
   bool _isAppFullyLoaded = false;
@@ -149,9 +151,11 @@ class _WeatherHomeState extends State<WeatherHome> {
       final layoutProvider =
           Provider.of<LayoutProvider>(context, listen: false);
 
-      layoutProvider.addListener(() {
+      _layoutProvider = layoutProvider;
+      _layoutProviderListener ??= () {
         loadLayoutConfig();
-      });
+      };
+      layoutProvider.addListener(_layoutProviderListener!);
 
       layoutProvider.loadLayout();
 
@@ -179,6 +183,17 @@ class _WeatherHomeState extends State<WeatherHome> {
     } else {
       _setLatLon();
     }
+  }
+
+  @override
+  void dispose() {
+    if (_layoutProvider != null && _layoutProviderListener != null) {
+      _layoutProvider!.removeListener(_layoutProviderListener!);
+    }
+    _weatherManager.dispose();
+    _scrollController.dispose();
+    _showHeaderNotifier.dispose();
+    super.dispose();
   }
 
   Future<void> loadLayoutConfig() async {
