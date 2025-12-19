@@ -83,7 +83,7 @@ class WeatherService {
           json.decode(responses[1].body) as Map<String, dynamic>;
       final astronomyData = astronomyUri != null
           ? json.decode(responses[2].body) as Map<String, dynamic>
-          : {};
+          : <String, dynamic>{};
 
       _normalizeAstronomyData(astronomyData);
       // Check if we need fallback data for missing fields

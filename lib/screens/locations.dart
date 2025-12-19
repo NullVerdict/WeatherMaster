@@ -77,8 +77,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
                 'lon': loc.longitude,
               }));
 
-          final box = await HiveBoxes.openWeatherCache();
-
           final locationData = {
             'city': loc.city,
             'country': loc.country,

@@ -1555,10 +1555,10 @@ class _WeatherHomeState extends State<WeatherHome> {
                           (selectedViewLocation?['lat'] as num?)?.toDouble();
                       final newLon =
                           (selectedViewLocation?['lon'] as num?)?.toDouble();
-                      final CacheKeyStr = newCacheKey?.toString();
+                      final cacheKeyStr = newCacheKey?.toString();
 
                       if (!context.mounted) return;
-                      if (newLat == null || newLon == null || CacheKeyStr == null) {
+                      if (newLat == null || newLon == null || cacheKeyStr == null) {
                         return;
                       }
                       Map<String, dynamic>? fetchedResult;
@@ -1567,7 +1567,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                         fetchedResult = await weatherService.fetchWeather(
                           newLat,
                           newLon,
-                          locationName: CacheKeyStr,
+                          locationName: cacheKeyStr,
                           context: context,
                         );
                       } catch (e) {
@@ -1591,7 +1591,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                       setState(() {
                         cityName = newCity ?? cityName;
                         countryName = newCountry ?? countryName;
-                        cacheKey = CacheKeyStr;
+                        cacheKey = cacheKeyStr;
                         lat = newLat;
                         lon = newLon;
                         isViewLocation = true;
