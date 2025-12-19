@@ -193,7 +193,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeController = Provider.of<ThemeController>(context);
+    final seedColor =
+        context.select<ThemeController, Color>((t) => t.seedColor);
+    final themeMode =
+        context.select<ThemeController, ThemeMode>((t) => t.themeMode);
 
     final isLight = Theme.of(context).brightness == Brightness.light;
 
@@ -220,12 +223,12 @@ class MyApp extends StatelessWidget {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     final colorThemeDark = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor,
+      seedColor: seedColor,
       brightness: Brightness.dark,
     );
 
     final colorThemeLight = ColorScheme.fromSeed(
-      seedColor: themeController.seedColor,
+      seedColor: seedColor,
       brightness: Brightness.light,
     );
 
@@ -248,20 +251,20 @@ class MyApp extends StatelessWidget {
         return child!;
       },
       theme: ThemeData.from(
-        colorScheme: isMonochrome(themeController.seedColor)
+        colorScheme: isMonochrome(seedColor)
             ? ColorScheme.fromSeed(
-                seedColor: themeController.seedColor,
+                seedColor: seedColor,
                 brightness: Brightness.light,
                 dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor,
+                    seedColor: seedColor,
                     brightness: Brightness.light,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor,
+                    seedColor: seedColor,
                     brightness: Brightness.light,
                   ),
         useMaterial3: true,
@@ -302,20 +305,20 @@ class MyApp extends StatelessWidget {
         ),
       ),
       darkTheme: ThemeData.from(
-        colorScheme: isMonochrome(themeController.seedColor)
+        colorScheme: isMonochrome(seedColor)
             ? ColorScheme.fromSeed(
-                seedColor: themeController.seedColor,
+                seedColor: seedColor,
                 brightness: Brightness.dark,
                 dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
               )
             : useExpressiveVariant
                 ? ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor,
+                    seedColor: seedColor,
                     brightness: Brightness.dark,
                     dynamicSchemeVariant: DynamicSchemeVariant.expressive,
                   )
                 : ColorScheme.fromSeed(
-                    seedColor: themeController.seedColor,
+                    seedColor: seedColor,
                     brightness: Brightness.dark,
                   ),
         useMaterial3: true,
@@ -359,7 +362,7 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
-      themeMode: themeController.themeMode,
+      themeMode: themeMode,
       home: (hasHomeLocation &&
               cacheKey != null &&
               cityName != null &&

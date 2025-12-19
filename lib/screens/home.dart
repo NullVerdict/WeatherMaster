@@ -96,8 +96,6 @@ class _WeatherHomeState extends State<WeatherHome> {
   // late Future<Map<String, dynamic>?>? weatherFuture;
   Future<Map<String, dynamic>?>? weatherFuture;
 
-  Map<String, dynamic>? weatherData;
-
   Widget? weatherAnimationWidget;
   int? _cachedWeatherCode;
   int? _cachedIsDay;
@@ -109,7 +107,6 @@ class _WeatherHomeState extends State<WeatherHome> {
   final ScrollController _scrollController = ScrollController();
 
   bool _isAppFullyLoaded = false;
-  bool shouldSkipAppFullyLoaded = false;
   bool themeCalled = false;
   late String cityName;
   late String countryName;
@@ -117,16 +114,26 @@ class _WeatherHomeState extends State<WeatherHome> {
   int selectedGradientIndex = 2;
   int selectedSearchBgIndex = 2;
   int selectedContainerBgIndex = 2;
-  int selectedConditionColorIndex = 2;
   bool _istriggeredFromLocations = false;
   bool showInsightsRandomly = false;
   int? lastWeatherCode;
-  bool isfirstStart = true;
-  bool showAlertsPref = PreferencesHelper.getBool("showAlerts") ?? true;
   bool widgetsUpdated = false;
   bool? iscurrentDay = false;
   bool? _cachedIsShowFrog;
   bool? lastIsDay;
+
+  bool? _cachedGradientIsLight;
+  bool? _cachedGradientIsShowFrog;
+  bool? _cachedGradientIsCurrentDay;
+  List<LinearGradient>? _cachedGradients;
+  List<LinearGradient>? _cachedGradientsScrolled;
+
+  bool? _cachedCardColorsIsLight;
+  bool? _cachedCardColorsIsShowFrog;
+  bool? _cachedCardColorsIsCurrentDay;
+  bool? _cachedCardColorsUseDarkerBackground;
+  List<Color>? _cachedSearchBgColors;
+  List<int>? _cachedWeatherContainerColors;
 
   final WeatherFroggyManager _weatherManager = WeatherFroggyManager();
 
@@ -588,6 +595,153 @@ class _WeatherHomeState extends State<WeatherHome> {
     Colors.cyan,
   ];
 
+  void _ensureGradientCache(bool isLight, bool isShowFrog, bool isCurrentDay) {
+    if (_cachedGradients != null &&
+        _cachedGradientsScrolled != null &&
+        _cachedGradientIsLight == isLight &&
+        _cachedGradientIsShowFrog == isShowFrog &&
+        _cachedGradientIsCurrentDay == isCurrentDay) {
+      return;
+    }
+
+    _cachedGradientIsLight = isLight;
+    _cachedGradientIsShowFrog = isShowFrog;
+    _cachedGradientIsCurrentDay = isCurrentDay;
+
+    _cachedGradients = getGradients(isLight, isShowFrog, isCurrentDay);
+    _cachedGradientsScrolled =
+        getGradientsScrolled(isLight, isShowFrog, isCurrentDay);
+  }
+
+  void _ensureCardColorCache({
+    required bool isLight,
+    required bool isShowFrog,
+    required bool isCurrentDay,
+    required bool useDarkerBackground,
+  }) {
+    if (_cachedSearchBgColors != null &&
+        _cachedWeatherContainerColors != null &&
+        _cachedCardColorsIsLight == isLight &&
+        _cachedCardColorsIsShowFrog == isShowFrog &&
+        _cachedCardColorsIsCurrentDay == isCurrentDay &&
+        _cachedCardColorsUseDarkerBackground == useDarkerBackground) {
+      return;
+    }
+
+    _cachedCardColorsIsLight = isLight;
+    _cachedCardColorsIsShowFrog = isShowFrog;
+    _cachedCardColorsIsCurrentDay = isCurrentDay;
+    _cachedCardColorsUseDarkerBackground = useDarkerBackground;
+
+    _cachedSearchBgColors = [
+      // cloudy
+      isLight
+          ? Color(paletteWeather.secondary.get(150))
+          : Color(paletteWeather.secondary.get(10)),
+
+      // overcast
+      isLight ? Color(0xFFe8f2ff) : Color(paletteWeather.secondary.get(13)),
+
+      // clear day
+      isLight ? Color(0xFFe8f2ff) : Color(paletteWeather.primary.get(10)),
+
+      // clear night
+      isLight
+          ? Color(paletteWeather.neutral.get(100))
+          : Color(paletteWeather.primary.get(10)),
+
+      // fog
+      isLight
+          ? Color(
+              CorePalette.of(const Color.fromARGB(255, 255, 153, 0).toARGB32())
+                  .secondary
+                  .get(100))
+          : Color(
+              CorePalette.of(const Color.fromARGB(255, 255, 153, 0).toARGB32())
+                  .secondary
+                  .get(20)),
+      // rain
+      isLight ? Color(0xFFe8f2ff) : Color(paletteWeather.secondary.get(15)),
+
+      // thunder
+      isLight
+          ? Color.fromARGB(255, 247, 232, 255)
+          : Color(CorePalette.of(const Color(0xFFe4b7f3).toARGB32())
+              .secondary
+              .get(20)),
+
+      // snow
+      isLight
+          ? Color.fromARGB(255, 232, 254, 255)
+          : Color(
+              CorePalette.of(const Color.fromARGB(255, 0, 13, 31).toARGB32())
+                  .secondary
+                  .get(18)),
+    ];
+
+    _cachedWeatherContainerColors = [
+      // cloudy
+      isLight
+          ? paletteWeather.secondary.get(98)
+          : paletteWeather.secondary.get(useDarkerBackground
+              ? 2
+              : !isShowFrog
+                  ? isCurrentDay
+                      ? 8
+                      : 3
+                  : 8),
+
+      // overcast
+      isLight
+          ? 0xFFfcfcff
+          : paletteWeather.secondary.get(useDarkerBackground ? 2 : 6),
+
+      // clear day
+      isLight
+          ? 0xFFfcfcff
+          : paletteWeather.primary.get(useDarkerBackground ? 2 : 8),
+
+      // clear night
+      isLight
+          ? CorePalette.of(const Color.fromARGB(255, 58, 77, 141).toARGB32())
+              .primary
+              .get(98)
+          : CorePalette.of(const Color.fromARGB(255, 58, 77, 141).toARGB32())
+              .primary
+              .get(useDarkerBackground ? 2 : 4),
+
+      // fog
+      isLight
+          ? CorePalette.of(Color.fromARGB(255, 255, 213, 165).toARGB32())
+              .secondary
+              .get(98)
+          : CorePalette.of(Color.fromARGB(255, 255, 213, 165).toARGB32())
+              .secondary
+              .get(useDarkerBackground ? 2 : 6),
+
+      // rain
+      isLight
+          ? 0xFFfcfcff
+          : CorePalette.of(Colors.blueAccent.toARGB32())
+              .secondary
+              .get(useDarkerBackground ? 2 : 8),
+
+      // thunder
+      isLight
+          ? CorePalette.of(const Color(0xFFe4b7f3).toARGB32()).secondary.get(96)
+          : CorePalette.of(const Color(0xFFe4b7f3).toARGB32())
+              .secondary
+              .get(useDarkerBackground ? 2 : 10),
+
+      // snow
+      isLight
+          ? 0xFFfcfcff
+          : CorePalette.of(const Color.fromARGB(255, 0, 13, 31).toARGB32())
+              .secondary
+              .get(1),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     SystemChrome.setSystemUIOverlayStyle(
@@ -604,14 +758,16 @@ class _WeatherHomeState extends State<WeatherHome> {
                       : Color.fromRGBO(0, 0, 0, 0.3)),
     );
 
-    final isShowFrog = context.read<UnitSettingsNotifier>().showFrog;
+    final isShowFrog =
+        context.select<UnitSettingsNotifier, bool>((n) => n.showFrog);
     final colorTheme = Theme.of(context).colorScheme;
+    final currentDay = iscurrentDay ?? false;
 
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-    final gradients = getGradients(isLight, isShowFrog, iscurrentDay);
-    final gradientsScrolled =
-        getGradientsScrolled(isLight, isShowFrog, iscurrentDay);
+    _ensureGradientCache(isLight, isShowFrog, currentDay);
+    final gradients = _cachedGradients!;
+    final gradientsScrolled = _cachedGradientsScrolled!;
 
     return Stack(
       children: [
@@ -774,113 +930,16 @@ class _WeatherHomeState extends State<WeatherHome> {
     final isShowFrog =
         context.select<UnitSettingsNotifier, bool>((n) => n.showFrog);
 
-    final List<Color> searchBgColors = [
-      // cloudy
-      isLight
-          ? Color(paletteWeather.secondary.get(150))
-          : Color(paletteWeather.secondary.get(10)),
+    final currentDay = iscurrentDay ?? false;
+    _ensureCardColorCache(
+      isLight: isLight,
+      isShowFrog: isShowFrog,
+      isCurrentDay: currentDay,
+      useDarkerBackground: useDarkerBackground,
+    );
 
-      // overcast
-      isLight ? Color(0xFFe8f2ff) : Color(paletteWeather.secondary.get(13)),
-
-      // clear day
-      isLight ? Color(0xFFe8f2ff) : Color(paletteWeather.primary.get(10)),
-
-      // clear night
-      isLight
-          ? Color(paletteWeather.neutral.get(100))
-          : Color(paletteWeather.primary.get(10)),
-
-      // fog
-      isLight
-          ? Color(
-              CorePalette.of(const Color.fromARGB(255, 255, 153, 0).toARGB32())
-                  .secondary
-                  .get(100))
-          : Color(
-              CorePalette.of(const Color.fromARGB(255, 255, 153, 0).toARGB32())
-                  .secondary
-                  .get(20)),
-      // rain
-      isLight ? Color(0xFFe8f2ff) : Color(paletteWeather.secondary.get(15)),
-
-      // thunder
-      isLight
-          ? Color.fromARGB(255, 247, 232, 255)
-          : Color(CorePalette.of(const Color(0xFFe4b7f3).toARGB32())
-              .secondary
-              .get(20)),
-
-      // snow
-      isLight
-          ? Color.fromARGB(255, 232, 254, 255)
-          : Color(
-              CorePalette.of(const Color.fromARGB(255, 0, 13, 31).toARGB32())
-                  .secondary
-                  .get(18)),
-    ];
-
-    final List<int> weatherContainerColors = [
-      // cloudy
-      isLight
-          ? paletteWeather.secondary.get(98)
-          : paletteWeather.secondary.get(useDarkerBackground
-              ? 2
-              : !isShowFrog
-                  ? iscurrentDay!
-                      ? 8
-                      : 3
-                  : 8),
-
-      // overcast
-      isLight
-          ? 0xFFfcfcff
-          : paletteWeather.secondary.get(useDarkerBackground ? 2 : 6),
-
-      // clear day
-      isLight
-          ? 0xFFfcfcff
-          : paletteWeather.primary.get(useDarkerBackground ? 2 : 8),
-
-      // clear night
-      isLight
-          ? CorePalette.of(const Color.fromARGB(255, 58, 77, 141).toARGB32())
-              .primary
-              .get(98)
-          : CorePalette.of(const Color.fromARGB(255, 58, 77, 141).toARGB32())
-              .primary
-              .get(useDarkerBackground ? 2 : 4),
-
-      // fog
-      isLight
-          ? CorePalette.of(Color.fromARGB(255, 255, 213, 165).toARGB32())
-              .secondary
-              .get(98)
-          : CorePalette.of(Color.fromARGB(255, 255, 213, 165).toARGB32())
-              .secondary
-              .get(useDarkerBackground ? 2 : 6),
-
-      // rain
-      isLight
-          ? 0xFFfcfcff
-          : CorePalette.of(Colors.blueAccent.toARGB32())
-              .secondary
-              .get(useDarkerBackground ? 2 : 8),
-
-      // thunder
-      isLight
-          ? CorePalette.of(const Color(0xFFe4b7f3).toARGB32()).secondary.get(96)
-          : CorePalette.of(const Color(0xFFe4b7f3).toARGB32())
-              .secondary
-              .get(useDarkerBackground ? 2 : 10),
-
-      // snow
-      isLight
-          ? 0xFFfcfcff
-          : CorePalette.of(const Color.fromARGB(255, 0, 13, 31).toARGB32())
-              .secondary
-              .get(1),
-    ];
+    final searchBgColors = _cachedSearchBgColors!;
+    final weatherContainerColors = _cachedWeatherContainerColors!;
 
     return FutureBuilder<Map<String, dynamic>?>(
         future: weatherFuture,
@@ -1048,9 +1107,6 @@ class _WeatherHomeState extends State<WeatherHome> {
                   !useFullMaterialScheme
                       ? selectedContainerBgIndex = newIndex
                       : null;
-                  !useFullMaterialScheme
-                      ? selectedConditionColorIndex = newIndex
-                      : null;
                 });
                 _isLoadingFroggy = true;
                 PreferencesHelper.setColor(
@@ -1062,9 +1118,9 @@ class _WeatherHomeState extends State<WeatherHome> {
               }
             });
           } else {
-            _isLoadingFroggy == true;
-            _loadWeatherIconFroggy(weatherCodeFroggy, isDayFroggy,
-                newIndex); // idk, call it anyway
+            if (_isLoadingFroggy) {
+              _loadWeatherIconFroggy(weatherCodeFroggy, isDayFroggy, newIndex);
+            }
           }
 
           final double? alderPollen =

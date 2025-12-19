@@ -24,10 +24,12 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
       PreferencesHelper.getBool("DynamicColors") == true ? false : true;
   @override
   Widget build(BuildContext context) {
-    final themeController = Provider.of<ThemeController>(context);
-    final currentMode = themeController.themeMode;
+    final themeController = context.read<ThemeController>();
+    final currentMode =
+        context.select<ThemeController, ThemeMode>((t) => t.themeMode);
 
-    final isSupported = themeController.isDynamicColorSupported;
+    final isSupported =
+        context.select<ThemeController, bool>((t) => t.isDynamicColorSupported);
 
     final colorTheme = Theme.of(context).colorScheme;
 

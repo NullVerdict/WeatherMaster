@@ -20,6 +20,16 @@ class LanguagesScreen extends StatefulWidget {
 
 class _LanguagesScreenState extends State<LanguagesScreen> {
   Locale? _selectedLocale;
+  Future<Map<String, int>>? _translationProgressFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _translationProgressFuture = TranslationProgressService(
+      projectId: '741419',
+      apiToken: dotenv.env['API_TOKEN']!.toString(),
+    ).fetchTranslationProgress();
+  }
 
   @override
   void didChangeDependencies() {
@@ -112,10 +122,7 @@ class _LanguagesScreenState extends State<LanguagesScreen> {
             ],
           )),
           FutureBuilder<Map<String, int>>(
-              future: TranslationProgressService(
-                projectId: '741419',
-                apiToken: dotenv.env['API_TOKEN']!.toString(),
-              ).fetchTranslationProgress(),
+              future: _translationProgressFuture,
               builder: (context, snapshot) {
                 final progressMap = snapshot.data ?? {};
 
