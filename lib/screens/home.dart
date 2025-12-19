@@ -867,7 +867,6 @@ class _WeatherHomeState extends State<WeatherHome> {
   }
 
   Widget _buildMainBody() {
-    final padding = MediaQuery.of(context).padding;
     final colorTheme = Theme.of(context).colorScheme;
 
     return CustomRefreshIndicator(
@@ -909,20 +908,12 @@ class _WeatherHomeState extends State<WeatherHome> {
           ],
         );
       },
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          children: [
-            Padding(padding: EdgeInsets.only(top: padding.top + 10)),
-            _buildWeatherContent(),
-          ],
-        ),
-      ),
+      child: _buildWeatherContent(),
     );
   }
 
   Widget _buildWeatherContent() {
+    final padding = MediaQuery.of(context).padding;
     final bool usAnimations = context.select<UnitSettingsNotifier, bool>(
         (n) => n.useCardBackgroundAnimations);
     final bool useDarkerBackground =
@@ -945,19 +936,34 @@ class _WeatherHomeState extends State<WeatherHome> {
         future: weatherFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SizedBox.shrink();
+            return ListView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              children: [
+                Padding(padding: EdgeInsets.only(top: padding.top + 10)),
+              ],
+            );
           }
 
           if (!snapshot.hasData || snapshot.data == null) {
-            return Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const LocationsScreen()),
-                  );
-                },
-                child: const Text("Choose Location"),
-              ),
+            return ListView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              children: [
+                Padding(padding: EdgeInsets.only(top: padding.top + 10)),
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const LocationsScreen()),
+                      );
+                    },
+                    child: const Text("Choose Location"),
+                  ),
+                ),
+              ],
             );
           }
 
@@ -1379,310 +1385,367 @@ class _WeatherHomeState extends State<WeatherHome> {
             }
           }
 
-          return _isAppFullyLoaded
-              ? Column(children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      if (weatherAnimationWidget != null)
-                        useFullMaterialScheme
-                            ? const SizedBox.shrink()
-                            : usAnimations
-                                ? ValueListenableBuilder<bool>(
-                                    valueListenable: _showHeaderNotifier,
-                                    builder: (context, show, child) {
-                                      return !show
-                                          ? weatherAnimationWidget!
-                                          : const SizedBox.shrink();
-                                    },
-                                  )
-                                : const SizedBox.shrink()
-                      else
-                        const SizedBox.shrink(),
-                      Container(
-                          margin: EdgeInsets.only(
-                              left: isShowFrog ? 14 : 0,
-                              right: isShowFrog ? 14 : 0),
-                          child: OpenContainer<Map<String, dynamic>?>(
-                            transitionType: ContainerTransitionType.fadeThrough,
-                            openBuilder: (context, _) =>
-                                const LocationsScreen(),
-                            closedElevation: 0,
-                            openElevation: 0,
-                            transitionDuration: Duration(milliseconds: 500),
-                            closedShape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                            middleColor: isShowFrog ? null : Colors.transparent,
-                            closedColor: isShowFrog
-                                ? !useFullMaterialScheme
-                                    ? searchBgColors[selectedSearchBgIndex]
-                                    : Color(Theme.of(context)
-                                        .colorScheme
-                                        .surfaceContainerHigh
-                                        .toARGB32())
-                                : Colors.transparent,
-                            // closedColor: Colors.transparent,
-                            openColor: colorTheme.surface,
-                            closedBuilder: (context, openContainer) {
-                              return Container(
-                                width: double.infinity,
-                                height: 56,
-                                padding: const EdgeInsetsDirectional.only(
-                                    start: 7, end: 8),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(50),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Row(
-                                        children: [
-                                          isShowFrog
-                                              ? IconButton(
-                                                  onPressed: () async {
-                                                    showAddBottomSheet(
-                                                      context,
-                                                      lat.toString(),
-                                                      lon.toString(),
-                                                      cityName,
-                                                      countryName,
-                                                    );
-                                                  },
-                                                  icon: const Icon(Icons
-                                                      .location_on_outlined),
-                                                )
-                                              : SizedBox(
-                                                  width: 10,
-                                                ),
-                                          // const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              "$cityName, $countryName",
-                                              style: TextStyle(
-                                                color: isShowFrog
-                                                    ? colorTheme
-                                                        .onSurfaceVariant
-                                                    : isLight
-                                                        ? Colors.black
-                                                        : Colors.white,
-                                                fontSize: 18,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.start,
-                                              textHeightBehavior:
-                                                  TextHeightBehavior(
-                                                      applyHeightToFirstAscent:
-                                                          false,
-                                                      applyHeightToLastDescent:
-                                                          false),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    IconButton(
-                                      onPressed: () async {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                              builder: (_) =>
-                                                  const SettingsScreen()),
-                                        );
-                                      },
-                                      icon: const Icon(Icons.settings_outlined),
-                                      color: isShowFrog
-                                          ? null
-                                          : colorTheme.onSurface,
-                                    ),
-                                    if (isViewLocation)
-                                      FilledButton(
-                                        onPressed: () => handleSaveLocationView(
-                                          context: context,
-                                          updateUIState: () {
-                                            setState(() {
-                                              isViewLocation = false;
-                                              _isAppFullyLoaded = false;
-                                              _istriggeredFromLocations = true;
-                                              themeCalled = false;
-                                              _isLoadingFroggy = true;
-                                            });
+          if (!_isAppFullyLoaded) {
+            return ListView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
+              children: [
+                Padding(padding: EdgeInsets.only(top: padding.top + 10)),
+              ],
+            );
+          }
+
+          final header = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              if (weatherAnimationWidget != null)
+                useFullMaterialScheme
+                    ? const SizedBox.shrink()
+                    : usAnimations
+                        ? ValueListenableBuilder<bool>(
+                            valueListenable: _showHeaderNotifier,
+                            builder: (context, show, child) {
+                              return !show
+                                  ? weatherAnimationWidget!
+                                  : const SizedBox.shrink();
+                            },
+                          )
+                        : const SizedBox.shrink()
+              else
+                const SizedBox.shrink(),
+              Container(
+                  margin: EdgeInsets.only(
+                      left: isShowFrog ? 14 : 0,
+                      right: isShowFrog ? 14 : 0),
+                  child: OpenContainer<Map<String, dynamic>?>(
+                    transitionType: ContainerTransitionType.fadeThrough,
+                    openBuilder: (context, _) => const LocationsScreen(),
+                    closedElevation: 0,
+                    openElevation: 0,
+                    transitionDuration: Duration(milliseconds: 500),
+                    closedShape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    middleColor: isShowFrog ? null : Colors.transparent,
+                    closedColor: isShowFrog
+                        ? !useFullMaterialScheme
+                            ? searchBgColors[selectedSearchBgIndex]
+                            : Color(Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHigh
+                                .toARGB32())
+                        : Colors.transparent,
+                    openColor: colorTheme.surface,
+                    closedBuilder: (context, openContainer) {
+                      return Container(
+                        width: double.infinity,
+                        height: 56,
+                        padding:
+                            const EdgeInsetsDirectional.only(start: 7, end: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  isShowFrog
+                                      ? IconButton(
+                                          onPressed: () async {
+                                            showAddBottomSheet(
+                                              context,
+                                              lat.toString(),
+                                              lon.toString(),
+                                              cityName,
+                                              countryName,
+                                            );
                                           },
+                                          icon: const Icon(
+                                              Icons.location_on_outlined),
+                                        )
+                                      : SizedBox(
+                                          width: 10,
                                         ),
-                                        style: ButtonStyle(
-                                            backgroundColor:
-                                                WidgetStateProperty.all(
-                                                    Theme.of(context)
-                                                        .colorScheme
-                                                        .tertiary)),
-                                        child: Text(
-                                          "Save",
-                                          style: TextStyle(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onTertiary,
-                                              fontWeight: FontWeight.w600),
-                                        ),
-                                      )
-                                  ],
-                                ),
-                              );
-                            },
-                            onClosed: (result) async {
-                              final messenger = ScaffoldMessenger.of(context);
-                              await Future.delayed(Duration(milliseconds: 300));
-                              if (!context.mounted) return;
-                              if (result == null || result['viewLocaton'] != true) {
-                                return;
-                              }
-
-                              SnackUtil.showSnackBar(
-                                context: context,
-                                message: 'Loading data',
-                              );
-
-                              final selectedViewLocation =
-                                  PreferencesHelper.getJson(PrefKeys.selectedViewLocation);
-                              final newCity = selectedViewLocation?['city'];
-                              final newCountry = selectedViewLocation?['country'];
-                              final newCacheKey = selectedViewLocation?['cacheKey'];
-                              final newLat =
-                                  (selectedViewLocation?['lat'] as num?)?.toDouble();
-                              final newLon =
-                                  (selectedViewLocation?['lon'] as num?)?.toDouble();
-                              final CacheKeyStr = newCacheKey?.toString();
-
-                              if (!context.mounted) return;
-                              if (newLat == null ||
-                                  newLon == null ||
-                                  CacheKeyStr == null) {
-                                return;
-                              }
-                              Map<String, dynamic>? fetchedResult;
-                              final weatherService = WeatherService();
-                              try {
-                                fetchedResult = await weatherService.fetchWeather(
-                                  newLat,
-                                  newLon,
-                                  locationName: CacheKeyStr,
-                                  context: context,
-                                );
-                              } catch (e) {
-                                if (!context.mounted) return;
-                                setState(() {
-                                  _isAppFullyLoaded = true;
-                                });
-                                messenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text('data_fetch_error'.tr()),
-                                    duration: Duration(seconds: 5),
+                                  Expanded(
+                                    child: Text(
+                                      "$cityName, $countryName",
+                                      style: TextStyle(
+                                        color: isShowFrog
+                                            ? colorTheme.onSurfaceVariant
+                                            : isLight
+                                                ? Colors.black
+                                                : Colors.white,
+                                        fontSize: 18,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.start,
+                                      textHeightBehavior: TextHeightBehavior(
+                                          applyHeightToFirstAscent: false,
+                                          applyHeightToLastDescent: false),
+                                    ),
                                   ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () async {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                      builder: (_) => const SettingsScreen()),
                                 );
-                                return;
-                              }
+                              },
+                              icon: const Icon(Icons.settings_outlined),
+                              color:
+                                  isShowFrog ? null : colorTheme.onSurface,
+                            ),
+                            if (isViewLocation)
+                              FilledButton(
+                                onPressed: () => handleSaveLocationView(
+                                  context: context,
+                                  updateUIState: () {
+                                    setState(() {
+                                      isViewLocation = false;
+                                      _isAppFullyLoaded = false;
+                                      _istriggeredFromLocations = true;
+                                      themeCalled = false;
+                                      _isLoadingFroggy = true;
+                                    });
+                                  },
+                                ),
+                                style: ButtonStyle(
+                                    backgroundColor: WidgetStateProperty.all(
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .tertiary)),
+                                child: Text(
+                                  "Save",
+                                  style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onTertiary,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              )
+                          ],
+                        ),
+                      );
+                    },
+                    onClosed: (result) async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      await Future.delayed(Duration(milliseconds: 300));
+                      if (!context.mounted) return;
+                      if (result == null || result['viewLocaton'] != true) {
+                        return;
+                      }
 
-                              if (!context.mounted || fetchedResult == null) {
-                                return;
-                              }
+                      SnackUtil.showSnackBar(
+                        context: context,
+                        message: 'Loading data',
+                      );
 
-                              setState(() {
-                                cityName = newCity ?? cityName;
-                                countryName = newCountry ?? countryName;
-                                cacheKey = CacheKeyStr;
-                                lat = newLat;
-                                lon = newLon;
-                                isViewLocation = true;
-                                _isAppFullyLoaded = false;
-                                _istriggeredFromLocations = true;
-                                themeCalled = false;
-                                _isLoadingFroggy = true;
-                                weatherFuture = Future.value(fetchedResult);
-                              });
-                            },
-                          ))
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  WeatherTopCard(
+                      final selectedViewLocation = PreferencesHelper.getJson(
+                          PrefKeys.selectedViewLocation);
+                      final newCity = selectedViewLocation?['city'];
+                      final newCountry = selectedViewLocation?['country'];
+                      final newCacheKey = selectedViewLocation?['cacheKey'];
+                      final newLat =
+                          (selectedViewLocation?['lat'] as num?)?.toDouble();
+                      final newLon =
+                          (selectedViewLocation?['lon'] as num?)?.toDouble();
+                      final CacheKeyStr = newCacheKey?.toString();
+
+                      if (!context.mounted) return;
+                      if (newLat == null || newLon == null || CacheKeyStr == null) {
+                        return;
+                      }
+                      Map<String, dynamic>? fetchedResult;
+                      final weatherService = WeatherService();
+                      try {
+                        fetchedResult = await weatherService.fetchWeather(
+                          newLat,
+                          newLon,
+                          locationName: CacheKeyStr,
+                          context: context,
+                        );
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        setState(() {
+                          _isAppFullyLoaded = true;
+                        });
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('data_fetch_error'.tr()),
+                            duration: Duration(seconds: 5),
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (!context.mounted || fetchedResult == null) {
+                        return;
+                      }
+
+                      setState(() {
+                        cityName = newCity ?? cityName;
+                        countryName = newCountry ?? countryName;
+                        cacheKey = CacheKeyStr;
+                        lat = newLat;
+                        lon = newLon;
+                        isViewLocation = true;
+                        _isAppFullyLoaded = false;
+                        _istriggeredFromLocations = true;
+                        themeCalled = false;
+                        _isLoadingFroggy = true;
+                        weatherFuture = Future.value(fetchedResult);
+                      });
+                    },
+                  ))
+            ],
+          );
+
+          final foldableWidth = isFoldableLayout(context) ? 500.0 : null;
+          Widget wrapFoldable(Widget child) {
+            if (foldableWidth == null) return child;
+            return Center(
+              child: SizedBox(
+                width: foldableWidth,
+                child: child,
+              ),
+            );
+          }
+
+          final visibleBlocks = layoutConfig.where((block) {
+            if (!block.isVisible) return false;
+
+            switch (block.type) {
+              case LayoutBlockType.pollen:
+                return isPollenDataAvailable([
+                  alderPollen,
+                  birchPollen,
+                  olivePollen,
+                  grassPollen,
+                  mugwortPollen,
+                  ragweedPollen,
+                ]);
+
+              case LayoutBlockType.rain:
+                return shouldShowRainBlock;
+
+              case LayoutBlockType.insights:
+                return !shouldShowRainBlock && showInsightsRandomly;
+
+              default:
+                return true;
+            }
+          }).toList();
+
+          final List<Object> blockEntries = <Object>[];
+          for (int i = 0; i < visibleBlocks.length; i++) {
+            final currentBlock = visibleBlocks[i];
+            blockEntries.add(currentBlock.type);
+
+            final isRainThenInsights = currentBlock.type == LayoutBlockType.rain &&
+                i + 1 < visibleBlocks.length &&
+                visibleBlocks[i + 1].type == LayoutBlockType.insights;
+            if (!isRainThenInsights && i < visibleBlocks.length - 1) {
+              blockEntries.add(const _HomeListSpacer());
+            }
+          }
+
+          const baseCount = 6;
+          final totalCount = baseCount + blockEntries.length + 1;
+
+          return ListView.builder(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: totalCount,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Padding(padding: EdgeInsets.only(top: padding.top + 10));
+              }
+              if (index == 1) {
+                return _HomeKeepAlive(child: header);
+              }
+              if (index == 2) {
+                return const SizedBox(height: 10);
+              }
+              if (index == 3) {
+                return _HomeKeepAlive(
+                  child: WeatherTopCard(
                     currentTemp: current['temperature_2m'].toDouble(),
                     currentFeelsLike:
                         current['apparent_temperature'].toDouble(),
-                    currentMaxTemp: weather['daily']?['temperature_2m_max']?[1]
-                            ?.toDouble() ??
-                        0,
-                    currentMinTemp: weather['daily']?['temperature_2m_min']?[1]
-                            ?.toDouble() ??
-                        0,
+                    currentMaxTemp:
+                        weather['daily']?['temperature_2m_max']?[1]
+                                ?.toDouble() ??
+                            0,
+                    currentMinTemp:
+                        weather['daily']?['temperature_2m_min']?[1]
+                                ?.toDouble() ??
+                            0,
                     currentWeatherIconCode: current['weather_code'],
                     currentisDay: current['is_day'],
                     currentLastUpdated: formattedTime,
                   ),
-                  WeatherFrogIconWidget(iconUrl: _iconUrlFroggy),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: isFoldableLayout(context) ? 500 : null,
-                    height: null,
-                    child: Column(
-                      children: () {
-                        final visibleBlocks = layoutConfig.where((block) {
-                          if (!block.isVisible) return false;
+                );
+              }
+              if (index == 4) {
+                return _HomeKeepAlive(
+                    child: WeatherFrogIconWidget(iconUrl: _iconUrlFroggy));
+              }
+              if (index == 5) {
+                return const SizedBox(height: 14);
+              }
 
-                          switch (block.type) {
-                            case LayoutBlockType.pollen:
-                              return isPollenDataAvailable([
-                                alderPollen,
-                                birchPollen,
-                                olivePollen,
-                                grassPollen,
-                                mugwortPollen,
-                                ragweedPollen,
-                              ]);
+              if (index == totalCount - 1) {
+                return homeBottomBar(context, isLight);
+              }
 
-                            case LayoutBlockType.rain:
-                              return shouldShowRainBlock;
+              final entryIndex = index - baseCount;
+              final entry = blockEntries[entryIndex];
 
-                            case LayoutBlockType.insights:
-                              return !shouldShowRainBlock &&
-                                  showInsightsRandomly;
+              if (entry is _HomeListSpacer) {
+                return const SizedBox(height: 12);
+              }
 
-                            default:
-                              return true;
-                          }
-                        }).toList();
-
-                        final List<Widget> children = [];
-
-                        for (int i = 0; i < visibleBlocks.length; i++) {
-                          final currentBlock = visibleBlocks[i];
-
-                          children.add(
-                            RepaintBoundary(
-                              child: buildLayoutBlock(currentBlock.type),
-                            ),
-                          );
-
-                          final isRainThenInsights =
-                              currentBlock.type == LayoutBlockType.rain &&
-                                  i + 1 < visibleBlocks.length &&
-                                  visibleBlocks[i + 1].type ==
-                                      LayoutBlockType.insights;
-
-                          if (!isRainThenInsights &&
-                              i < visibleBlocks.length - 1) {
-                            children.add(const SizedBox(height: 12));
-                          }
-                        }
-
-                        return children;
-                      }(),
-                    ),
+              return _HomeKeepAlive(
+                child: wrapFoldable(
+                  RepaintBoundary(
+                    child: buildLayoutBlock(entry as LayoutBlockType),
                   ),
-                  homeBottomBar(context, isLight)
-                ])
-              : const SizedBox.shrink();
+                ),
+              );
+            },
+          );
         });
+  }
+}
+
+class _HomeListSpacer {
+  const _HomeListSpacer();
+}
+
+class _HomeKeepAlive extends StatefulWidget {
+  final Widget child;
+  const _HomeKeepAlive({required this.child});
+
+  @override
+  State<_HomeKeepAlive> createState() => _HomeKeepAliveState();
+}
+
+class _HomeKeepAliveState extends State<_HomeKeepAlive>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }
 

@@ -84,6 +84,8 @@ class WeatherService {
       final astronomyData = astronomyUri != null
           ? json.decode(responses[2].body) as Map<String, dynamic>
           : {};
+
+      _normalizeAstronomyData(astronomyData);
       // Check if we need fallback data for missing fields
       Map<String, dynamic> finalWeatherData = weatherData;
       if (selectedModel != "best_match" && _hasIncompleteData(weatherData)) {
@@ -530,5 +532,24 @@ class WeatherService {
               .toList() ??
           [],
     };
+  }
+
+  void _normalizeAstronomyData(Map<String, dynamic> astronomyData) {
+    final astronomyObj = astronomyData['astronomy'];
+    if (astronomyObj is! Map) return;
+
+    final astroObj = astronomyObj['astro'];
+    if (astroObj is! Map) return;
+
+    if (astroObj['_wmMoonTimesNormalized'] == true) return;
+
+    final moonrise = astroObj['moonrise'];
+    final moonset = astroObj['moonset'];
+
+    if (moonrise == null && moonset == null) return;
+
+    astroObj['moonrise'] = moonset;
+    astroObj['moonset'] = moonrise;
+    astroObj['_wmMoonTimesNormalized'] = true;
   }
 }
