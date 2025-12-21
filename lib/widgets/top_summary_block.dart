@@ -45,12 +45,52 @@ class _SummaryCardState extends State<SummaryCard> {
   List<String>? _bullets;
   String? _readableDayLengthTime;
 
-  bool isSummaryLoaded = false;
+  String? _summaryKey;
+  bool _summaryRecomputeScheduled = false;
 
   @override
   void initState() {
     super.initState();
-    isSummaryLoaded = false;
+    _scheduleSummaryRecompute();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scheduleSummaryRecompute();
+  }
+
+  @override
+  void didUpdateWidget(covariant SummaryCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.hourlyData != widget.hourlyData ||
+        oldWidget.dailyData != widget.dailyData ||
+        oldWidget.currentData != widget.currentData ||
+        oldWidget.airQualityData != widget.airQualityData ||
+        oldWidget.utcOffsetSeconds != widget.utcOffsetSeconds) {
+      _scheduleSummaryRecompute(force: true);
+    }
+  }
+
+  void _scheduleSummaryRecompute({bool force = false}) {
+    if (force) {
+      _summaryKey = null;
+    }
+    if (_summaryRecomputeScheduled) return;
+    _summaryRecomputeScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _summaryRecomputeScheduled = false;
+      if (!mounted) return;
+      _recomputeSummaryIfNeeded();
+    });
+  }
+
+  T? _listAt<T>(dynamic list, int index) {
+    if (list is! List) return null;
+    if (index < 0 || index >= list.length) return null;
+    final v = list[index];
+    if (v == null) return null;
+    return v as T?;
   }
 
   Map<String, dynamic> findPeakUv(Map<String, dynamic> hourly) {
@@ -236,15 +276,12 @@ class _SummaryCardState extends State<SummaryCard> {
     required int dewHour,
     required double windSpeed,
     required int? airQuality,
+    required String tempUnit,
+    required String windUnit,
+    required String timeUnit,
+    required Locale locale,
   }) {
     final bullets = <_BulletCandidate>[];
-
-    final tempUnit =
-        context.select<UnitSettingsNotifier, String>((n) => n.tempUnit);
-    final windUnit =
-        context.select<UnitSettingsNotifier, String>((n) => n.windUnit);
-    final timeUnit =
-        context.select<UnitSettingsNotifier, String>((n) => n.timeUnit);
     final isFahrenheit = tempUnit == 'Fahrenheit';
 
     final tempOptions = [
@@ -324,11 +361,11 @@ class _SummaryCardState extends State<SummaryCard> {
       final windOptions = [
         "bulletsWINDOptions_1".tr(namedArgs: {
           'windSpeed': convertedWind.toString(),
-          'windUnit': localizeWindUnit(windUnit.toString(), context.locale),
+          'windUnit': localizeWindUnit(windUnit.toString(), locale),
         }),
         "bulletsWINDOptions_2".tr(namedArgs: {
           'windSpeed': convertedWind.toString(),
-          'windUnit': localizeWindUnit(windUnit.toString(), context.locale),
+          'windUnit': localizeWindUnit(windUnit.toString(), locale),
         }),
       ];
       bullets.add(_BulletCandidate(60, _random(windOptions)));
@@ -405,32 +442,49 @@ class _SummaryCardState extends State<SummaryCard> {
     return options[Random().nextInt(options.length)];
   }
 
-  void computeWeatherSummary() {
+  void _recomputeSummaryIfNeeded() {
+    final unit = context.read<UnitSettingsNotifier>();
+    final tempUnit = unit.tempUnit;
+    final windUnit = unit.windUnit;
+    final timeUnit = unit.timeUnit;
+    final locale = context.locale;
+
     final currentTemp = widget.currentData['temperature_2m']?.toDouble() ?? 0;
     final windSpeed = widget.currentData['wind_speed_10m']?.toDouble() ?? 0;
-    final airQuality = widget.airQualityData['current']['us_aqi']?.toInt();
-    final tempMin = widget.dailyData['temperature_2m_min']?[1]?.toDouble() ?? 0;
-    final tempMax = widget.dailyData['temperature_2m_max']?[1]?.toDouble() ?? 0;
+    final airQuality = widget.airQualityData['current']?['us_aqi']?.toInt();
+
+    final tempMin =
+        (_listAt<dynamic>(widget.dailyData['temperature_2m_min'], 1) as num?)
+                ?.toDouble() ??
+            0;
+    final tempMax =
+        (_listAt<dynamic>(widget.dailyData['temperature_2m_max'], 1) as num?)
+                ?.toDouble() ??
+            0;
 
     final uvData = findPeakUv(widget.hourlyData);
-    final peakUv = uvData['value'] as double;
-    final uvHour = DateTime.parse(uvData['time']).hour;
+    final peakUv = (uvData['value'] as num?)?.toDouble() ?? 0;
+    final uvTime = uvData['time']?.toString() ?? '';
+    final uvHour = DateTime.tryParse(uvTime)?.hour ?? 0;
 
     final evening = getEveningHumidityAndDew(widget.hourlyData);
-    final humidity = evening['humidity'] as double;
-    final dewPoint = evening['dewPoint'] as double;
-    final dewHour = DateTime.parse(evening['time']).hour;
+    final humidity = (evening['humidity'] as num?)?.toDouble() ?? 0;
+    final dewPoint = (evening['dewPoint'] as num?)?.toDouble() ?? 0;
+    final dewTime = evening['time']?.toString() ?? '';
+    final dewHour = DateTime.tryParse(dewTime)?.hour ?? 0;
 
     final weatherCodeNow = widget.currentData['weather_code']?.toInt() ?? 0;
     final cloudCoverNow = widget.currentData['cloud_cover']?.toDouble() ?? 100;
 
-    final currentDayLength = widget.dailyData['daylight_duration'][1];
-    final secondsDayLength = currentDayLength.toInt();
+    final secondsDayLength =
+        (_listAt<dynamic>(widget.dailyData['daylight_duration'], 1) as num?)
+                ?.toInt() ??
+            0;
     final dayLengthDuration = Duration(seconds: secondsDayLength);
     final readableDayLengthTime =
         "${dayLengthDuration.inHours} ${"hrs_sub_text".tr()} ${dayLengthDuration.inMinutes.remainder(60)} ${"mins_sub_text".tr()}";
 
-    int offsetSeconds = int.parse(widget.utcOffsetSeconds);
+    int offsetSeconds = int.tryParse(widget.utcOffsetSeconds) ?? 0;
     DateTime utcNow = DateTime.now().toUtc();
     DateTime now = utcNow.add(Duration(seconds: offsetSeconds));
 
@@ -447,30 +501,60 @@ class _SummaryCardState extends State<SummaryCard> {
 
     final period = getTimeOfDayPeriod(now);
 
+    final nextKey = [
+      locale.toLanguageTag(),
+      tempUnit,
+      windUnit,
+      timeUnit,
+      currentTemp.toStringAsFixed(2),
+      windSpeed.toStringAsFixed(2),
+      (airQuality ?? -1).toString(),
+      tempMin.toStringAsFixed(2),
+      tempMax.toStringAsFixed(2),
+      peakUv.toStringAsFixed(2),
+      uvHour.toString(),
+      humidity.toStringAsFixed(2),
+      dewPoint.toStringAsFixed(2),
+      dewHour.toString(),
+      weatherCodeNow.toString(),
+      cloudCoverNow.toStringAsFixed(2),
+      secondsDayLength.toString(),
+      period.toString(),
+    ].join('|');
+
+    if (_summaryKey == nextKey) return;
+
+    final headline = generateHeadline(
+      currentTemp,
+      peakUv,
+      windSpeed,
+      humidity,
+      cloudCoverNow,
+      weatherCodeNow,
+      period,
+      airQuality: airQuality,
+    );
+
+    final bullets = generateBulletPoints(
+      tempMin: tempMin,
+      tempMax: tempMax,
+      uvIndex: peakUv,
+      uvHour: uvHour,
+      humidity: humidity,
+      dewPoint: dewPoint,
+      dewHour: dewHour,
+      windSpeed: windSpeed,
+      airQuality: airQuality,
+      tempUnit: tempUnit,
+      windUnit: windUnit,
+      timeUnit: timeUnit,
+      locale: locale,
+    );
+
     setState(() {
-      _headline = generateHeadline(
-        currentTemp,
-        peakUv,
-        windSpeed,
-        humidity,
-        cloudCoverNow,
-        weatherCodeNow,
-        period,
-        airQuality: airQuality,
-      );
-
-      _bullets = generateBulletPoints(
-        tempMin: tempMin,
-        tempMax: tempMax,
-        uvIndex: peakUv,
-        uvHour: uvHour,
-        humidity: humidity,
-        dewPoint: dewPoint,
-        dewHour: dewHour,
-        windSpeed: windSpeed,
-        airQuality: airQuality,
-      );
-
+      _summaryKey = nextKey;
+      _headline = headline;
+      _bullets = bullets;
       _readableDayLengthTime = readableDayLengthTime;
     });
   }
@@ -555,11 +639,6 @@ class _SummaryCardState extends State<SummaryCard> {
 
   @override
   Widget build(BuildContext context) {
-    if (!isSummaryLoaded) {
-      computeWeatherSummary();
-      isSummaryLoaded = true;
-    }
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.7),
       child: Material(
