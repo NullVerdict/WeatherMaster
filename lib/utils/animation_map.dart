@@ -233,7 +233,7 @@ class WeatherConditionAnimationMapper {
     final useFixedMainHeight =
         (isSunAnim && !isNight) || secondaryAnimationUrl.contains(_cloudyBackground);
 
-    final mainHeight = (setFullDisplay && !useFixedMainHeight) ? heightScreen : 300;
+    final mainHeight = (setFullDisplay && !useFixedMainHeight) ? heightScreen : 300.0;
 
     final needsCloudyOffset = setFullDisplay &&
         secondaryAnimationUrl.contains(_cloudyBackground) &&
