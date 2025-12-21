@@ -739,6 +739,21 @@ class _WeatherHomeState extends State<WeatherHome> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     isLight = Theme.of(context).brightness == Brightness.light;
+
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+          statusBarColor: Color(0x01000000),
+          statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
+          systemNavigationBarIconBrightness:
+              isLight ? Brightness.dark : Brightness.light,
+          systemNavigationBarColor:
+              MediaQuery.of(context).systemGestureInsets.left > 0
+                  ? Color(0x01000000)
+                  : isLight
+                      ? Color(0x01000000)
+                      : Color.fromRGBO(0, 0, 0, 0.3)),
+    );
   }
 
   final List<Color> weatherConditionColors = [
@@ -916,26 +931,10 @@ class _WeatherHomeState extends State<WeatherHome> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-          statusBarColor: Color(0x01000000),
-          statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
-          systemNavigationBarIconBrightness:
-              isLight ? Brightness.dark : Brightness.light,
-          systemNavigationBarColor:
-              MediaQuery.of(context).systemGestureInsets.left > 0
-                  ? Color(0x01000000)
-                  : isLight
-                      ? Color(0x01000000)
-                      : Color.fromRGBO(0, 0, 0, 0.3)),
-    );
-
     final isShowFrog =
         context.select<UnitSettingsNotifier, bool>((n) => n.showFrog);
     final colorTheme = Theme.of(context).colorScheme;
     final currentDay = iscurrentDay ?? false;
-
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     _ensureGradientCache(isLight, isShowFrog, currentDay);
     final gradients = _cachedGradients!;
@@ -1718,7 +1717,6 @@ class _WeatherHomeState extends State<WeatherHome> {
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
-            cacheExtent: 500,
             itemCount: totalCount,
             itemBuilder: (context, index) {
               if (index == 0) {

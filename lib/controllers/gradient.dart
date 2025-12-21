@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../utils/preferences_helper.dart';
-import 'dart:async';
 
 class ScrollReactiveGradient extends StatefulWidget {
   final ScrollController scrollController;
@@ -21,8 +20,7 @@ class ScrollReactiveGradient extends StatefulWidget {
 }
 
 class _ScrollReactiveGradientState extends State<ScrollReactiveGradient> {
-  bool _isScrolled = false;
-  Timer? _debounceTimer;
+  late final ValueNotifier<bool> _isScrolledNotifier = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -36,32 +34,33 @@ class _ScrollReactiveGradientState extends State<ScrollReactiveGradient> {
   @override
   void didUpdateWidget(covariant ScrollReactiveGradient oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.scrollController != widget.scrollController) {
+      oldWidget.scrollController.removeListener(_onScroll);
+      widget.scrollController.addListener(_onScroll);
+    }
     _checkScroll();
   }
 
   void _onScroll() {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 16), _checkScroll);
+    _checkScroll();
   }
 
   void _checkScroll() {
     final isNowScrolled = widget.scrollController.offset > 300;
-    if (_isScrolled != isNowScrolled) {
-      setState(() {
-        _isScrolled = isNowScrolled;
-      });
+    if (_isScrolledNotifier.value != isNowScrolled) {
+      _isScrolledNotifier.value = isNowScrolled;
+    }
 
-      if (widget.headerVisibilityNotifier != null &&
-          widget.headerVisibilityNotifier!.value != isNowScrolled) {
-        widget.headerVisibilityNotifier!.value = isNowScrolled;
-      }
+    if (widget.headerVisibilityNotifier != null &&
+        widget.headerVisibilityNotifier!.value != isNowScrolled) {
+      widget.headerVisibilityNotifier!.value = isNowScrolled;
     }
   }
 
   @override
   void dispose() {
-    _debounceTimer?.cancel();
     widget.scrollController.removeListener(_onScroll);
+    _isScrolledNotifier.dispose();
     super.dispose();
   }
 
@@ -70,37 +69,44 @@ class _ScrollReactiveGradientState extends State<ScrollReactiveGradient> {
     final useFullMaterialScheme =
         PreferencesHelper.getBool("OnlyMaterialScheme") ?? false;
 
-    return Stack(
-      children: [
-        AnimatedOpacity(
-          duration: const Duration(milliseconds: 300),
-          opacity: _isScrolled ? 0 : 1,
-          child: RepaintBoundary(
-            child: Container(
-                decoration: !useFullMaterialScheme
-                    ? BoxDecoration(
-                        gradient: widget.baseGradient,
-                      )
-                    : BoxDecoration(
-                        color:
-                            Theme.of(context).colorScheme.surfaceContainerLow)),
-          ),
-        ),
-        AnimatedOpacity(
-          duration: const Duration(milliseconds: 300),
-          opacity: _isScrolled ? 1 : 0,
-          child: RepaintBoundary(
-            child: Container(
-                decoration: !useFullMaterialScheme
-                    ? BoxDecoration(
-                        gradient: widget.scrolledGradient,
-                      )
-                    : BoxDecoration(
-                        color:
-                            Theme.of(context).colorScheme.surfaceContainerLow)),
-          ),
-        ),
-      ],
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isScrolledNotifier,
+      builder: (context, isScrolled, _) {
+        return Stack(
+          children: [
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: isScrolled ? 0 : 1,
+              child: RepaintBoundary(
+                child: Container(
+                    decoration: !useFullMaterialScheme
+                        ? BoxDecoration(
+                            gradient: widget.baseGradient,
+                          )
+                        : BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerLow)),
+              ),
+            ),
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: isScrolled ? 1 : 0,
+              child: RepaintBoundary(
+                child: Container(
+                    decoration: !useFullMaterialScheme
+                        ? BoxDecoration(
+                            gradient: widget.scrolledGradient,
+                          )
+                        : BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerLow)),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
