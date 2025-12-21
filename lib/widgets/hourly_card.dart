@@ -58,9 +58,6 @@ class HourlyCard extends StatelessWidget {
     final scale = MediaQuery.of(context).textScaler.scale(1.0);
     final extraHeight = (scale - 1.0) * 30;
 
-    final nowHourSvgFirst = buildNowHourSvg(colorTheme.tertiary);
-    final nowHourSvgOther = buildNowHourSvg(Color(selectedContainerBgIndex));
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.7),
       child: Material(
@@ -156,7 +153,9 @@ class HourlyCard extends StatelessWidget {
 
                                   // bottom: -10,
                                   child: SvgPicture.string(
-                                isFirst ? nowHourSvgFirst : nowHourSvgOther,
+                                buildNowHourSvg(isFirst
+                                    ? colorTheme.tertiary
+                                    : Color(selectedContainerBgIndex)),
                                 width: 42,
                                 height: 42,
                               )),

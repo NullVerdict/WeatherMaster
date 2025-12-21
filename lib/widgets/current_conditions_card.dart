@@ -1698,51 +1698,9 @@ class _WindCompassWidgetState extends State<WindCompassWidget> {
   double _previousRotation = 0;
   double? _lastHeading;
 
-  StreamSubscription<CompassEvent>? _compassSub;
-  late final ValueNotifier<double?> _headingNotifier = ValueNotifier<double?>(null);
-  bool _isCompassActive = false;
-
   double lowPassFilter(double newValue, double? oldValue, double alpha) {
     if (oldValue == null) return newValue;
     return oldValue + alpha * (newValue - oldValue);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final useDeviceCompass =
-        context.read<UnitSettingsNotifier>().useDeviceCompass;
-
-    final shouldUseCompass = useDeviceCompass &&
-        !kIsWeb &&
-        (Platform.isAndroid || Platform.isIOS);
-
-    if (_isCompassActive != shouldUseCompass) {
-      _isCompassActive = shouldUseCompass;
-
-      _compassSub?.cancel();
-      _compassSub = null;
-      _headingNotifier.value = null;
-      _lastHeading = null;
-
-      if (_isCompassActive) {
-        _compassSub = FlutterCompass.events?.listen((event) {
-          final rawHeading = event.heading;
-          if (rawHeading == null) return;
-
-          _lastHeading = lowPassFilter(rawHeading, _lastHeading, 0.2);
-          _headingNotifier.value = _lastHeading;
-        });
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _compassSub?.cancel();
-    _headingNotifier.dispose();
-    super.dispose();
   }
 
   @override
@@ -1751,24 +1709,11 @@ class _WindCompassWidgetState extends State<WindCompassWidget> {
         context.select<UnitSettingsNotifier, bool>((n) => n.useDeviceCompass);
 
     if (useDeviceCompass && !kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-      final svgChild = RepaintBoundary(
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: SvgPicture.string(
-            buildWindSvg(
-              Theme.of(context).colorScheme.primaryContainer,
-              widget.backgroundColor,
-            ),
-            fit: BoxFit.contain,
-          ),
-        ),
-      );
-
-      return ValueListenableBuilder<double?>(
-        valueListenable: _headingNotifier,
-        child: svgChild,
-        builder: (context, heading, child) {
-          if (heading == null) return const SizedBox();
+      return StreamBuilder<CompassEvent>(
+        stream: FlutterCompass.events,
+        builder: (context, snapshot) {
+          final rawHeading = snapshot.data?.heading;
+          if (rawHeading == null) return const SizedBox();
 
           double normalizeAngle(double angle) {
             while (angle > pi) {
@@ -1780,9 +1725,12 @@ class _WindCompassWidgetState extends State<WindCompassWidget> {
             return angle;
           }
 
+          _lastHeading = lowPassFilter(rawHeading, _lastHeading, 0.2);
+          final smoothedHeading = _lastHeading!;
+
           final targetRotation =
-              (widget.currentWindDirc - heading) * (pi / 180);
-          final delta = normalizeAngle(targetRotation - _previousRotation);
+              (widget.currentWindDirc - smoothedHeading) * (pi / 180);
+          double delta = normalizeAngle(targetRotation - _previousRotation);
           final newRotation = _previousRotation + delta;
 
           final animatedRotation = _previousRotation;
@@ -1800,7 +1748,16 @@ class _WindCompassWidgetState extends State<WindCompassWidget> {
                 child: child,
               );
             },
-            child: child,
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: SvgPicture.string(
+                buildWindSvg(
+                  Theme.of(context).colorScheme.primaryContainer,
+                  widget.backgroundColor,
+                ),
+                fit: BoxFit.contain,
+              ),
+            ),
           );
         },
       );
