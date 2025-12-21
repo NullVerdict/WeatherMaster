@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:math';
 
 // Flutter packages
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -90,6 +91,259 @@ class WeatherHome extends StatefulWidget {
   State<WeatherHome> createState() => _WeatherHomeState();
 }
 
+Map<String, dynamic> _wmDecodeJson(String raw) {
+  return (json.decode(raw) as Map).cast<String, dynamic>();
+}
+
+Map<String, dynamic> _wmComputeDerivedWeather(Map<String, dynamic> args) {
+  final int utcOffsetSeconds = (args['utcOffsetSeconds'] as num?)?.toInt() ?? 0;
+  final int nowMs = (args['nowMs'] as num?)?.toInt() ?? 0;
+  final int nowUtcMs = (args['nowUtcMs'] as num?)?.toInt() ?? 0;
+  final Map<String, dynamic> hourly =
+      (args['hourly'] as Map).cast<String, dynamic>();
+  final Map<String, dynamic> daily =
+      (args['daily'] as Map).cast<String, dynamic>();
+
+  final now = DateTime.fromMillisecondsSinceEpoch(nowMs);
+  final todayMidnight = DateTime(now.year, now.month, now.day);
+
+  final List<dynamic> hourlyTimeNoFilter =
+      (hourly['time'] as List?) ?? const [];
+  final List<dynamic> hourlyTempsNoFilter =
+      (hourly['temperature_2m'] as List?) ?? const [];
+  final List<dynamic> hourlyWeatherCodesNoFilter =
+      (hourly['weather_code'] as List?) ?? const [];
+  final List<dynamic> hourlyPrecpProbNoFilter =
+      (hourly['precipitation_probability'] as List?) ?? const [];
+
+  final filteredIndices = <int>[];
+  for (int i = 0; i < hourlyTimeNoFilter.length; i++) {
+    final timeStr = hourlyTimeNoFilter[i];
+    if (timeStr == null) continue;
+    final time = DateTime.parse(timeStr.toString());
+    if (time.isAfter(todayMidnight) || time.isAtSameMomentAs(todayMidnight)) {
+      filteredIndices.add(i);
+    }
+  }
+
+  final hourlyTime =
+      filteredIndices.map((i) => hourlyTimeNoFilter[i]).toList(growable: false);
+  final List? visibilityList = hourly['visibility'] as List?;
+  final hourlyVisibility = filteredIndices.map((i) {
+    final dynamic rawVal =
+        (visibilityList != null && i < visibilityList.length)
+            ? visibilityList[i]
+            : null;
+    return (rawVal as num?)?.toDouble() ?? 0.0;
+  }).toList(growable: false);
+  final hourlyTemps =
+      filteredIndices.map((i) => hourlyTempsNoFilter[i]).toList(growable: false);
+  final hourlyWeatherCodes = filteredIndices
+      .map((i) => hourlyWeatherCodesNoFilter[i])
+      .toList(growable: false);
+  final hourlyPrecpProb = filteredIndices
+      .map((i) => hourlyPrecpProbNoFilter[i])
+      .toList(growable: false);
+
+  final List<dynamic> dailyDates = (daily['time'] as List?) ?? const [];
+  final List<dynamic> sunriseTimes = (daily['sunrise'] as List?) ?? const [];
+  final List<dynamic> sunsetTimes = (daily['sunset'] as List?) ?? const [];
+  final Map<String, List<int>> daylightMapMs = {};
+  final int len = dailyDates.length;
+  for (int i = 0; i < len; i++) {
+    if (i >= sunriseTimes.length || i >= sunsetTimes.length) break;
+    final dayKey = dailyDates[i]?.toString();
+    if (dayKey == null) continue;
+    final sunriseIso = sunriseTimes[i]?.toString();
+    final sunsetIso = sunsetTimes[i]?.toString();
+    if (sunriseIso == null || sunsetIso == null) continue;
+    daylightMapMs[dayKey] = [
+      DateTime.parse(sunriseIso).millisecondsSinceEpoch,
+      DateTime.parse(sunsetIso).millisecondsSinceEpoch,
+    ];
+  }
+
+  const double rainThreshold = 0.5;
+  const int probThreshold = 40;
+
+  final utcNow = DateTime.fromMillisecondsSinceEpoch(nowUtcMs, isUtc: true);
+  var nowPrecip = utcNow.add(Duration(seconds: utcOffsetSeconds));
+  nowPrecip = DateTime(
+    nowPrecip.year,
+    nowPrecip.month,
+    nowPrecip.day,
+    nowPrecip.hour,
+    nowPrecip.minute,
+  );
+
+  final List<String> allTimeStrings =
+      (hourly['time'] as List?)?.cast<String>() ?? const [];
+  final List<double> allPrecip = (hourly['precipitation'] as List?)
+          ?.map((e) => (e as num?)?.toDouble() ?? 0.0)
+          .toList() ??
+      const [];
+  final List<int> allPrecipProb = (hourly['precipitation_probability'] as List?)
+          ?.map((e) => (e as num?)?.toInt() ?? 0)
+          .toList() ??
+      const [];
+
+  final List<double> precpNext12h = [];
+  final List<int> precipProbNext12h = [];
+  for (int i = 0; i < allTimeStrings.length; i++) {
+    if (i >= allPrecip.length || i >= allPrecipProb.length) break;
+    final time = DateTime.parse(allTimeStrings[i]);
+    if (time.isAfter(nowPrecip) && time.isBefore(nowPrecip.add(const Duration(hours: 12)))) {
+      precpNext12h.add(allPrecip[i]);
+      precipProbNext12h.add(allPrecipProb[i]);
+    }
+  }
+
+  int? rainStart;
+  int longestRainLength = 0;
+  int? bestStart;
+  int? bestEnd;
+
+  for (int i = 0; i < precpNext12h.length; i++) {
+    if (precpNext12h[i] >= rainThreshold && precipProbNext12h[i] >= probThreshold) {
+      rainStart ??= i;
+    } else {
+      if (rainStart != null) {
+        final length = i - rainStart;
+        if (length >= 2 && length > longestRainLength) {
+          longestRainLength = length;
+          bestStart = rainStart;
+          bestEnd = i - 1;
+        }
+        rainStart = null;
+      }
+    }
+  }
+
+  if (rainStart != null) {
+    final length = precpNext12h.length - rainStart;
+    if (length >= 2 && length > longestRainLength) {
+      bestStart = rainStart;
+      bestEnd = precpNext12h.length - 1;
+    }
+  }
+
+  final startIndex = getStartIndex(
+    utcOffsetSeconds.toString(),
+    hourlyTime,
+  );
+
+  return {
+    'hourlyTime': hourlyTime,
+    'hourlyTemps': hourlyTemps,
+    'hourlyWeatherCodes': hourlyWeatherCodes,
+    'hourlyPrecpProb': hourlyPrecpProb,
+    'hourlyVisibility': hourlyVisibility,
+    'daylightMap': daylightMapMs,
+    'shouldShowRainBlock': bestStart != null && bestEnd != null,
+    'startIndex': startIndex,
+  };
+}
+
+Map<String, dynamic> _wmComputeConditions(Map<String, dynamic> args) {
+  final int utcOffsetSeconds = (args['utcOffsetSeconds'] as num?)?.toInt() ?? 0;
+  final int nowUtcMs = (args['nowUtcMs'] as num?)?.toInt() ?? 0;
+  final sunriseIso = args['sunriseIso']?.toString() ?? '';
+  final sunsetIso = args['sunsetIso']?.toString() ?? '';
+  final moonriseRaw = args['moonrise']?.toString() ?? '';
+  final moonsetRaw = args['moonset']?.toString() ?? '';
+
+  final utcNow = DateTime.fromMillisecondsSinceEpoch(nowUtcMs, isUtc: true);
+  var nowLocal = utcNow.add(Duration(seconds: utcOffsetSeconds));
+  nowLocal = DateTime(
+    nowLocal.year,
+    nowLocal.month,
+    nowLocal.day,
+    nowLocal.hour,
+    nowLocal.minute,
+    nowLocal.second,
+    nowLocal.millisecond,
+    nowLocal.microsecond,
+  );
+
+  final sunrise = sunriseIso.isEmpty ? null : DateTime.tryParse(sunriseIso);
+  final sunset = sunsetIso.isEmpty ? null : DateTime.tryParse(sunsetIso);
+
+  double sunPercent = 0.0;
+  int? sunriseMs;
+  int? sunsetMs;
+  if (sunrise != null && sunset != null) {
+    var sset = sunset;
+    if (sset.isBefore(sunrise)) {
+      sset = sset.add(const Duration(days: 1));
+    }
+    final denom = sset.difference(sunrise).inSeconds;
+    if (denom > 0) {
+      sunPercent = (nowLocal.difference(sunrise).inSeconds / denom).clamp(0.0, 1.0);
+    }
+    sunriseMs = sunrise.millisecondsSinceEpoch;
+    sunsetMs = sset.millisecondsSinceEpoch;
+  }
+
+  (int hour, int minute)? parseWeatherApiClock(String raw) {
+    if (raw.isEmpty || raw.toLowerCase().contains('no')) return null;
+    final cleaned = raw.split('at').first.trim();
+
+    final parts = cleaned.split(RegExp(r'\s+'));
+    if (parts.isEmpty) return null;
+
+    final hm = parts[0];
+    final ampm = (parts.length > 1) ? parts[1].toUpperCase() : '';
+    final hmParts = hm.split(':');
+    if (hmParts.isEmpty) return null;
+
+    final h = int.tryParse(hmParts[0]);
+    final m = hmParts.length > 1 ? int.tryParse(hmParts[1]) : 0;
+    if (h == null || m == null) return null;
+
+    var hour24 = h;
+    if (ampm == 'PM' && hour24 < 12) hour24 += 12;
+    if (ampm == 'AM' && hour24 == 12) hour24 = 0;
+
+    if (hour24 < 0 || hour24 > 23 || m < 0 || m > 59) return null;
+    return (hour24, m);
+  }
+
+  final moonriseClock = parseWeatherApiClock(moonriseRaw);
+  final moonsetClock = parseWeatherApiClock(moonsetRaw);
+
+  int? moonriseMs;
+  int? moonsetMs;
+  double moonPercent = 0.0;
+
+  if (moonriseClock != null && moonsetClock != null) {
+    var moonrise = DateTime(nowLocal.year, nowLocal.month, nowLocal.day,
+        moonriseClock.$1, moonriseClock.$2);
+    var moonset = DateTime(nowLocal.year, nowLocal.month, nowLocal.day,
+        moonsetClock.$1, moonsetClock.$2);
+    if (moonset.isBefore(moonrise)) {
+      moonset = moonset.add(const Duration(days: 1));
+    }
+
+    final totalSeconds = moonset.difference(moonrise).inSeconds;
+    if (totalSeconds > 0) {
+      final secondsSinceMoonrise = nowLocal.difference(moonrise).inSeconds;
+      moonPercent = (secondsSinceMoonrise / totalSeconds).clamp(0.0, 1.0);
+    }
+
+    moonriseMs = moonrise.millisecondsSinceEpoch;
+    moonsetMs = moonset.millisecondsSinceEpoch;
+  }
+
+  return {
+    'sunriseMs': sunriseMs,
+    'sunsetMs': sunsetMs,
+    'sunPercent': sunPercent,
+    'moonriseMs': moonriseMs,
+    'moonsetMs': moonsetMs,
+    'moonPercent': moonPercent,
+  };
+}
+
 class _WeatherHomeState extends State<WeatherHome> {
   // late Future<Map<String, dynamic>?>? weatherFuture;
   Future<Map<String, dynamic>?>? weatherFuture;
@@ -156,9 +410,17 @@ class _WeatherHomeState extends State<WeatherHome> {
   double? homeLat;
   double? homeLon;
 
+  String? _systemUiKey;
+
+  String? _wmPrecomputeKey;
+  Map<String, dynamic>? _wmDerivedCache;
+  Map<String, dynamic>? _wmConditionsCache;
+
   @override
   void initState() {
     super.initState();
+
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final layoutProvider = Provider.of<LayoutProvider>(context, listen: false);
@@ -188,6 +450,29 @@ class _WeatherHomeState extends State<WeatherHome> {
     } else {
       _setLatLon();
     }
+  }
+
+  void _updateSystemUiOverlayStyle() {
+    final leftInset = MediaQuery.of(context).systemGestureInsets.left;
+    final navColor = leftInset > 0
+        ? const Color(0x01000000)
+        : isLight
+            ? const Color(0x01000000)
+            : const Color.fromRGBO(0, 0, 0, 0.3);
+    final nextKey = '${isLight ? 1 : 0}|${leftInset > 0 ? 1 : 0}';
+    if (_systemUiKey == nextKey) return;
+    _systemUiKey = nextKey;
+
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: const Color(0x01000000),
+        statusBarIconBrightness:
+            isLight ? Brightness.dark : Brightness.light,
+        systemNavigationBarIconBrightness:
+            isLight ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: navColor,
+      ),
+    );
   }
 
   @override
@@ -414,9 +699,10 @@ class _WeatherHomeState extends State<WeatherHome> {
 
     String? lastUpdated;
 
+    Map<String, dynamic>? decoded;
     if (cached != null) {
-      final map = json.decode(cached);
-      lastUpdated = map['last_updated'];
+      decoded = (await compute(_wmDecodeJson, cached)).cast<String, dynamic>();
+      lastUpdated = decoded['last_updated'];
     }
 
     if (lat == homePref?['lat'] && lon == homePref?['lon']) {
@@ -453,7 +739,87 @@ class _WeatherHomeState extends State<WeatherHome> {
         isFirstAppBuild = false;
       }
     }
-    return json.decode(cached);
+    if (decoded == null) return null;
+    return _attachPrecomputedWeather(decoded);
+  }
+
+  Future<Map<String, dynamic>> _attachPrecomputedWeather(
+      Map<String, dynamic> raw) async {
+    final weather = raw['data'];
+    if (weather is! Map) return raw;
+
+    final lastUpdated = raw['last_updated']?.toString() ?? '';
+    final offsetSeconds = int.tryParse(weather['utc_offset_seconds']?.toString() ?? '') ?? 0;
+    final now = DateTime.now();
+    final utcNow = now.toUtc();
+    final nowPrecip = utcNow.add(Duration(seconds: offsetSeconds));
+
+    final dayKey =
+        '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final nowPrecipKey =
+        '${nowPrecip.year.toString().padLeft(4, '0')}-${nowPrecip.month.toString().padLeft(2, '0')}-${nowPrecip.day.toString().padLeft(2, '0')}-${nowPrecip.hour.toString().padLeft(2, '0')}-${nowPrecip.minute.toString().padLeft(2, '0')}';
+
+    final key = '$lastUpdated|$offsetSeconds|$dayKey|$nowPrecipKey';
+    if (_wmPrecomputeKey == key &&
+        _wmDerivedCache != null &&
+        _wmConditionsCache != null) {
+      raw['_wmDerived'] = _wmDerivedCache;
+      raw['_wmConditions'] = _wmConditionsCache;
+      return raw;
+    }
+
+    final hourly = weather['hourly'];
+    final daily = weather['daily'];
+    if (hourly is! Map || daily is! Map) return raw;
+
+    final astronomy = weather['astronomy'];
+    String moonrise = '';
+    String moonset = '';
+    if (astronomy is Map) {
+      final astronomyObj = astronomy['astronomy'];
+      if (astronomyObj is Map) {
+        final astroObj = astronomyObj['astro'];
+        if (astroObj is Map) {
+          moonrise = astroObj['moonrise']?.toString() ?? '';
+          moonset = astroObj['moonset']?.toString() ?? '';
+        }
+      }
+    }
+
+    final derivedArgs = <String, dynamic>{
+      'utcOffsetSeconds': offsetSeconds,
+      'nowMs': now.millisecondsSinceEpoch,
+      'nowUtcMs': utcNow.millisecondsSinceEpoch,
+      'lastUpdated': lastUpdated,
+      'hourly': (hourly as Map).cast<String, dynamic>(),
+      'daily': (daily as Map).cast<String, dynamic>(),
+    };
+
+    final conditionsArgs = <String, dynamic>{
+      'utcOffsetSeconds': offsetSeconds,
+      'nowUtcMs': utcNow.millisecondsSinceEpoch,
+      'sunriseIso': (daily['sunrise'] is List && (daily['sunrise'] as List).length > 1)
+          ? (daily['sunrise'] as List)[1]?.toString() ?? ''
+          : '',
+      'sunsetIso': (daily['sunset'] is List && (daily['sunset'] as List).length > 1)
+          ? (daily['sunset'] as List)[1]?.toString() ?? ''
+          : '',
+      'moonrise': moonrise,
+      'moonset': moonset,
+    };
+
+    final derived =
+        await compute(_wmComputeDerivedWeather, derivedArgs);
+    final conditions =
+        await compute(_wmComputeConditions, conditionsArgs);
+
+    _wmPrecomputeKey = key;
+    _wmDerivedCache = derived;
+    _wmConditionsCache = conditions;
+
+    raw['_wmDerived'] = derived;
+    raw['_wmConditions'] = conditions;
+    return raw;
   }
 
   Future<void> _loadWeatherIconFroggy(
@@ -739,6 +1105,7 @@ class _WeatherHomeState extends State<WeatherHome> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     isLight = Theme.of(context).brightness == Brightness.light;
+    _updateSystemUiOverlayStyle();
   }
 
   final List<Color> weatherConditionColors = [
@@ -916,26 +1283,10 @@ class _WeatherHomeState extends State<WeatherHome> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-          statusBarColor: Color(0x01000000),
-          statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
-          systemNavigationBarIconBrightness:
-              isLight ? Brightness.dark : Brightness.light,
-          systemNavigationBarColor:
-              MediaQuery.of(context).systemGestureInsets.left > 0
-                  ? Color(0x01000000)
-                  : isLight
-                      ? Color(0x01000000)
-                      : Color.fromRGBO(0, 0, 0, 0.3)),
-    );
-
     final isShowFrog =
         context.select<UnitSettingsNotifier, bool>((n) => n.showFrog);
     final colorTheme = Theme.of(context).colorScheme;
     final currentDay = iscurrentDay ?? false;
-
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     _ensureGradientCache(isLight, isShowFrog, currentDay);
     final gradients = _cachedGradients!;
@@ -1146,15 +1497,20 @@ class _WeatherHomeState extends State<WeatherHome> {
           final current = weather['current'];
           final String? lastUpdated = raw['last_updated'];
 
+          final precomputedDerived = raw['_wmDerived'];
+          final precomputedConditions = raw['_wmConditions'];
+
           final int weatherCodeFroggy = current['weather_code'] ?? 0;
           final bool isDayFroggy = current['is_day'] == 1;
 
           final hourly = weather['hourly'] ?? {};
 
-          final derived = _getOrComputeDerivedWeatherData(
-            weather: weather,
-            lastUpdated: lastUpdated,
-          );
+          final derived = (precomputedDerived is Map)
+              ? _WeatherDerivedData.fromPrecomputed(precomputedDerived)
+              : _getOrComputeDerivedWeatherData(
+                  weather: weather,
+                  lastUpdated: lastUpdated,
+                );
 
           final hourlyTime = derived.hourlyTime;
           final hourlyVisibility = derived.hourlyVisibility;
@@ -1416,6 +1772,9 @@ class _WeatherHomeState extends State<WeatherHome> {
                       moonrise: weather['astronomy']?['astronomy']?['astro']?['moonrise'] ?? '',
                       moonset: weather['astronomy']?['astronomy']?['astro']?['moonset'] ?? '',
                       moonPhase: weather['astronomy']?['astronomy']?['astro']?['moon_phase'] ?? '',
+                      precomputed: precomputedConditions is Map
+                          ? (precomputedConditions as Map).cast<String, dynamic>()
+                          : null,
                       cloudCover: current['cloud_cover'].toString()),
                 );
 
@@ -1650,7 +2009,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                         _istriggeredFromLocations = true;
                         themeCalled = false;
                         _isLoadingFroggy = true;
-                        weatherFuture = Future.value(fetchedResult);
+                        weatherFuture = _attachPrecomputedWeather(fetchedResult);
                       });
                     },
                   ))
@@ -1731,27 +2090,30 @@ class _WeatherHomeState extends State<WeatherHome> {
               }
               if (index == 3) {
                 return _HomeKeepAlive(
-                  child: WeatherTopCard(
-                    currentTemp: current['temperature_2m'].toDouble(),
-                    currentFeelsLike:
-                        current['apparent_temperature'].toDouble(),
-                    currentMaxTemp:
-                        weather['daily']?['temperature_2m_max']?[1]
-                                ?.toDouble() ??
-                            0,
-                    currentMinTemp:
-                        weather['daily']?['temperature_2m_min']?[1]
-                                ?.toDouble() ??
-                            0,
-                    currentWeatherIconCode: current['weather_code'],
-                    currentisDay: current['is_day'],
-                    currentLastUpdated: formattedTime,
+                  child: RepaintBoundary(
+                    child: WeatherTopCard(
+                      currentTemp: current['temperature_2m'].toDouble(),
+                      currentFeelsLike:
+                          current['apparent_temperature'].toDouble(),
+                      currentMaxTemp:
+                          weather['daily']?['temperature_2m_max']?[1]
+                                  ?.toDouble() ??
+                              0,
+                      currentMinTemp:
+                          weather['daily']?['temperature_2m_min']?[1]
+                                  ?.toDouble() ??
+                              0,
+                      currentWeatherIconCode: current['weather_code'],
+                      currentisDay: current['is_day'],
+                      currentLastUpdated: formattedTime,
+                    ),
                   ),
                 );
               }
               if (index == 4) {
                 return _HomeKeepAlive(
-                    child: WeatherFrogIconWidget(iconUrl: _iconUrlFroggy));
+                    child: RepaintBoundary(
+                        child: WeatherFrogIconWidget(iconUrl: _iconUrlFroggy)));
               }
               if (index == 5) {
                 return const SizedBox(height: 14);
@@ -1825,6 +2187,46 @@ class _WeatherDerivedData {
     required this.shouldShowRainBlock,
     required this.startIndex,
   });
+
+  factory _WeatherDerivedData.fromPrecomputed(Map precomputed) {
+    final hourlyTime = (precomputed['hourlyTime'] as List?) ?? const [];
+    final hourlyTemps = (precomputed['hourlyTemps'] as List?) ?? const [];
+    final hourlyWeatherCodes = (precomputed['hourlyWeatherCodes'] as List?) ?? const [];
+    final hourlyPrecpProb = (precomputed['hourlyPrecpProb'] as List?) ?? const [];
+    final hourlyVisibility = (precomputed['hourlyVisibility'] as List?) ?? const [];
+    final shouldShowRainBlock = precomputed['shouldShowRainBlock'] == true;
+    final startIndex = (precomputed['startIndex'] as num?)?.toInt() ?? 0;
+
+    final Map<String, (DateTime, DateTime)> daylightMap = {};
+    final rawDaylight = precomputed['daylightMap'];
+    if (rawDaylight is Map) {
+      for (final entry in rawDaylight.entries) {
+        final key = entry.key?.toString();
+        final value = entry.value;
+        if (key == null) continue;
+        if (value is List && value.length >= 2) {
+          final sunriseMs = (value[0] as num?)?.toInt();
+          final sunsetMs = (value[1] as num?)?.toInt();
+          if (sunriseMs == null || sunsetMs == null) continue;
+          daylightMap[key] = (
+            DateTime.fromMillisecondsSinceEpoch(sunriseMs),
+            DateTime.fromMillisecondsSinceEpoch(sunsetMs),
+          );
+        }
+      }
+    }
+
+    return _WeatherDerivedData(
+      hourlyTime: hourlyTime,
+      hourlyTemps: hourlyTemps,
+      hourlyWeatherCodes: hourlyWeatherCodes,
+      hourlyPrecpProb: hourlyPrecpProb,
+      hourlyVisibility: hourlyVisibility,
+      daylightMap: daylightMap,
+      shouldShowRainBlock: shouldShowRainBlock,
+      startIndex: startIndex,
+    );
+  }
 
   bool isHourDuringDaylightOptimized(DateTime hourTime) {
     final key =
