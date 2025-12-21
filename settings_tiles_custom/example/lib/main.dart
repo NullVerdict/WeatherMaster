@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:settings_tiles/settings_tiles.dart';
 
+const String _option1 = 'Option 1';
+const String _option2 = 'Option 2';
+const String _option3 = 'Option 3';
+const String _textTileDescription = 'This is a text tile';
+
 void main() {
   runApp(const MyApp());
 }
@@ -15,8 +20,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool toggled = true;
   bool checked = true;
-  String selectedOption = 'Option 1';
-  List<String> selectedOptions = ['Option 1', 'Option 3'];
+  String selectedOption = _option1;
+  List<String> selectedOptions = [_option1, _option3];
   double sliderValue = 5.0;
   List<double> customSliderValues = [1, 7, 30];
   double customSliderValue = 7;
@@ -42,7 +47,7 @@ class _MyAppState extends State<MyApp> {
                         const SettingTextTile(
                           icon: SettingTileIcon(Icons.abc),
                           title: Text('Text'),
-                          description: Text('This is a text tile'),
+                          description: Text(_textTileDescription),
                         ),
                         SettingActionTile(
                           icon: SettingTileIcon(Icons.touch_app),
@@ -89,7 +94,7 @@ class _MyAppState extends State<MyApp> {
                           value: SettingTileValue(selectedOption),
                           description: Text('This is a single option tile'),
                           dialogTitle: 'Options',
-                          options: const ['Option 1', 'Option 2', 'Option 3'],
+                          options: const [_option1, _option2, _option3],
                           initialOption: selectedOption,
                           onSubmitted: (value) {
                             setState(() {
@@ -106,17 +111,17 @@ class _MyAppState extends State<MyApp> {
                           dialogTitle: 'Options',
                           options: const [
                             (
-                              value: 'Option 1',
+                              value: _option1,
                               title: 'Option n°1',
                               subtitle: 'This is option n°1'
                             ),
                             (
-                              value: 'Option 2',
+                              value: _option2,
                               title: 'Option n°2',
                               subtitle: 'This is option n°2'
                             ),
                             (
-                              value: 'Option 3',
+                              value: _option3,
                               title: 'Option n°3',
                               subtitle: 'This is option n°3'
                             ),
@@ -134,7 +139,7 @@ class _MyAppState extends State<MyApp> {
                           value: SettingTileValue(selectedOptions.join(' | ')),
                           description: Text('This is a multiple options tile'),
                           dialogTitle: 'Options',
-                          options: const ['Option 1', 'Option 2', 'Option 3'],
+                          options: const [_option1, _option2, _option3],
                           initialOptions: selectedOptions,
                           onSubmitted: (value) {
                             setState(() {
@@ -151,17 +156,17 @@ class _MyAppState extends State<MyApp> {
                           dialogTitle: 'Options',
                           options: const [
                             (
-                              value: 'Option 1',
+                              value: _option1,
                               title: 'Option n°1',
                               subtitle: 'This is option n°1'
                             ),
                             (
-                              value: 'Option 2',
+                              value: _option2,
                               title: 'Option n°2',
                               subtitle: 'This is option n°2'
                             ),
                             (
-                              value: 'Option 3',
+                              value: _option3,
                               title: 'Option n°3',
                               subtitle: 'This is option n°3'
                             ),
@@ -266,12 +271,12 @@ class _MyAppState extends State<MyApp> {
                         const SettingTextTile(
                           icon: SettingTileIcon(Icons.abc),
                           title: Text('Tile 1'),
-                          description: Text('This is a text tile'),
+                          description: Text(_textTileDescription),
                         ),
                         const SettingTextTile(
                           icon: SettingTileIcon(Icons.abc),
                           title: Text('Tile 3'),
-                          description: Text('This is a text tile'),
+                          description: Text(_textTileDescription),
                         ),
                       ],
                     )

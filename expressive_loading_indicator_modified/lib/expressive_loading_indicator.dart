@@ -57,7 +57,7 @@ class _ExpressiveLoadingIndicatorState extends State<ExpressiveLoadingIndicator>
     MaterialShapes.oval,
   ];
 
-  static final BoxConstraints _defaultConstraints = BoxConstraints(
+  static const BoxConstraints _defaultConstraints = BoxConstraints(
     minWidth: 48.0,
     minHeight: 48.0,
     maxWidth: 48.0,
