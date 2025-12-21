@@ -39,6 +39,21 @@ class UnitSettingsNotifier extends ChangeNotifier {
   }
 
   void _loadAllUnits() {
+    final prevTempUnit = _tempUnit;
+    final prevWindUnit = _windUnit;
+    final prevVisibilityUnit = _visibilityUnit;
+    final prevPrecipitationUnit = _precipitationUnit;
+    final prevPressureUnit = _pressureUnit;
+    final prevTimeUnit = _timeUnit;
+    final prevAqiUnit = _aqiUnit;
+    final prevUseDeviceCompass = _useDeviceCompass;
+    final prevUseCardBackgroundAnimations = _useCardBackgroundAnimations;
+    final prevUseOnlyMaterialScheme = _useOnlyMaterialScheme;
+    final prevShowFrog = _showFrog;
+    final prevUseDarkBackgroundCards = _useDarkBackgroundCards;
+    final prevUseExpressiveVariant = _useExpressiveVariant;
+    final prevForceltrLayout = _forceltrLayout;
+
     _tempUnit = PreferencesHelper.getString("selectedTempUnit") ?? _tempUnit;
     _windUnit = PreferencesHelper.getString("selectedWindUnit") ?? _windUnit;
     _visibilityUnit =
@@ -68,7 +83,23 @@ class UnitSettingsNotifier extends ChangeNotifier {
             _useExpressiveVariant;
     _forceltrLayout =
         PreferencesHelper.getBool("ForceltrLayout") ?? _forceltrLayout;
-    notifyListeners();
+
+    final didChange = _tempUnit != prevTempUnit ||
+        _windUnit != prevWindUnit ||
+        _visibilityUnit != prevVisibilityUnit ||
+        _precipitationUnit != prevPrecipitationUnit ||
+        _pressureUnit != prevPressureUnit ||
+        _timeUnit != prevTimeUnit ||
+        _aqiUnit != prevAqiUnit ||
+        _useDeviceCompass != prevUseDeviceCompass ||
+        _useCardBackgroundAnimations != prevUseCardBackgroundAnimations ||
+        _useOnlyMaterialScheme != prevUseOnlyMaterialScheme ||
+        _showFrog != prevShowFrog ||
+        _useDarkBackgroundCards != prevUseDarkBackgroundCards ||
+        _useExpressiveVariant != prevUseExpressiveVariant ||
+        _forceltrLayout != prevForceltrLayout;
+
+    if (didChange) notifyListeners();
   }
 
   // Setters with notification
@@ -129,42 +160,49 @@ class UnitSettingsNotifier extends ChangeNotifier {
   }
 
   void updateUseDeviceCompass(bool value) {
+    if (_useDeviceCompass == value) return;
     _useDeviceCompass = value;
     PreferencesHelper.setBool("useDeviceCompass", value);
     notifyListeners();
   }
 
   void updateuseCardBackgroundAnimations(bool value) {
+    if (_useCardBackgroundAnimations == value) return;
     _useCardBackgroundAnimations = value;
     PreferencesHelper.setBool("CardBackgroundAnimations", value);
     notifyListeners();
   }
 
   void updateuseOnlyMaterialScheme(bool value) {
+    if (_useOnlyMaterialScheme == value) return;
     _useOnlyMaterialScheme = value;
     PreferencesHelper.setBool("OnlyMaterialScheme", value);
     notifyListeners();
   }
 
   void updateShowFroggy(bool value) {
+    if (_showFrog == value) return;
     _showFrog = value;
     PreferencesHelper.setBool("showFroggy", value);
     notifyListeners();
   }
 
   void updateUseDarkerBackground(bool value) {
+    if (_useDarkBackgroundCards == value) return;
     _useDarkBackgroundCards = value;
     PreferencesHelper.setBool("useDarkerCardBackground", value);
     notifyListeners();
   }
 
   void updateColorVariant(bool value) {
+    if (_useExpressiveVariant == value) return;
     _useExpressiveVariant = value;
     PreferencesHelper.setBool("useExpressiveVariant", value);
     notifyListeners();
   }
 
   void updateForceLTRlayout(bool value) {
+    if (_forceltrLayout == value) return;
     _forceltrLayout = value;
     PreferencesHelper.setBool("ForceltrLayout", value);
     notifyListeners();

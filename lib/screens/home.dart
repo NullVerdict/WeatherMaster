@@ -91,8 +91,6 @@ class WeatherHome extends StatefulWidget {
 }
 
 class _WeatherHomeState extends State<WeatherHome> {
-  List<LayoutBlockConfig> layoutConfig = [];
-
   // late Future<Map<String, dynamic>?>? weatherFuture;
   Future<Map<String, dynamic>?>? weatherFuture;
 
@@ -102,8 +100,6 @@ class _WeatherHomeState extends State<WeatherHome> {
   bool isViewLocation = false;
   final ValueNotifier<bool> _showHeaderNotifier = ValueNotifier(false);
   late bool isHomeLocation;
-  LayoutProvider? _layoutProvider;
-  VoidCallback? _layoutProviderListener;
   final ScrollController _scrollController = ScrollController();
 
   bool _isAppFullyLoaded = false;
@@ -139,7 +135,10 @@ class _WeatherHomeState extends State<WeatherHome> {
 
   String? _iconUrlFroggy;
   bool _isLoadingFroggy = true;
-  bool layoutCreated = false;
+  int? _lastFroggyWeatherCode;
+  bool? _lastFroggyIsDay;
+  int? _lastFroggyIndex;
+  bool _froggyLoadInFlight = false;
 
   bool isFirstAppBuild = true;
   bool onLoadForceCall = false;
@@ -155,15 +154,7 @@ class _WeatherHomeState extends State<WeatherHome> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final layoutProvider =
-          Provider.of<LayoutProvider>(context, listen: false);
-
-      _layoutProvider = layoutProvider;
-      _layoutProviderListener ??= () {
-        loadLayoutConfig();
-      };
-      layoutProvider.addListener(_layoutProviderListener!);
-
+      final layoutProvider = Provider.of<LayoutProvider>(context, listen: false);
       layoutProvider.loadLayout();
 
       if (PreferencesHelper.getBool("showNewVerNotification") ?? true) {
@@ -194,39 +185,10 @@ class _WeatherHomeState extends State<WeatherHome> {
 
   @override
   void dispose() {
-    if (_layoutProvider != null && _layoutProviderListener != null) {
-      _layoutProvider!.removeListener(_layoutProviderListener!);
-    }
     _weatherManager.dispose();
     _scrollController.dispose();
     _showHeaderNotifier.dispose();
     super.dispose();
-  }
-
-  Future<void> loadLayoutConfig() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonStringList = prefs.getStringList(PrefKeys.layoutConfig);
-
-    if (jsonStringList != null) {
-      layoutConfig = jsonStringList
-          .map((json) => LayoutBlockConfig.fromJson(jsonDecode(json)))
-          .toList();
-    } else {
-      layoutConfig = LayoutBlockConfig.defaults();
-    }
-
-    if (layoutCreated) {
-      setState(() {});
-    }
-    layoutCreated = true;
-  }
-
-  Future<void> saveLayoutConfig() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      PrefKeys.layoutConfig,
-      layoutConfig.map((e) => jsonEncode(e.toJson())).toList(),
-    );
   }
 
   Future<void> setHomeasCurrent() async {
@@ -301,38 +263,54 @@ class _WeatherHomeState extends State<WeatherHome> {
   }
 
   Future<void> _loadWeatherIconFroggy(
-      int weatherCode, bool isDay, newindex) async {
+      int weatherCode, bool isDay, int newIndex) async {
+    if (!_isLoadingFroggy) return;
+    if (_froggyLoadInFlight &&
+        _lastFroggyWeatherCode == weatherCode &&
+        _lastFroggyIsDay == isDay &&
+        _lastFroggyIndex == newIndex) {
+      return;
+    }
+
+    _lastFroggyWeatherCode = weatherCode;
+    _lastFroggyIsDay = isDay;
+    _lastFroggyIndex = newIndex;
+    _froggyLoadInFlight = true;
+
     await _weatherManager.initializeIcons();
     final icon = _weatherManager.getFroggieIcon(weatherCode, isDay);
-    if (mounted && _isLoadingFroggy == true) {
-      if ((PreferencesHelper.getBool("DynamicColors") ?? false) ||
-          (PreferencesHelper.getBool("usingCustomSeed") ?? false)) {
-        setState(() {
-          _iconUrlFroggy = icon;
-          _isLoadingFroggy = false;
-          if (_istriggeredFromLocations) {
-            _istriggeredFromLocations = false;
-            _isAppFullyLoaded = true;
-          }
-        });
-      }
-
-      if (!(PreferencesHelper.getBool("DynamicColors") ?? false) &&
-          !(PreferencesHelper.getBool("usingCustomSeed") ?? false)) {
-        if (themeCalled == false) {
-          _iconUrlFroggy = icon;
-          _isLoadingFroggy = false;
-          if (_istriggeredFromLocations) {
-            _istriggeredFromLocations = false;
-            _isAppFullyLoaded = true;
-          }
-          Provider.of<ThemeController>(context, listen: false)
-              .setSeedColor(weatherConditionColors[newindex]);
-
-          themeCalled = true;
-        }
-      }
+    if (!mounted || _isLoadingFroggy != true) {
+      _froggyLoadInFlight = false;
+      return;
     }
+
+    if ((PreferencesHelper.getBool("DynamicColors") ?? false) ||
+        (PreferencesHelper.getBool("usingCustomSeed") ?? false)) {
+      setState(() {
+        _iconUrlFroggy = icon;
+        _isLoadingFroggy = false;
+        if (_istriggeredFromLocations) {
+          _istriggeredFromLocations = false;
+          _isAppFullyLoaded = true;
+        }
+      });
+      _froggyLoadInFlight = false;
+      return;
+    }
+
+    if (themeCalled == false) {
+      _iconUrlFroggy = icon;
+      _isLoadingFroggy = false;
+      if (_istriggeredFromLocations) {
+        _istriggeredFromLocations = false;
+        _isAppFullyLoaded = true;
+      }
+      Provider.of<ThemeController>(context, listen: false)
+          .setSeedColor(weatherConditionColors[newIndex]);
+
+      themeCalled = true;
+    }
+    _froggyLoadInFlight = false;
   }
 
   Future<void> _refreshWeatherData() async {
@@ -920,6 +898,8 @@ class _WeatherHomeState extends State<WeatherHome> {
         context.select<UnitSettingsNotifier, bool>((n) => n.useDarkBackgroundCards);
     final isShowFrog =
         context.select<UnitSettingsNotifier, bool>((n) => n.showFrog);
+    final useFullMaterialScheme =
+        context.select<UnitSettingsNotifier, bool>((n) => n.useOnlyMaterialScheme);
 
     final currentDay = iscurrentDay ?? false;
     _ensureCardColorCache(
@@ -1000,6 +980,8 @@ class _WeatherHomeState extends State<WeatherHome> {
 // Keep only today's + future hours
           final hourlyTime =
               filteredIndices.map((i) => hourlyTimeNoFilter[i]).toList();
+          final hourlyVisibility =
+              filteredIndices.map((i) => (hourly['visibility'] as List?)[i] ?? 0.0).toList();
           final hourlyTemps =
               filteredIndices.map((i) => hourlyTempsNoFilter[i]).toList();
           final hourlyWeatherCodes = filteredIndices
@@ -1081,9 +1063,6 @@ class _WeatherHomeState extends State<WeatherHome> {
 
           final int weatherCode = current['weather_code'] ?? 0;
           final bool isDay = current['is_day'] == 1;
-
-          final useFullMaterialScheme =
-              PreferencesHelper.getBool("OnlyMaterialScheme") ?? false;
 
           String formattedTime = lastUpdated != null
               ? _formatLastUpdated(
@@ -1231,12 +1210,15 @@ class _WeatherHomeState extends State<WeatherHome> {
           final colorTheme = Theme.of(context).colorScheme;
 
           if (!widgetsUpdated) {
-            updateHomeWidget(weather,
-                updatedFromHome: true); // update once on start
-            PreferencesHelper.setBool(PrefKeys.triggerFromWorker, false);
-            PreferencesHelper.setString(
-                PrefKeys.lastUpdatedFromHome, DateTime.now().toIso8601String());
-            widgetsUpdated = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted || widgetsUpdated) return;
+              updateHomeWidget(weather,
+                  updatedFromHome: true); // update once on start
+              PreferencesHelper.setBool(PrefKeys.triggerFromWorker, false);
+              PreferencesHelper.setString(PrefKeys.lastUpdatedFromHome,
+                  DateTime.now().toIso8601String());
+              widgetsUpdated = true;
+            });
           }
 
           Widget buildLayoutBlock(LayoutBlockType type) {
@@ -1344,7 +1326,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                       currentSunrise: daily['sunrise'][1] ?? 0.0000001,
                       currentSunset: daily['sunset'][1] ?? 0.0000001,
                       currentPressure: current['pressure_msl'] ?? 0.0000001,
-                      currentVisibility: hourly['visibility'][getStartIndex(
+                      currentVisibility: hourlyVisibility[getStartIndex(
                               weather['utc_offset_seconds'].toString(),
                               hourlyTime)] ??
                           0.0000001,
@@ -1616,6 +1598,11 @@ class _WeatherHomeState extends State<WeatherHome> {
               ),
             );
           }
+
+          final layoutConfig =
+              context.select<LayoutProvider, List<LayoutBlockConfig>>(
+            (p) => p.layoutConfig,
+          );
 
           final visibleBlocks = layoutConfig.where((block) {
             if (!block.isVisible) return false;
