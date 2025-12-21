@@ -791,8 +791,8 @@ class _WeatherHomeState extends State<WeatherHome> {
       'nowMs': now.millisecondsSinceEpoch,
       'nowUtcMs': utcNow.millisecondsSinceEpoch,
       'lastUpdated': lastUpdated,
-      'hourly': (hourly as Map).cast<String, dynamic>(),
-      'daily': (daily as Map).cast<String, dynamic>(),
+      'hourly': (hourly).cast<String, dynamic>(),
+      'daily': (daily).cast<String, dynamic>(),
     };
 
     final conditionsArgs = <String, dynamic>{
@@ -1773,7 +1773,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                       moonset: weather['astronomy']?['astronomy']?['astro']?['moonset'] ?? '',
                       moonPhase: weather['astronomy']?['astronomy']?['astro']?['moon_phase'] ?? '',
                       precomputed: precomputedConditions is Map
-                          ? (precomputedConditions as Map).cast<String, dynamic>()
+                          ? (precomputedConditions).cast<String, dynamic>()
                           : null,
                       cloudCover: current['cloud_cover'].toString()),
                 );
