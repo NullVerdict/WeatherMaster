@@ -1158,7 +1158,7 @@ class _WeatherHomeState extends State<WeatherHome> {
           final hourlyPrecpProb = derived.hourlyPrecpProb;
           final bool shouldShowRainBlock = derived.shouldShowRainBlock;
           final int startIndex = derived.startIndex;
-          final insightsKey = '${cacheKey}|${lastUpdated ?? ''}';
+          final insightsKey = '$cacheKey|${lastUpdated ?? ''}';
 
           final daily = weather['daily'];
           final List<dynamic> dailyDates = daily['time'];
