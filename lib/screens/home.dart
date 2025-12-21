@@ -261,9 +261,14 @@ class _WeatherHomeState extends State<WeatherHome> {
 
     final hourlyTime =
         filteredIndices.map((i) => hourlyTimeNoFilter[i]).toList(growable: false);
-    final hourlyVisibility = filteredIndices
-        .map((i) => (hourly['visibility'] as List?)[i] ?? 0.0)
-        .toList(growable: false);
+    final List? visibilityList = hourly['visibility'] as List?;
+    final hourlyVisibility = filteredIndices.map((i) {
+      final dynamic rawVal =
+          (visibilityList != null && i < visibilityList.length)
+              ? visibilityList[i]
+              : null;
+      return (rawVal as num?)?.toDouble() ?? 0.0;
+    }).toList(growable: false);
     final hourlyTemps =
         filteredIndices.map((i) => hourlyTempsNoFilter[i]).toList(growable: false);
     final hourlyWeatherCodes = filteredIndices

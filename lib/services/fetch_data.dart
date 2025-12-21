@@ -94,8 +94,13 @@ class WeatherService {
 
     Uri? astronomyUri;
     if (isBackground == false) {
-      astronomyUri = Uri.parse(
-          'https://api.weatherapi.com/v1/astronomy.json?key=${dotenv.env['API_KEY_WEATHERAPI'].toString()}&q=$lat,$lon');
+      final apiKey = dotenv.env['API_KEY_WEATHERAPI'];
+      final hasApiKey =
+          apiKey != null && apiKey.isNotEmpty && apiKey != 'weatherapi.com_api';
+      if (hasApiKey) {
+        astronomyUri = Uri.parse(
+            'https://api.weatherapi.com/v1/astronomy.json?key=$apiKey&q=$lat,$lon');
+      }
     }
 
     // Prepare list of HTTP requests

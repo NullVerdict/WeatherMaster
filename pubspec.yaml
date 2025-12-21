@@ -58,7 +58,7 @@ dependencies:
   url_launcher: ^6.3.2
   reorderable_grid_view: ^2.2.8
   custom_refresh_indicator: ^4.0.1
-  flutter_markdown: ^0.7.7+1
+  flutter_markdown_plus: ^1.0.5
   solar_calculator: ^1.0.3
   file_picker: ^10.3.8
   flutter_dotenv: ^5.2.1
