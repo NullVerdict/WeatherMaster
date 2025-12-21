@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/preferences_helper.dart';
+import 'dart:async';
 
 class ScrollReactiveGradient extends StatefulWidget {
   final ScrollController scrollController;
@@ -21,6 +22,7 @@ class ScrollReactiveGradient extends StatefulWidget {
 
 class _ScrollReactiveGradientState extends State<ScrollReactiveGradient> {
   bool _isScrolled = false;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -38,7 +40,8 @@ class _ScrollReactiveGradientState extends State<ScrollReactiveGradient> {
   }
 
   void _onScroll() {
-    _checkScroll();
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 16), _checkScroll);
   }
 
   void _checkScroll() {
@@ -57,6 +60,7 @@ class _ScrollReactiveGradientState extends State<ScrollReactiveGradient> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     widget.scrollController.removeListener(_onScroll);
     super.dispose();
   }

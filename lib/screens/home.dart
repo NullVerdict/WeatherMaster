@@ -1718,6 +1718,7 @@ class _WeatherHomeState extends State<WeatherHome> {
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
+            cacheExtent: 500,
             itemCount: totalCount,
             itemBuilder: (context, index) {
               if (index == 0) {
