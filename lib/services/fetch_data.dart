@@ -11,6 +11,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:async';
 
 class WeatherService {
+  static final Map<String, Future<Map<String, dynamic>?>> _inFlight = {};
+
   Future<Box> _openBox() => HiveBoxes.openWeatherCache();
 
   Future<Map<String, dynamic>?> fetchWeather(double lat, double lon,
@@ -18,12 +20,51 @@ class WeatherService {
       BuildContext? context,
       bool isOnlyView = false,
       bool isBackground = false}) async {
+    final selectedModel =
+        PreferencesHelper.getString("selectedWeatherModel") ?? "best_match";
+    final key = locationName ?? 'loc_${lat}_$lon';
+    final requestKey = '$key|$selectedModel|bg:$isBackground|view:$isOnlyView';
+
+    if (context == null) {
+      final existing = _inFlight[requestKey];
+      if (existing != null) return existing;
+
+      final future = _fetchWeatherInternal(
+        lat,
+        lon,
+        locationName: locationName,
+        context: context,
+        isOnlyView: isOnlyView,
+        isBackground: isBackground,
+        selectedModel: selectedModel,
+      );
+      _inFlight[requestKey] = future;
+
+      return future.whenComplete(() {
+        _inFlight.remove(requestKey);
+      });
+    }
+
+    return _fetchWeatherInternal(
+      lat,
+      lon,
+      locationName: locationName,
+      context: context,
+      isOnlyView: isOnlyView,
+      isBackground: isBackground,
+      selectedModel: selectedModel,
+    );
+  }
+
+  Future<Map<String, dynamic>?> _fetchWeatherInternal(double lat, double lon,
+      {required String selectedModel,
+      String? locationName,
+      BuildContext? context,
+      bool isOnlyView = false,
+      bool isBackground = false}) async {
     final timezone = tzmap.latLngToTimezoneString(lat, lon);
     final key = locationName ?? 'loc_${lat}_$lon';
     final box = await _openBox();
-
-    final selectedModel =
-        PreferencesHelper.getString("selectedWeatherModel") ?? "best_match";
 
     final uri = Uri.parse('https://api.open-meteo.com/v1/forecast')
         .replace(queryParameters: {
