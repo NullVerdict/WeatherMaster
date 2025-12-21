@@ -40,7 +40,6 @@ class ConditionsWidgets extends StatefulWidget {
   final String? moonrise;
   final String? moonset;
   final String? moonPhase;
-  final Map<String, dynamic>? precomputed;
   final String cloudCover;
 
   const ConditionsWidgets(
@@ -65,7 +64,6 @@ class ConditionsWidgets extends StatefulWidget {
       this.moonrise,
       this.moonset,
       this.moonPhase,
-      this.precomputed,
       required this.cloudCover});
 
   @override
@@ -136,18 +134,16 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
       }
     }
 
-    if (widget.precomputed == null) {
-      if (moonriseRaw != null &&
-          moonriseRaw.isNotEmpty &&
-          moonriseRaw.toLowerCase() != 'no moonrise') {
-        moonrise = parseTime(moonriseRaw);
-      }
+    if (moonriseRaw != null &&
+        moonriseRaw.isNotEmpty &&
+        moonriseRaw.toLowerCase() != 'no moonrise') {
+      moonrise = parseTime(moonriseRaw);
+    }
 
-      if (moonsetRaw != null &&
-          moonsetRaw.isNotEmpty &&
-          moonsetRaw.toLowerCase() != 'no moonset') {
-        moonset = parseTime(moonsetRaw);
-      }
+    if (moonsetRaw != null &&
+        moonsetRaw.isNotEmpty &&
+        moonsetRaw.toLowerCase() != 'no moonset') {
+      moonset = parseTime(moonsetRaw);
     }
 
     now = DateTime(
@@ -171,33 +167,17 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
         ? DateFormat.Hm().format(sunset)
         : DateFormat.jm().format(sunset);
 
-    final precomputed = widget.precomputed;
-    final int? moonriseMs = (precomputed?['moonriseMs'] as num?)?.toInt();
-    final int? moonsetMs = (precomputed?['moonsetMs'] as num?)?.toInt();
-
-    final moonriseFormat = (moonriseMs != null)
+    final moonriseFormat = (moonrise != null)
         ? (timeUnit == '24 hr'
-            ? DateFormat.Hm()
-                .format(DateTime.fromMillisecondsSinceEpoch(moonriseMs))
-            : DateFormat.jm()
-                .format(DateTime.fromMillisecondsSinceEpoch(moonriseMs)))
-        : (moonrise != null)
-            ? (timeUnit == '24 hr'
-                ? DateFormat.Hm().format(moonrise)
-                : DateFormat.jm().format(moonrise))
-            : 'N/A';
+            ? DateFormat.Hm().format(moonrise)
+            : DateFormat.jm().format(moonrise))
+        : 'N/A';
 
-    final moonsetFormat = (moonsetMs != null)
+    final moonsetFormat = (moonset != null)
         ? (timeUnit == '24 hr'
-            ? DateFormat.Hm()
-                .format(DateTime.fromMillisecondsSinceEpoch(moonsetMs))
-            : DateFormat.jm()
-                .format(DateTime.fromMillisecondsSinceEpoch(moonsetMs)))
-        : (moonset != null)
-            ? (timeUnit == '24 hr'
-                ? DateFormat.Hm().format(moonset)
-                : DateFormat.jm().format(moonset))
-            : 'N/A';
+            ? DateFormat.Hm().format(moonset)
+            : DateFormat.jm().format(moonset))
+        : 'N/A';
 
     final pressureUnit =
         context.select<UnitSettingsNotifier, String>((n) => n.pressureUnit);
@@ -240,41 +220,37 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
       sunset = sunset.add(Duration(days: 1));
     }
 
-    double percent = (precomputed?['sunPercent'] as num?)?.toDouble() ??
-        ((now.difference(sunrise).inSeconds) /
-                (sunset.difference(sunrise).inSeconds))
-            .clamp(0, 1);
+    double percent = ((now.difference(sunrise).inSeconds) /
+            (sunset.difference(sunrise).inSeconds))
+        .clamp(0, 1);
 
     final aqiFormat =
         aqiUnit == 'European' ? widget.currentAQIEURO : widget.currentAQIUSA;
 
     final colorTheme = Theme.of(context).colorScheme;
 
-    double? moonPercent =
-        (precomputed?['moonPercent'] as num?)?.toDouble();
+    double? moonPercent;
 
-    if (moonPercent == null) {
-      if (moonrise != null && moonset != null) {
-        moonrise = DateTime(
-            now.year, now.month, now.day, moonrise.hour, moonrise.minute);
-        moonset = DateTime(
-            now.year, now.month, now.day, moonset.hour, moonset.minute);
+    if (moonrise != null && moonset != null) {
+      moonrise = DateTime(
+          now.year, now.month, now.day, moonrise.hour, moonrise.minute);
+      moonset =
+          DateTime(now.year, now.month, now.day, moonset.hour, moonset.minute);
 
-        if (moonset.isBefore(moonrise)) {
-          moonset = moonset.add(const Duration(days: 1));
-        }
+      if (moonset.isBefore(moonrise)) {
+        moonset = moonset.add(const Duration(days: 1));
+      }
 
-        final totalSeconds = moonset.difference(moonrise).inSeconds;
-        if (totalSeconds > 0) {
-          final secondsSinceMoonrise = now.difference(moonrise).inSeconds;
-          double raw = secondsSinceMoonrise / totalSeconds;
-          moonPercent = raw.clamp(0.0, 1.0);
-        } else {
-          moonPercent = 0.0;
-        }
+      final totalSeconds = moonset.difference(moonrise).inSeconds;
+      if (totalSeconds > 0) {
+        final secondsSinceMoonrise = now.difference(moonrise).inSeconds;
+        double raw = secondsSinceMoonrise / totalSeconds;
+        moonPercent = raw.clamp(0.0, 1.0);
       } else {
         moonPercent = 0.0;
       }
+    } else {
+      moonPercent = 0.0;
     }
 
     List<Widget> gridItems = itemOrder.map((i) {

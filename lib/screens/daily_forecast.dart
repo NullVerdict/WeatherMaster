@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/app_storage.dart';
 import '../utils/unit_converter.dart';
@@ -44,7 +43,7 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
       final box = await HiveBoxes.openWeatherCache();
       final cached = box.get(jsonMap['cacheKey']);
       if (cached == null) return null;
-      return (await compute(_wmDecodeJson, cached)).cast<String, dynamic>();
+      return json.decode(cached);
     } else {
       return null;
     }
@@ -61,225 +60,207 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
           scrolledUnderElevation: 1,
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
         ),
-        body: FutureBuilder<Map<String, dynamic>?>(
-            future: weatherFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SizedBox.shrink();
-              }
-              if (!snapshot.hasData) return const Text("No data");
+        body: SingleChildScrollView(
+            child: FutureBuilder<Map<String, dynamic>?>(
+                future: weatherFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox.shrink();
+                  }
+                  if (!snapshot.hasData) return const Text("No data");
 
-              weatherData ??= snapshot.data!['data'];
-              final weather = weatherData!;
+                  weatherData ??= snapshot.data!['data'];
 
-              final daily = weather['daily'];
-              final List<dynamic> dailyDates = daily['time'];
-              final List<dynamic> sunriseTimes = daily['sunrise'];
-              final List<dynamic> sunsetTimes = daily['sunset'];
-              final List<dynamic> dailyTempsMin = daily['temperature_2m_min'];
-              final List<dynamic> dailyTempsMax = daily['temperature_2m_max'];
-              final List<dynamic> dailyWeatherCodes = daily['weather_code'];
+                  final weather = weatherData!;
 
-              final hourly = weather['hourly'];
-              final List<dynamic> hourlyTime = hourly['time'];
-              final List<dynamic> hourlyTemps = hourly['temperature_2m'];
-              final List<dynamic> hourlyWeatherCodes = hourly['weather_code'];
-              final List<dynamic> hourlyPrecpProb =
-                  hourly['precipitation_probability'];
+                  final daily = weather['daily'];
+                  final List<dynamic> dailyDates = daily['time'];
+                  final List<dynamic> sunriseTimes = daily['sunrise'];
+                  final List<dynamic> sunsetTimes = daily['sunset'];
+                  final List<dynamic> dailyTempsMin =
+                      daily['temperature_2m_min'];
+                  final List<dynamic> dailyTempsMax =
+                      daily['temperature_2m_max'];
+                  final List<dynamic> dailyWeatherCodes = daily['weather_code'];
 
-              final current = weather['current'];
+                  final hourly = weather['hourly'];
+                  final List<dynamic> hourlyTime = hourly['time'];
+                  final List<dynamic> hourlyTemps = hourly['temperature_2m'];
+                  final List<dynamic> hourlyWeatherCodes =
+                      hourly['weather_code'];
 
-              final Map<String, (DateTime, DateTime)> daylightMap = {
-                for (int i = 0; i < dailyDates.length; i++)
-                  dailyDates[i]: (
-                    DateTime.parse(sunriseTimes[i]),
-                    DateTime.parse(sunsetTimes[i])
-                  ),
-              };
+                  final current = weather['current'];
 
-              bool isHourDuringDaylightOptimized(DateTime hourTime) {
-                final key =
-                    "${hourTime.year.toString().padLeft(4, '0')}-${hourTime.month.toString().padLeft(2, '0')}-${hourTime.day.toString().padLeft(2, '0')}";
-                final times = daylightMap[key];
-                if (times != null) {
-                  return hourTime.isAfter(times.$1) &&
-                      hourTime.isBefore(times.$2);
-                }
-                return true;
-              }
+                  final List<dynamic> hourlyPrecpProb =
+                      hourly['precipitation_probability'];
 
-              int selectedIndex = -1;
-              for (int i = 0; i < dailyDates.length; i++) {
-                final date = DateTime.parse(dailyDates[i]);
-                if (isSameDay(date, selectedDate)) {
-                  selectedIndex = i;
-                  break;
-                }
-              }
+                  final Map<String, (DateTime, DateTime)> daylightMap = {
+                    for (int i = 0; i < dailyDates.length; i++)
+                      dailyDates[i]: (
+                        DateTime.parse(sunriseTimes[i]),
+                        DateTime.parse(sunsetTimes[i])
+                      ),
+                  };
 
-              final selectedDayData = selectedIndex != -1
-                  ? {
-                      'date': dailyDates[selectedIndex],
-                      'minTemp': dailyTempsMin[selectedIndex],
-                      'maxTemp': dailyTempsMax[selectedIndex],
-                      'weatherCode': dailyWeatherCodes[selectedIndex],
+                  bool isHourDuringDaylightOptimized(DateTime hourTime) {
+                    final key =
+                        "${hourTime.year.toString().padLeft(4, '0')}-${hourTime.month.toString().padLeft(2, '0')}-${hourTime.day.toString().padLeft(2, '0')}";
+                    final times = daylightMap[key];
+                    if (times != null) {
+                      return hourTime.isAfter(times.$1) &&
+                          hourTime.isBefore(times.$2);
                     }
-                  : null;
+                    return true;
+                  }
 
-              final selectedDay = DateTime.parse(dailyDates[selectedIndex]);
+                  int selectedIndex = -1;
+                  for (int i = 0; i < dailyDates.length; i++) {
+                    final date = DateTime.parse(dailyDates[i]);
+                    if (isSameDay(date, selectedDate)) {
+                      selectedIndex = i;
+                      break;
+                    }
+                  }
 
-              final List<int> selectedDayHourIndexes = [];
-              for (int i = 0; i < hourlyTime.length; i++) {
-                final date = DateTime.parse(hourlyTime[i]);
-                if (date.year == selectedDay.year &&
-                    date.month == selectedDay.month &&
-                    date.day == selectedDay.day) {
-                  selectedDayHourIndexes.add(i);
-                }
-              }
-              final int firstIndex = selectedDayHourIndexes.isNotEmpty
-                  ? selectedDayHourIndexes.first
-                  : 0;
+                  final selectedDayData = selectedIndex != -1
+                      ? {
+                          'date': dailyDates[selectedIndex],
+                          'minTemp': dailyTempsMin[selectedIndex],
+                          'maxTemp': dailyTempsMax[selectedIndex],
+                          'weatherCode': dailyWeatherCodes[selectedIndex],
+                        }
+                      : null;
 
-              final nowLocal = DateTime.now().toUtc().add(
-                    Duration(
-                        seconds:
-                            int.parse(weather['utc_offset_seconds'].toString())),
-                  );
-              final isToday = isSameDay(selectedDate!, nowLocal);
+                  final selectedDay = DateTime.parse(dailyDates[selectedIndex]);
 
-              Map<String, dynamic>? precomputedConditions;
-              if (isToday) {
-                final sunriseIso =
-                    (daily['sunrise'] is List && (daily['sunrise'] as List).length > 1)
-                        ? (daily['sunrise'] as List)[1]?.toString() ?? ''
-                        : '';
-                final sunsetIso =
-                    (daily['sunset'] is List && (daily['sunset'] as List).length > 1)
-                        ? (daily['sunset'] as List)[1]?.toString() ?? ''
-                        : '';
-                final moonrise =
-                    weather['astronomy']?['astronomy']?['astro']?['moonrise']?.toString() ?? '';
-                final moonset =
-                    weather['astronomy']?['astronomy']?['astro']?['moonset']?.toString() ?? '';
+                  final List<int> selectedDayHourIndexes = [];
 
-                precomputedConditions = await compute(_wmComputeConditions, {
-                  'utcOffsetSeconds':
-                      int.parse(weather['utc_offset_seconds'].toString()),
-                  'nowUtcMs': DateTime.now().toUtc().millisecondsSinceEpoch,
-                  'sunriseIso': sunriseIso,
-                  'sunsetIso': sunsetIso,
-                  'moonrise': moonrise,
-                  'moonset': moonset,
-                });
-              }
+                  for (int i = 0; i < hourlyTime.length; i++) {
+                    final date = DateTime.parse(hourlyTime[i]);
+                    if (date.year == selectedDay.year &&
+                        date.month == selectedDay.month &&
+                        date.day == selectedDay.day) {
+                      selectedDayHourIndexes.add(i);
+                    }
+                  }
+                  final int firstIndex = selectedDayHourIndexes.isNotEmpty
+                      ? selectedDayHourIndexes.first
+                      : 0;
 
-              return CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: DailyForecastCard(
-                      dailyTime: dailyDates,
-                      dailyTempsMin: dailyTempsMin,
-                      dailyWeatherCodes: dailyWeatherCodes,
-                      dailyTempsMax: dailyTempsMax,
-                      onDaySelected: (date) {
-                        setState(() {
-                          selectedDate = date;
-                        });
-                      },
-                      timezone: weather['timezone'].toString(),
-                      utcOffsetSeconds: weather['utc_offset_seconds'].toString(),
-                      selectedDate: selectedDate,
-                    ),
-                  ),
-                  SliverToBoxAdapter(
-                    child: ForecastDetailsHeader(
-                      selectedDayData: selectedDayData,
-                    ),
-                  ),
-                  if (selectedDate != null) ...[
-                    const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                    SliverToBoxAdapter(
-                      child: isToday
-                          ? HourlyCard(
-                              hourlyTime: hourlyTime,
-                              hourlyTemps: hourlyTemps,
-                              hourlyWeatherCodes: hourlyWeatherCodes,
-                              isHourDuringDaylightOptimized:
-                                  isHourDuringDaylightOptimized,
-                              selectedContainerBgIndex: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerLowest
-                                  .toARGB32(),
-                              timezone: weather['timezone'].toString(),
-                              utcOffsetSeconds:
-                                  weather['utc_offset_seconds'].toString(),
-                              hourlyPrecpProb: hourlyPrecpProb,
-                            )
-                          : HourlyCardForecast(
-                              selectedDate: selectedDate!,
-                              hourlyTime: hourlyTime,
-                              hourlyTemps: hourlyTemps,
-                              hourlyWeatherCodes: hourlyWeatherCodes,
-                              isHourDuringDaylightOptimized:
-                                  isHourDuringDaylightOptimized,
-                              selectedContainerBgIndex: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerLowest
-                                  .toARGB32(),
-                              timezone: weather['timezone'].toString(),
-                              utcOffsetSeconds:
-                                  weather['utc_offset_seconds'].toString(),
-                              hourlyPrecpProb: hourlyPrecpProb,
-                              isYesterday: selectedIndex == 0,
-                            ),
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 10)),
-                    SliverToBoxAdapter(
-                      child: isToday
-                          ? ConditionsWidgets(
-                              selectedContainerBgIndex: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerLowest
-                                  .toARGB32(),
-                              currentHumidity:
-                                  current['relative_humidity_2m'] ?? 0.0000001,
-                              currentDewPoint:
-                                  hourly['dew_point_2m'][0].toDouble() ??
+                  return Column(
+                    children: [
+                      DailyForecastCard(
+                        dailyTime: dailyDates,
+                        dailyTempsMin: dailyTempsMin,
+                        dailyWeatherCodes: dailyWeatherCodes,
+                        dailyTempsMax: dailyTempsMax,
+                        onDaySelected: (date) {
+                          setState(() {
+                            selectedDate = date;
+                          });
+                        },
+                        timezone: weather['timezone'].toString(),
+                        utcOffsetSeconds:
+                            weather['utc_offset_seconds'].toString(),
+                        selectedDate: selectedDate,
+                      ),
+                      // Divider(),
+                      ForecastDetailsHeader(
+                        selectedDayData: selectedDayData,
+                      ),
+                      if (selectedDate != null) ...[
+                        const SizedBox(height: 12),
+                        isSameDay(
+                                selectedDate!,
+                                DateTime.now().toUtc().add(Duration(
+                                    seconds: int.parse(
+                                        weather['utc_offset_seconds']
+                                            .toString()))))
+                            ? HourlyCard(
+                                hourlyTime: hourlyTime,
+                                hourlyTemps: hourlyTemps,
+                                hourlyWeatherCodes: hourlyWeatherCodes,
+                                isHourDuringDaylightOptimized:
+                                    isHourDuringDaylightOptimized,
+                                selectedContainerBgIndex: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerLowest
+                                    .toARGB32(),
+                                timezone: weather['timezone'].toString(),
+                                utcOffsetSeconds:
+                                    weather['utc_offset_seconds'].toString(),
+                                hourlyPrecpProb: hourlyPrecpProb,
+                              )
+                            : HourlyCardForecast(
+                                selectedDate: selectedDate!,
+                                hourlyTime: hourlyTime,
+                                hourlyTemps: hourlyTemps,
+                                hourlyWeatherCodes: hourlyWeatherCodes,
+                                isHourDuringDaylightOptimized:
+                                    isHourDuringDaylightOptimized,
+                                selectedContainerBgIndex: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerLowest
+                                    .toARGB32(),
+                                timezone: weather['timezone'].toString(),
+                                utcOffsetSeconds:
+                                    weather['utc_offset_seconds'].toString(),
+                                hourlyPrecpProb: hourlyPrecpProb,
+                                isYesterday: selectedIndex == 0),
+                      ],
+                      SizedBox(
+                        height: 10,
+                      ),
+                      isSameDay(
+                              selectedDate!,
+                              DateTime.now().toUtc().add(Duration(
+                                  seconds: int.parse(
+                                      weather['utc_offset_seconds']
+                                          .toString()))))
+                          ? SizedBox(
+                              child: ConditionsWidgets(
+                                  selectedContainerBgIndex: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerLowest
+                                      .toARGB32(),
+                                  currentHumidity: current['relative_humidity_2m'] ??
                                       0.0000001,
-                              currentSunrise: daily['sunrise'][1] ?? 0.0000001,
-                              currentSunset: daily['sunset'][1] ?? 0.0000001,
-                              currentPressure:
-                                  current['pressure_msl'] ?? 0.0000001,
-                              currentVisibility:
-                                  hourly['visibility'][0] ?? 0.0000001,
-                              currentWindSpeed:
-                                  current['wind_speed_10m'] ?? 0.0000001,
-                              currentWindDirc:
-                                  current['wind_direction_10m'] ?? 0.0000001,
-                              timezone: weather['timezone'].toString(),
-                              utcOffsetSeconds:
-                                  weather['utc_offset_seconds'].toString(),
-                              currentUvIndex:
-                                  daily['uv_index_max'][1] ?? 0.0000001,
-                              currentAQIUSA:
-                                  weather['air_quality']['current']['us_aqi'] ??
+                                  currentDewPoint:
+                                      hourly['dew_point_2m'][0].toDouble() ??
+                                          0.0000001,
+                                  currentSunrise:
+                                      daily['sunrise'][1] ?? 0.0000001,
+                                  currentSunset:
+                                      daily['sunset'][1] ?? 0.0000001,
+                                  currentPressure:
+                                      current['pressure_msl'] ?? 0.0000001,
+                                  currentVisibility:
+                                      hourly['visibility'][0] ?? 0.0000001,
+                                  currentWindSpeed:
+                                      current['wind_speed_10m'] ?? 0.0000001,
+                                  currentWindDirc: current['wind_direction_10m'] ??
                                       0.0000001,
-                              currentAQIEURO: weather['air_quality']['current']
-                                      ['european_aqi'] ??
-                                  0.0000001,
-                              currentTotalPrec:
-                                  daily['precipitation_sum'][1] ?? 0.0000001,
-                              currentDayLength:
-                                  daily['daylight_duration'][1] ?? 0.0000001,
-                              isFromHome: false,
-                              moonrise: weather['astronomy']?['astronomy']?['astro']?['moonrise'] ?? '',
-                              moonset: weather['astronomy']?['astronomy']?['astro']?['moonset'] ?? '',
-                              moonPhase: weather['astronomy']?['astronomy']?['astro']?['moon_phase'] ?? '',
-                              precomputed: precomputedConditions,
-                              cloudCover: current['cloud_cover'].toString(),
+                                  timezone: weather['timezone'].toString(),
+                                  utcOffsetSeconds:
+                                      weather['utc_offset_seconds'].toString(),
+                                  currentUvIndex:
+                                      daily['uv_index_max'][1] ?? 0.0000001,
+                                  currentAQIUSA: weather['air_quality']
+                                          ['current']['us_aqi'] ??
+                                      0.0000001,
+                                  currentAQIEURO: weather['air_quality']
+                                          ['current']['european_aqi'] ??
+                                      0.0000001,
+                                  currentTotalPrec: daily['precipitation_sum'][1] ?? 0.0000001,
+                                  currentDayLength: daily['daylight_duration'][1] ?? 0.0000001,
+                                  isFromHome: false,
+                                  moonrise: weather['astronomy']?['astronomy']?['astro']?['moonrise'] ?? '',
+                                  moonset: weather['astronomy']?['astronomy']?['astro']?['moonset'] ?? '',
+                                  moonPhase: weather['astronomy']?['astronomy']?['astro']?['moon_phase'] ?? '',
+                                  cloudCover: current['cloud_cover'].toString()),
                             )
-                          : ConditionsWidgetsForecast(
+                          : SizedBox(
+                              child: ConditionsWidgetsForecast(
                               selectedContainerBgIndex: Theme.of(context)
                                   .colorScheme
                                   .surfaceContainerLowest
@@ -288,41 +269,38 @@ class _DailyForecastPageState extends State<DailyForecastPage> {
                                   daily['sunrise']?[selectedIndex] ?? '',
                               currentSunset:
                                   daily['sunset']?[selectedIndex] ?? '',
-                              currentPressure:
-                                  hourly['pressure_msl']?[firstIndex] ??
-                                      0.0000001,
-                              currentVisibility:
-                                  hourly['visibility']?[firstIndex] ??
-                                      0.0000001,
-                              currentWindSpeed:
-                                  daily['wind_speed_10m_max']?[selectedIndex] ??
-                                      0.0000001,
-                              currentWindDirc:
-                                  hourly['wind_direction_10m']?[firstIndex] ??
-                                      0.0000001,
+                              currentPressure: hourly['pressure_msl']
+                                      ?[firstIndex] ??
+                                  0.0000001,
+                              currentVisibility: hourly['visibility']
+                                      ?[firstIndex] ??
+                                  0.0000001,
+                              currentWindSpeed: daily['wind_speed_10m_max']
+                                      ?[selectedIndex] ??
+                                  0.0000001,
+                              currentWindDirc: hourly['wind_direction_10m']
+                                      ?[firstIndex] ??
+                                  0.0000001,
                               timezone: weather['timezone'].toString(),
                               utcOffsetSeconds:
                                   weather['utc_offset_seconds'].toString(),
-                              currentUvIndex:
-                                  daily['uv_index_max']?[selectedIndex] ??
-                                      0.0000001,
-                              currentTotalPrec:
-                                  daily['precipitation_sum']?[selectedIndex] ??
-                                      0.0000001,
-                              currentTotalPrecProb: daily[
-                                      'precipitation_probability_max']?[selectedIndex] ??
-                                  0,
-                            ),
-                    ),
-                  ],
-                  SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: MediaQuery.of(context).padding.bottom + 16,
-                    ),
-                  ),
-                ],
-              );
-            }));
+                              currentUvIndex: daily['uv_index_max']
+                                      ?[selectedIndex] ??
+                                  0.0000001,
+                              currentTotalPrec: daily['precipitation_sum']
+                                      ?[selectedIndex] ??
+                                  0.0000001,
+                              currentTotalPrecProb:
+                                  daily['precipitation_probability_max']
+                                          ?[selectedIndex] ??
+                                      0,
+                            )),
+                      SizedBox(
+                        height: MediaQuery.of(context).padding.bottom + 16,
+                      )
+                    ],
+                  );
+                })));
   }
 }
 

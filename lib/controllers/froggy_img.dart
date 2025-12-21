@@ -16,26 +16,16 @@ class WeatherFrogIconWidget extends StatelessWidget {
 
     final isShowFrog = context.read<UnitSettingsNotifier>().showFrog;
 
-    final int targetWidth = (MediaQuery.of(context).size.width * 0.9).round();
-
     return isShowFrog
-        ? RepaintBoundary(
-            child: iconUrl!.startsWith('http')
-                ? Image.network(
-                    iconUrl!,
-                    cacheWidth: targetWidth,
-                    filterQuality: FilterQuality.low,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Text("loading_text".tr());
-                    },
-                  )
-                : Image.asset(
-                    iconUrl!,
-                    cacheWidth: targetWidth,
-                    filterQuality: FilterQuality.low,
-                  ),
-          )
+        ? iconUrl!.startsWith('http')
+            ? Image.network(
+                iconUrl!,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Text("loading_text".tr());
+                },
+              )
+            : Image.asset(iconUrl!)
         : SizedBox.shrink();
   }
 }

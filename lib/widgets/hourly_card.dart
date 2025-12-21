@@ -97,13 +97,16 @@ class HourlyCard extends StatelessWidget {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   physics: BouncingScrollPhysics(),
-                  padding: const EdgeInsetsDirectional.only(start: 10, end: 10),
-                  itemExtent: 56,
                   itemCount:
                       (48 - startIndex).clamp(0, 48),
                   itemBuilder: (context, index) {
                     // final time = DateTime.parse(hourlyTime[index]);
                     final dataIndex = startIndex + index;
+                    final itemCount =
+                        (48 - startIndex).clamp(0, 48);
+
+                    final isFirst = index == 0;
+                    final isLast = index == itemCount - 1;
 
                     if (dataIndex >= hourlyTime.length) return const SizedBox();
 
@@ -133,6 +136,8 @@ class HourlyCard extends StatelessWidget {
                     return Container(
                       clipBehavior: Clip.none,
                       width: 56,
+                      margin: EdgeInsetsDirectional.only(
+                          end: isLast ? 10 : 0, start: isFirst ? 10 : 0),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -148,7 +153,7 @@ class HourlyCard extends StatelessWidget {
 
                                   // bottom: -10,
                                   child: SvgPicture.string(
-                                buildNowHourSvg(index == 0
+                                buildNowHourSvg(isFirst
                                     ? colorTheme.tertiary
                                     : Color(selectedContainerBgIndex)),
                                 width: 42,
@@ -156,13 +161,13 @@ class HourlyCard extends StatelessWidget {
                               )),
                               Transform(
                                 transform: Matrix4.translationValues(
-                                    0, index == 0 ? 0 : 0, 0),
+                                    0, isFirst ? 0 : 0, 0),
                                 child: Text(
                                   "$temp°",
                                   style: TextStyle(
                                     fontFamily: "FlexFontEn",
                                     fontSize: 16,
-                                    color: index == 0
+                                    color: isFirst
                                         ? colorTheme.onTertiary
                                         : colorTheme.onSurface,
                                   ),
