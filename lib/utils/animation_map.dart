@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:dotlottie_flutter/dotlottie_flutter.dart';
+import 'package:lottie/lottie.dart';
 
 class _AnimationConfig {
   final String? animationUrl;
@@ -21,29 +21,29 @@ class WeatherConditionAnimationMapper {
   static const _foregroundAnimationsBasePath = 'assets/foreground-animations/';
 
   static const _sunnyForeground =
-      '${_foregroundAnimationsBasePath}sunny_foreground.lottie';
+      '${_foregroundAnimationsBasePath}sunny_foreground.json';
   static const _starsForeground =
-      '${_foregroundAnimationsBasePath}stars_foreground.lottie';
+      '${_foregroundAnimationsBasePath}stars_foreground.json';
   static const _sunnyBackground =
-      '${_foregroundAnimationsBasePath}sunny_background.lottie';
+      '${_foregroundAnimationsBasePath}sunny_background.json';
   static const _cloudyForeground =
-      '${_foregroundAnimationsBasePath}cloudy_foreground.lottie';
-  static const _cloudyFull = '${_foregroundAnimationsBasePath}cloudy.lottie';
+      '${_foregroundAnimationsBasePath}cloudy_foreground.json';
+  static const _cloudyFull = '${_foregroundAnimationsBasePath}cloudy.json';
   static const _cloudyBackground =
-      '${_foregroundAnimationsBasePath}cloudy_background.lottie';
+      '${_foregroundAnimationsBasePath}cloudy_background.json';
   static const _mostlyClearNight =
-      '${_foregroundAnimationsBasePath}mostly_clear_night.lottie';
+      '${_foregroundAnimationsBasePath}mostly_clear_night.json';
   static const _hazeForeground =
-      '${_foregroundAnimationsBasePath}haze_foreground.lottie';
-  static const _showers = '${_foregroundAnimationsBasePath}showers.lottie';
+      '${_foregroundAnimationsBasePath}haze_foreground.json';
+  static const _showers = '${_foregroundAnimationsBasePath}showers.json';
   static const _rainForeground =
-      '${_foregroundAnimationsBasePath}rain_foreground.lottie';
+      '${_foregroundAnimationsBasePath}rain_foreground.json';
   static const _flurriesForeground =
-      '${_foregroundAnimationsBasePath}flurries_foreground.lottie';
+      '${_foregroundAnimationsBasePath}flurries_foreground.json';
   static const _snowShowerForeground =
-      '${_foregroundAnimationsBasePath}snow_shower_foreground.lottie';
+      '${_foregroundAnimationsBasePath}snow_shower_foreground.json';
   static const _thunderBackground =
-      '${_foregroundAnimationsBasePath}thunder_background.lottie';
+      '${_foregroundAnimationsBasePath}thunder_background.json';
 
   static const Set<int> _hazeCodes = {45, 48};
   static const Set<int> _rainCodes = {
@@ -259,11 +259,14 @@ class WeatherConditionAnimationMapper {
         children: [
           Positioned.fill(
             child: RepaintBoundary(
-              child: DotLottieView(
-                sourceType: 'asset',
-                source: animationUrl,
-                autoplay: true,
-                loop: true,
+              child: Lottie.asset(
+                animationUrl,
+                fit: BoxFit.cover,
+                repeat: true,
+                backgroundLoading: true,
+                renderCache: RenderCache.raster,
+                frameRate: FrameRate.composition,
+                addRepaintBoundary: true,
               ),
             ),
           ),
@@ -274,11 +277,14 @@ class WeatherConditionAnimationMapper {
             // height: diffHeight ?? 500,
             height: secondaryHeight,
             child: RepaintBoundary(
-              child: DotLottieView(
-                sourceType: 'asset',
-                source: secondaryAnimationUrl,
-                autoplay: true,
-                loop: true,
+              child: Lottie.asset(
+                secondaryAnimationUrl,
+                fit: BoxFit.cover,
+                repeat: true,
+                backgroundLoading: true,
+                renderCache: RenderCache.raster,
+                frameRate: FrameRate.composition,
+                addRepaintBoundary: true,
               ),
             ),
           ),
@@ -320,11 +326,13 @@ class WeatherConditionAnimationMapper {
       child: RepaintBoundary(
         child: Opacity(
           opacity: opacity,
-          child: DotLottieView(
-            sourceType: 'asset',
-            source: animationUrl,
-            autoplay: true,
-            loop: true,
+          child: Lottie.asset(
+            animationUrl,
+            fit: BoxFit.cover,
+            repeat: true,
+            backgroundLoading: true,
+            renderCache: RenderCache.raster,
+            frameRate: FrameRate.composition,
           ),
         ),
       ),
