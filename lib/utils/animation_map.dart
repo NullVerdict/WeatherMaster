@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+import 'package:dotlottie_flutter/dotlottie_flutter.dart';
 
 class _AnimationConfig {
   final String? animationUrl;
@@ -259,14 +259,11 @@ class WeatherConditionAnimationMapper {
         children: [
           Positioned.fill(
             child: RepaintBoundary(
-              child: Lottie.asset(
-                animationUrl,
-                fit: BoxFit.cover,
-                repeat: true,
-                backgroundLoading: true,
-                renderCache: RenderCache.raster,
-                frameRate: FrameRate.composition,
-                addRepaintBoundary: true,
+              child: DotLottieView(
+                sourceType: 'asset',
+                source: animationUrl,
+                autoplay: true,
+                loop: true,
               ),
             ),
           ),
@@ -277,14 +274,11 @@ class WeatherConditionAnimationMapper {
             // height: diffHeight ?? 500,
             height: secondaryHeight,
             child: RepaintBoundary(
-              child: Lottie.asset(
-                secondaryAnimationUrl,
-                fit: BoxFit.cover,
-                repeat: true,
-                backgroundLoading: true,
-                renderCache: RenderCache.raster,
-                frameRate: FrameRate.composition,
-                addRepaintBoundary: true,
+              child: DotLottieView(
+                sourceType: 'asset',
+                source: secondaryAnimationUrl,
+                autoplay: true,
+                loop: true,
               ),
             ),
           ),
@@ -326,13 +320,11 @@ class WeatherConditionAnimationMapper {
       child: RepaintBoundary(
         child: Opacity(
           opacity: opacity,
-          child: Lottie.asset(
-            animationUrl,
-            fit: BoxFit.cover,
-            repeat: true,
-            backgroundLoading: true,
-            renderCache: RenderCache.raster,
-            frameRate: FrameRate.composition,
+          child: DotLottieView(
+            sourceType: 'asset',
+            source: animationUrl,
+            autoplay: true,
+            loop: true,
           ),
         ),
       ),
