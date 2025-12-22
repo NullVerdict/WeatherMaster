@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:dotlottie_flutter/dotlottie_flutter.dart';
+import 'package:lottie/lottie.dart';
 
 class _AnimationConfig {
   final String? animationUrl;
@@ -259,10 +259,14 @@ class WeatherConditionAnimationMapper {
         children: [
           Positioned.fill(
             child: RepaintBoundary(
-              child: _dotLottieAsset(
+              child: Lottie.asset(
                 animationUrl,
-                autoplay: true,
-                loop: true,
+                fit: BoxFit.cover,
+                repeat: true,
+                backgroundLoading: true,
+                renderCache: RenderCache.raster,
+                frameRate: FrameRate.composition,
+                addRepaintBoundary: true,
               ),
             ),
           ),
@@ -273,10 +277,14 @@ class WeatherConditionAnimationMapper {
             // height: diffHeight ?? 500,
             height: secondaryHeight,
             child: RepaintBoundary(
-              child: _dotLottieAsset(
+              child: Lottie.asset(
                 secondaryAnimationUrl,
-                autoplay: true,
-                loop: true,
+                fit: BoxFit.cover,
+                repeat: true,
+                backgroundLoading: true,
+                renderCache: RenderCache.raster,
+                frameRate: FrameRate.composition,
+                addRepaintBoundary: true,
               ),
             ),
           ),
@@ -318,38 +326,16 @@ class WeatherConditionAnimationMapper {
       child: RepaintBoundary(
         child: Opacity(
           opacity: opacity,
-          child: _dotLottieAsset(
+          child: Lottie.asset(
             animationUrl,
-            autoplay: true,
-            loop: true,
+            fit: BoxFit.cover,
+            repeat: true,
+            backgroundLoading: true,
+            renderCache: RenderCache.raster,
+            frameRate: FrameRate.composition,
           ),
         ),
       ),
-    );
-  }
-
-  static Widget _dotLottieAsset(
-    String source, {
-    required bool autoplay,
-    required bool loop,
-  }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.hasBoundedWidth ? constraints.maxWidth : null;
-        final height = constraints.hasBoundedHeight ? constraints.maxHeight : null;
-
-        return DotLottieView(
-          sourceType: 'asset',
-          source: source,
-          autoplay: autoplay,
-          loop: loop,
-          useFrameInterpolation: true,
-          mode: 'forward',
-          speed: 1.0,
-          width: width,
-          height: height,
-        );
-      },
     );
   }
 }
