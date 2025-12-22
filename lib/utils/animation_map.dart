@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
+import 'package:dotlottie_flutter/dotlottie_flutter.dart';
 
 class _AnimationConfig {
   final String? animationUrl;
@@ -21,29 +21,29 @@ class WeatherConditionAnimationMapper {
   static const _foregroundAnimationsBasePath = 'assets/foreground-animations/';
 
   static const _sunnyForeground =
-      '${_foregroundAnimationsBasePath}sunny_foreground.json';
+      '${_foregroundAnimationsBasePath}sunny_foreground.lottie';
   static const _starsForeground =
-      '${_foregroundAnimationsBasePath}stars_foreground.json';
+      '${_foregroundAnimationsBasePath}stars_foreground.lottie';
   static const _sunnyBackground =
-      '${_foregroundAnimationsBasePath}sunny_background.json';
+      '${_foregroundAnimationsBasePath}sunny_background.lottie';
   static const _cloudyForeground =
-      '${_foregroundAnimationsBasePath}cloudy_foreground.json';
-  static const _cloudyFull = '${_foregroundAnimationsBasePath}cloudy.json';
+      '${_foregroundAnimationsBasePath}cloudy_foreground.lottie';
+  static const _cloudyFull = '${_foregroundAnimationsBasePath}cloudy.lottie';
   static const _cloudyBackground =
-      '${_foregroundAnimationsBasePath}cloudy_background.json';
+      '${_foregroundAnimationsBasePath}cloudy_background.lottie';
   static const _mostlyClearNight =
-      '${_foregroundAnimationsBasePath}mostly_clear_night.json';
+      '${_foregroundAnimationsBasePath}mostly_clear_night.lottie';
   static const _hazeForeground =
-      '${_foregroundAnimationsBasePath}haze_foreground.json';
-  static const _showers = '${_foregroundAnimationsBasePath}showers.json';
+      '${_foregroundAnimationsBasePath}haze_foreground.lottie';
+  static const _showers = '${_foregroundAnimationsBasePath}showers.lottie';
   static const _rainForeground =
-      '${_foregroundAnimationsBasePath}rain_foreground.json';
+      '${_foregroundAnimationsBasePath}rain_foreground.lottie';
   static const _flurriesForeground =
-      '${_foregroundAnimationsBasePath}flurries_foreground.json';
+      '${_foregroundAnimationsBasePath}flurries_foreground.lottie';
   static const _snowShowerForeground =
-      '${_foregroundAnimationsBasePath}snow_shower_foreground.json';
+      '${_foregroundAnimationsBasePath}snow_shower_foreground.lottie';
   static const _thunderBackground =
-      '${_foregroundAnimationsBasePath}thunder_background.json';
+      '${_foregroundAnimationsBasePath}thunder_background.lottie';
 
   static const Set<int> _hazeCodes = {45, 48};
   static const Set<int> _rainCodes = {
@@ -259,14 +259,10 @@ class WeatherConditionAnimationMapper {
         children: [
           Positioned.fill(
             child: RepaintBoundary(
-              child: Lottie.asset(
+              child: _dotLottieAsset(
                 animationUrl,
-                fit: BoxFit.cover,
-                repeat: true,
-                backgroundLoading: true,
-                renderCache: RenderCache.raster,
-                frameRate: FrameRate.composition,
-                addRepaintBoundary: true,
+                autoplay: true,
+                loop: true,
               ),
             ),
           ),
@@ -277,14 +273,10 @@ class WeatherConditionAnimationMapper {
             // height: diffHeight ?? 500,
             height: secondaryHeight,
             child: RepaintBoundary(
-              child: Lottie.asset(
+              child: _dotLottieAsset(
                 secondaryAnimationUrl,
-                fit: BoxFit.cover,
-                repeat: true,
-                backgroundLoading: true,
-                renderCache: RenderCache.raster,
-                frameRate: FrameRate.composition,
-                addRepaintBoundary: true,
+                autoplay: true,
+                loop: true,
               ),
             ),
           ),
@@ -326,16 +318,38 @@ class WeatherConditionAnimationMapper {
       child: RepaintBoundary(
         child: Opacity(
           opacity: opacity,
-          child: Lottie.asset(
+          child: _dotLottieAsset(
             animationUrl,
-            fit: BoxFit.cover,
-            repeat: true,
-            backgroundLoading: true,
-            renderCache: RenderCache.raster,
-            frameRate: FrameRate.composition,
+            autoplay: true,
+            loop: true,
           ),
         ),
       ),
+    );
+  }
+
+  static Widget _dotLottieAsset(
+    String source, {
+    required bool autoplay,
+    required bool loop,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.hasBoundedWidth ? constraints.maxWidth : null;
+        final height = constraints.hasBoundedHeight ? constraints.maxHeight : null;
+
+        return DotLottieView(
+          sourceType: 'asset',
+          source: source,
+          autoplay: autoplay,
+          loop: loop,
+          useFrameInterpolation: true,
+          mode: 'forward',
+          speed: 1.0,
+          width: width,
+          height: height,
+        );
+      },
     );
   }
 }
