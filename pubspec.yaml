@@ -39,7 +39,7 @@ dependencies:
   material_color_utilities: ^0.11.1
   animations: ^2.1.1
   flutter_svg: ^2.2.3
-  dotlottie-flutter: ^0.1.0
+  dotlottie_flutter: ^0.0.2
   shared_preferences: ^2.5.4
   hive_ce: ^2.16.0
   hive_ce_flutter: ^2.3.3
