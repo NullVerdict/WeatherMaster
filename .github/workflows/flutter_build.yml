@@ -59,8 +59,8 @@ jobs:
           EOF
 
       - name: Build Split APKs
-        run: flutter build apk --release
-
+        run: flutter build apk --release --split-per-abi
+        
       - name: Rename APKs
         run: |
           VERSION_NAME=$(grep 'version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
