@@ -92,7 +92,7 @@ class WeatherConditionAnimationMapper {
       fit: BoxFit.cover,
       repeat: true,
       backgroundLoading: true,
-      renderCache: RenderCache.raster,
+      renderCache: RenderCache.drawingCommands,
       frameRate: FrameRate.composition,
       addRepaintBoundary: false,
     );
