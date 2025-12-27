@@ -722,7 +722,7 @@ class _WeatherHomeState extends State<WeatherHome> {
 
       bool locationChanged = true;
 
-      if (storedLocation != null && storedLocation['isGPS'] == true) {
+      if (storedLocation['isGPS'] == true) {
         final storedLat = storedLocation['lat'];
         final storedLon = storedLocation['lon'];
 
