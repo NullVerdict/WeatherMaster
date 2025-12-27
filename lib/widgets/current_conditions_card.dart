@@ -114,10 +114,15 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
     final normalized = _normalizeOrder(parsed);
 
     if (listEquals(normalized, itemOrder)) return;
+    if (!mounted) return;
     setState(() => itemOrder = normalized);
   }
 
-  bool _isNoData(num value) => value == _noData;
+  bool _isNoData(num value) {
+    if (value == -1) return true;
+    final d = value.toDouble();
+    return (d - _noData).abs() < 1e-9;
+  }
 
   void _showNoDataSnack(BuildContext context) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -174,16 +179,49 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
 
   DateTime? _parseTime(String? timeString) {
     if (timeString == null || timeString.isEmpty) return null;
-    final lower = timeString.toLowerCase();
-    if (lower.contains("no")) return null;
+
+    final lower = timeString.toLowerCase().trim();
+    if (RegExp(r'\bno\b').hasMatch(lower) || lower.contains('not available') || lower.contains('n/a')) {
+      return null;
+    }
 
     try {
-      final cleaned = timeString.split("at").first.trim();
-      return DateFormat.jm().parse(cleaned);
+      final cleaned = timeString.split(RegExp(r'\bat\b', caseSensitive: false)).last.trim();
+      final normalized = cleaned.replaceAll('.', '').replaceAll('\u202F', ' ').trim();
+      final now = DateTime.now();
+
+      DateTime? parsed;
+      try {
+        parsed = DateFormat.jm().parseLoose(normalized);
+      } catch (_) {
+        parsed = null;
+      }
+      parsed ??= DateFormat.Hm().parseLoose(normalized);
+
+      return DateTime(now.year, now.month, now.day, parsed.hour, parsed.minute);
     } catch (e) {
       debugPrint("Failed to parse time: $timeString ($e)");
       return null;
     }
+  }
+
+  DateTime _applyOffsetToLocal(DateTime dt, int offsetSeconds) {
+    final shifted = dt.toUtc().add(Duration(seconds: offsetSeconds));
+    return DateTime(
+      shifted.year,
+      shifted.month,
+      shifted.day,
+      shifted.hour,
+      shifted.minute,
+      shifted.second,
+      shifted.millisecond,
+      shifted.microsecond,
+    );
+  }
+
+  String _formatDoubleTrim(double value, {int fractionDigits = 2}) {
+    final s = value.toStringAsFixed(fractionDigits);
+    return s.replaceFirst(RegExp(r'\.?0+$'), '');
   }
 
   double _convertPressure(double hPa, String unit) {
@@ -259,19 +297,24 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
     final headerFg = isDark ? Colors.white : Colors.black;
     final size = MediaQuery.sizeOf(context);
     final isFoldable = isFoldableLayout(context);
+    final bgColor = Color(widget.selectedContainerBgIndex);
+    final borderRadius20 = BorderRadius.circular(20);
+    final borderRadius999 = BorderRadius.circular(999);
 
     final useAnimation = PreferencesHelper.getBool("UseopenContainerAnimation") ?? true;
 
-    final dewpointConverted = settings.tempUnit == 'Fahrenheit'
-        ? UnitConverter.celsiusToFahrenheit(widget.currentDewPoint).round()
-        : widget.currentDewPoint.round();
+    final int? dewpointConverted = _isNoData(widget.currentDewPoint)
+        ? null
+        : (settings.tempUnit == 'Fahrenheit'
+            ? UnitConverter.celsiusToFahrenheit(widget.currentDewPoint).round()
+            : widget.currentDewPoint.round());
 
     final offsetSeconds = int.tryParse(widget.utcOffsetSeconds) ?? 0;
     final now = DateTime.now().toUtc().add(Duration(seconds: offsetSeconds));
     final nowLocal = DateTime(now.year, now.month, now.day, now.hour, now.minute, now.second);
 
-    final sunrise = DateTime.parse(widget.currentSunrise);
-    var sunset = DateTime.parse(widget.currentSunset);
+    final sunrise = _applyOffsetToLocal(DateTime.parse(widget.currentSunrise), offsetSeconds);
+    var sunset = _applyOffsetToLocal(DateTime.parse(widget.currentSunset), offsetSeconds);
 
     final timeFormatter =
         settings.timeUnit == _timeFormat24Hr ? DateFormat.Hm() : DateFormat.jm();
@@ -331,14 +374,14 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             transitionType: ContainerTransitionType.fadeThrough,
             closedElevation: 1,
             closedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
-            closedColor: Color(widget.selectedContainerBgIndex),
+            transitionDuration: _openContainerDuration,
+            closedColor: bgColor,
             openColor: colorTheme.surface,
             openBuilder: (context, _) => ExtendWidget('humidity_widget'),
             closedBuilder: (context, openContainer) {
@@ -348,14 +391,14 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                   widgetKey: 'humidity_widget',
                   openContainer: openContainer,
                   useAnimation: useAnimation,
-                  enabled: !_isNoData(widget.currentPressure),
+                  enabled: !_isNoData(widget.currentHumidity),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: borderRadius20,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Color(widget.selectedContainerBgIndex),
-                      borderRadius: BorderRadius.circular(20),
+                      color: bgColor,
+                      borderRadius: borderRadius20,
                     ),
                     child: Stack(
                       children: [
@@ -411,7 +454,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      _isNoData(widget.currentDewPoint) ? '--' : "$dewpointConverted°",
+                                      dewpointConverted == null ? '--' : "$dewpointConverted°",
                                       style: TextStyle(
                                         fontFamily: "FlexFontEn",
                                         color: colorTheme.onTertiary,
@@ -444,14 +487,14 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             transitionType: ContainerTransitionType.fadeThrough,
             closedElevation: 1,
             closedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
-            closedColor: Color(widget.selectedContainerBgIndex),
+            transitionDuration: _openContainerDuration,
+            closedColor: bgColor,
             openColor: colorTheme.surface,
             openBuilder: (context, _) => ExtendWidget('sun_widget'),
             closedBuilder: (context, openContainer) {
@@ -466,8 +509,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                 child: Container(
                   clipBehavior: Clip.hardEdge,
                   decoration: BoxDecoration(
-                    color: Color(widget.selectedContainerBgIndex),
-                    borderRadius: BorderRadius.circular(20),
+                    color: bgColor,
+                    borderRadius: borderRadius20,
                   ),
                   child: Stack(
                     children: [
@@ -585,11 +628,11 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             closedElevation: 1,
             closedShape: const CircleBorder(),
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
-            closedColor: Color(widget.selectedContainerBgIndex),
+            transitionDuration: _openContainerDuration,
+            closedColor: bgColor,
             openColor: colorTheme.surface,
             openBuilder: (context, _) => ExtendWidget('pressure_widget'),
             closedBuilder: (context, openContainer) {
@@ -609,7 +652,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                         buildPressueSvg(
                           colorTheme.primary,
                           colorTheme.surfaceContainerHighest,
-                          Color(widget.selectedContainerBgIndex),
+                          bgColor,
                           widget.currentPressure.round(),
                         ),
                         fit: BoxFit.contain,
@@ -655,11 +698,11 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             closedElevation: 1,
             closedShape: const CircleBorder(),
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
-            closedColor: Color(widget.selectedContainerBgIndex),
+            transitionDuration: _openContainerDuration,
+            closedColor: bgColor,
             openColor: colorTheme.surface,
             openBuilder: (context, _) => ExtendWidget('visibility_widget'),
             closedBuilder: (context, openContainer) {
@@ -672,12 +715,12 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                   enabled: !_isNoData(widget.currentVisibility),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: borderRadius999,
                   child: Container(
                     height: 160,
                     decoration: BoxDecoration(
-                      color: Color(widget.selectedContainerBgIndex),
-                      borderRadius: BorderRadius.circular(999),
+                      color: bgColor,
+                      borderRadius: borderRadius999,
                     ),
                     child: Stack(
                       children: [
@@ -730,14 +773,15 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             closedElevation: 1,
             closedShape: const CircleBorder(),
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
-            closedColor: Color(widget.selectedContainerBgIndex),
+            transitionDuration: _openContainerDuration,
+            closedColor: bgColor,
             openColor: colorTheme.surface,
             openBuilder: (context, _) => ExtendWidget('winddirc_widget'),
             closedBuilder: (context, openContainer) {
+              final safeDir = _isNoData(widget.currentWindDirc) ? 0 : widget.currentWindDirc;
               return GestureDetector(
                 onTap: _tapHandler(
                   context,
@@ -747,18 +791,18 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                   enabled: !_isNoData(widget.currentWindSpeed),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: borderRadius999,
                   child: Container(
                     height: 160,
                     decoration: BoxDecoration(
-                      color: Color(widget.selectedContainerBgIndex),
-                      borderRadius: BorderRadius.circular(999),
+                      color: bgColor,
+                      borderRadius: borderRadius999,
                     ),
                     child: Stack(
                       children: [
                         WindCompassWidget(
-                          currentWindDirc: widget.currentWindDirc,
-                          backgroundColor: Color(widget.selectedContainerBgIndex),
+                          currentWindDirc: safeDir,
+                          backgroundColor: bgColor,
                         ),
                         HeaderWidgetConditions(
                           headerText: "wind".tr(),
@@ -810,10 +854,10 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             transitionType: ContainerTransitionType.fadeThrough,
             closedElevation: 0,
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
+            transitionDuration: _openContainerDuration,
             closedColor: Colors.transparent,
             middleColor: Colors.transparent,
             openColor: colorTheme.surface,
@@ -828,11 +872,11 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                   enabled: !_isNoData(widget.currentUvIndex),
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: borderRadius999,
                   child: Container(
                     height: 160,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: borderRadius999,
                     ),
                     child: Stack(
                       children: [
@@ -840,7 +884,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                           aspectRatio: 1,
                           child: SvgPicture.string(
                             buildUVSvg(
-                              Color(widget.selectedContainerBgIndex),
+                              bgColor,
                               widget.currentUvIndex.round(),
                             ),
                             fit: BoxFit.contain,
@@ -887,14 +931,14 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             transitionType: ContainerTransitionType.fadeThrough,
             closedElevation: 1,
             closedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
-            closedColor: Color(widget.selectedContainerBgIndex),
+            transitionDuration: _openContainerDuration,
+            closedColor: bgColor,
             openColor: colorTheme.surface,
             openBuilder: (context, _) => ExtendWidget('aqi_widget'),
             closedBuilder: (context, openContainer) {
@@ -908,8 +952,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Color(widget.selectedContainerBgIndex),
-                    borderRadius: BorderRadius.circular(20),
+                    color: bgColor,
+                    borderRadius: borderRadius20,
                   ),
                   child: Stack(
                     children: [
@@ -944,7 +988,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                         ),
                       ),
                       AQISliderBar(
-                        aqi: widget.currentAQIUSA,
+                        aqi: aqiFormat,
                         width: 360,
                       ),
                       Align(
@@ -970,18 +1014,19 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
           );
 
         case 7:
+          final precipText = _isNoData(widget.currentTotalPrec) ? '--' : _formatDoubleTrim(convertedPrecip);
           return OpenContainer(
             transitionType: ContainerTransitionType.fadeThrough,
             closedElevation: 1,
             closedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
-            closedColor: Color(widget.selectedContainerBgIndex),
+            transitionDuration: _openContainerDuration,
+            closedColor: bgColor,
             openColor: colorTheme.surface,
             openBuilder: (context, _) => ExtendWidget('precip_widget'),
             closedBuilder: (context, openContainer) {
@@ -995,8 +1040,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Color(widget.selectedContainerBgIndex),
-                    borderRadius: BorderRadius.circular(20),
+                    color: bgColor,
+                    borderRadius: borderRadius20,
                   ),
                   child: Stack(
                     children: [
@@ -1025,9 +1070,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                             spacing: 2,
                             children: [
                               Text(
-                                _isNoData(widget.currentTotalPrec)
-                                    ? '--'
-                                    : "${double.parse(convertedPrecip.toStringAsFixed(2))}",
+                                precipText,
                                 style: TextStyle(
                                   fontFamily: "FlexFontEn",
                                   fontSize: isFoldable ? 60 : size.width * 0.10 + 0.5,
@@ -1088,14 +1131,14 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
             transitionType: ContainerTransitionType.fadeThrough,
             closedElevation: 1,
             closedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
-            closedColor: Color(widget.selectedContainerBgIndex),
+            transitionDuration: _openContainerDuration,
+            closedColor: bgColor,
             openColor: colorTheme.surface,
             openBuilder: (context, _) => ExtendWidget('moon_widget'),
             closedBuilder: (context, openContainer) {
@@ -1111,8 +1154,8 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                 child: Container(
                   clipBehavior: Clip.hardEdge,
                   decoration: BoxDecoration(
-                    color: Color(widget.selectedContainerBgIndex),
-                    borderRadius: BorderRadius.circular(20),
+                    color: bgColor,
+                    borderRadius: borderRadius20,
                   ),
                   child: Stack(
                     children: [
@@ -1226,28 +1269,29 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
           );
 
         case 9:
+          final cloudNoData = widget.cloudCover.isEmpty || widget.cloudCover == _notAvailableValue;
           return OpenContainer(
             transitionType: ContainerTransitionType.fadeThrough,
             closedElevation: 1,
             closedShape: const CircleBorder(),
             openShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius20,
             ),
             openElevation: 0,
-            transitionDuration: const Duration(milliseconds: 500),
-            closedColor: Color(widget.selectedContainerBgIndex),
+            transitionDuration: _openContainerDuration,
+            closedColor: bgColor,
             openColor: colorTheme.surface,
             openBuilder: (context, _) => const SizedBox.shrink(),
             closedBuilder: (context, openContainer) {
               return GestureDetector(
                 onTap: () {},
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: borderRadius999,
                   child: Container(
                     height: 160,
                     decoration: BoxDecoration(
-                      color: Color(widget.selectedContainerBgIndex),
-                      borderRadius: BorderRadius.circular(999),
+                      color: bgColor,
+                      borderRadius: borderRadius999,
                     ),
                     child: Stack(
                       children: [
@@ -1265,7 +1309,7 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
                         Align(
                           alignment: Alignment.center,
                           child: Text(
-                            _isNoData(widget.currentVisibility) ? '--' : widget.cloudCover,
+                            cloudNoData ? '--' : widget.cloudCover,
                             style: TextStyle(
                               color: colorTheme.onTertiaryContainer,
                               fontFamily: "FlexFontEn",
@@ -1327,9 +1371,12 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
               );
             },
             onReorder: (oldIndex, newIndex) async {
+              if (oldIndex == newIndex) return;
+
               setState(() {
                 final item = itemOrder.removeAt(oldIndex);
-                itemOrder.insert(newIndex, item);
+                final targetIndex = newIndex.clamp(0, itemOrder.length);
+                itemOrder.insert(targetIndex, item);
               });
 
               final prefs = await _prefs;
@@ -1448,7 +1495,7 @@ class _WindCompassWidgetState extends State<WindCompassWidget> {
         stream: FlutterCompass.events,
         builder: (context, snapshot) {
           final rawHeading = snapshot.data?.heading;
-          if (rawHeading == null) return const SizedBox();
+          if (rawHeading == null) return svg;
 
           _lastHeading = lowPassFilter(rawHeading, _lastHeading, 0.2);
           final smoothedHeading = _lastHeading!;
@@ -1498,64 +1545,70 @@ class AQISliderBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double clampedAQI = aqi.clamp(0, 500).toDouble();
-    final double thumbPosition = (clampedAQI / 500) * width;
-
     return Positioned(
       bottom: 55,
       left: 0,
       right: 0,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            height: height,
-            width: width,
-            margin: const EdgeInsets.only(left: 10, right: 10),
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(999)),
-              gradient: LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [
-                  Color(0xFF00E400), // Green
-                  Color(0xFFFFFF00), // Yellow
-                  Color(0xFFFF7E00), // Orange
-                  Color(0xFFFF0000), // Red
-                  Color(0xFF8F3F97), // Purple
-                  Color(0xFF7E0023), // Maroon
-                ],
-                stops: [
-                  0.1,
-                  0.2,
-                  0.4,
-                  0.6,
-                  0.8,
-                  1.0,
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            left: thumbPosition - 10,
-            top: -2.5,
-            child: Column(
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxBarWidth = (constraints.maxWidth - 20).clamp(0.0, double.infinity);
+          final barWidth = min(width, maxBarWidth);
+          final double clampedAQI = aqi.clamp(0, 500).toDouble();
+          final double thumbPosition = barWidth <= 0 ? 0 : (clampedAQI / 500) * barWidth;
+
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                height: height,
+                width: barWidth,
+                margin: const EdgeInsets.only(left: 10, right: 10),
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(999)),
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Color(0xFF00E400),
+                      Color(0xFFFFFF00),
+                      Color(0xFFFF7E00),
+                      Color(0xFFFF0000),
+                      Color(0xFF8F3F97),
+                      Color(0xFF7E0023),
+                    ],
+                    stops: [
+                      0.1,
+                      0.2,
+                      0.4,
+                      0.6,
+                      0.8,
+                      1.0,
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+              Positioned(
+                left: 10 + thumbPosition - 5,
+                top: -2.5,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
       // ],
     );
