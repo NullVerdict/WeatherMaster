@@ -1832,17 +1832,18 @@ class _WeatherHomeState extends State<WeatherHome> {
                 return const SizedBox(height: 10);
               }
               if (index == 3) {
-                final dynamic currentTempSource = (startIndex >= 0 &&
-                        startIndex < hourlyTemps.length)
-                    ? hourlyTemps[startIndex]
-                    : current['temperature_2m'];
-                final dynamic currentCodeSource = (startIndex >= 0 &&
-                        startIndex < hourlyWeatherCodes.length)
-                    ? hourlyWeatherCodes[startIndex]
-                    : current['weather_code'];
+                final dynamic currentTempSource = current['temperature_2m'] ??
+                    ((startIndex >= 0 && startIndex < hourlyTemps.length)
+                        ? hourlyTemps[startIndex]
+                        : null);
+                final dynamic currentCodeSource = current['weather_code'] ??
+                    ((startIndex >= 0 &&
+                            startIndex < hourlyWeatherCodes.length)
+                        ? hourlyWeatherCodes[startIndex]
+                        : null);
                 return _HomeKeepAlive(
                   child: WeatherTopCard(
-                    currentTemp: (currentTempSource as num).toDouble(),
+                    currentTemp: ((currentTempSource ?? 0) as num).toDouble(),
                     currentFeelsLike:
                         (current['apparent_temperature'] as num).toDouble(),
                     currentMaxTemp:
@@ -1853,7 +1854,8 @@ class _WeatherHomeState extends State<WeatherHome> {
                         (weather['daily']?['temperature_2m_min']?[1] as num?)
                                 ?.toDouble() ??
                             0,
-                    currentWeatherIconCode: (currentCodeSource as num).toInt(),
+                    currentWeatherIconCode:
+                        ((currentCodeSource ?? 0) as num).toInt(),
                     currentisDay: current['is_day'],
                     currentLastUpdated: formattedTime,
                   ),
