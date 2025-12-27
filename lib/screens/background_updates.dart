@@ -93,7 +93,7 @@ class _BackgroundUpdatesPageState extends State<BackgroundUpdatesPage> {
             ),
             SettingSection(
               styleTile: true,
-              PrimarySwitch: true,
+              primarySwitch: true,
               tiles: [
                 SettingSwitchTile(
                     title: Padding(

@@ -1050,7 +1050,7 @@ class _WeatherHomeState extends State<WeatherHome> {
             ? Color(0x01000000)
             : Color.fromRGBO(0, 0, 0, 0.3);
 
-    final systemUiKey = '${isLight ? 1 : 0}|${navColor.value}';
+    final systemUiKey = '${isLight ? 1 : 0}|${navColor.toARGB32()}';
     if (_lastSystemUiKey != systemUiKey) {
       _lastSystemUiKey = systemUiKey;
       SystemChrome.setSystemUIOverlayStyle(
@@ -1489,7 +1489,7 @@ class _WeatherHomeState extends State<WeatherHome> {
                               .toARGB32()
                           : weatherContainerColors[selectedContainerBgIndex],
                       currentHumidity:
-                          (current['relative_humidity_2m'] as num?)?.toDouble() ?? 0.0000001,
+                          (current['relative_humidity_2m'] as num?)?.round() ?? -1,
                       currentDewPoint:
                           (hourly['dew_point_2m']?[startIndex] as num?)?.toDouble() ?? 0.0000001,
                       currentSunrise: daily['sunrise']?[1]?.toString() ?? '',
@@ -1502,14 +1502,16 @@ class _WeatherHomeState extends State<WeatherHome> {
                       currentWindSpeed:
                           (current['wind_speed_10m'] as num?)?.toDouble() ?? 0.0000001,
                       currentWindDirc:
-                          (current['wind_direction_10m'] as num?)?.toDouble() ?? 0.0000001,
+                          (current['wind_direction_10m'] as num?)?.round() ?? -1,
                       timezone: weather['timezone'].toString(),
                       utcOffsetSeconds:
                           weather['utc_offset_seconds'].toString(),
                       currentUvIndex:
                           (hourly['uv_index']?[startIndex] as num?)?.toDouble() ?? 0.0000001,
-                      currentAQIUSA: (weather['air_quality']?['current']?['us_aqi'] as num?)?.toDouble() ?? 0.0000001,
-                      currentAQIEURO: (weather['air_quality']?['current']?['european_aqi'] as num?)?.toDouble() ?? 0.0000001,
+                      currentAQIUSA:
+                          (weather['air_quality']?['current']?['us_aqi'] as num?)?.round() ?? -1,
+                      currentAQIEURO:
+                          (weather['air_quality']?['current']?['european_aqi'] as num?)?.round() ?? -1,
                       currentTotalPrec: (daily['precipitation_sum']?[1] as num?)?.toDouble() ?? 0.0000001,
                       currentDayLength: (daily['daylight_duration']?[1] as num?)?.toDouble() ?? 0.0000001,
                       isFromHome: true,

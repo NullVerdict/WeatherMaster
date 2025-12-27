@@ -17,7 +17,6 @@ import '../utils/visual_utils.dart';
 import 'package:animations/animations.dart';
 
 const String _timeFormat24Hr = '24 hr';
-const String _noDataAvailableMessageKey = 'no_data_available';
 
 class DailyForecastPage extends StatefulWidget {
   final DateTime? initialSelectedDate;

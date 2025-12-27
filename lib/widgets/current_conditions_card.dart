@@ -261,32 +261,6 @@ class _ConditionsWidgetsState extends State<ConditionsWidgets> {
     }
   }
 
-  Widget _openContainerTile({
-    required Color closedColor,
-    Color? middleColor,
-    required Color openColor,
-    required ShapeBorder closedShape,
-    required ShapeBorder openShape,
-    double closedElevation = 1,
-    double openElevation = 0,
-    required Widget Function(BuildContext, VoidCallback) closedBuilder,
-    required Widget Function(BuildContext, VoidCallback) openBuilder,
-  }) {
-    return OpenContainer(
-      transitionType: ContainerTransitionType.fadeThrough,
-      closedElevation: closedElevation,
-      closedShape: closedShape,
-      openShape: openShape,
-      openElevation: openElevation,
-      transitionDuration: _openContainerDuration,
-      closedColor: closedColor,
-      middleColor: middleColor,
-      openColor: openColor,
-      openBuilder: (context, _) => openBuilder(context, () {}),
-      closedBuilder: (context, openContainer) => closedBuilder(context, openContainer),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<UnitSettingsNotifier>();
